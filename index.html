@@ -981,46 +981,60 @@
     // ==================== دوال العرض والتحديث ====================
     
     function refreshHome() {
-        document.getElementById('totalExams').innerText = exams.length;
-        document.getElementById('activeExams').innerText = exams.filter(e => e.isActive !== false).length;
-        
-        const uniqueStudents = new Set(results.map(r => r.studentName));
-        document.getElementById('totalStudents').innerText = uniqueStudents.size;
-        
-        const myResults = currentUser ? results.filter(r => r.userId === currentUser.uid) : [];
-        document.getElementById('completedExams').innerText = myResults.length;
-        
-        const recent = [...exams].reverse().slice(0, 5);
+    // إذا لم يكن هناك مستخدم مسجل الدخول، لا تظهر أي بيانات
+    if (!currentUser) {
+        document.getElementById('totalExams').innerText = '0';
+        document.getElementById('activeExams').innerText = '0';
+        document.getElementById('totalStudents').innerText = '0';
+        document.getElementById('completedExams').innerText = '0';
         const container = document.getElementById('recentExamsList');
-        
-        if (recent.length === 0) {
-            container.innerHTML = '<div class="text-center p-6 bg-white rounded-xl shadow">لا توجد امتحانات</div>';
-        } else {
-            container.innerHTML = recent.map(exam => `
-                <div class="exam-card">
-                    <div class="flex justify-between items-center">
-                        <div>
-                            <h3 class="font-bold">${exam.title}</h3>
-                            <p class="text-sm text-gray-500">${exam.className || 'بدون صف'} | ${exam.questions?.length || 0} سؤال</p>
-                        </div>
-                        <button onclick="startExam('${exam.id}')" class="bg-indigo-600 text-white px-3 py-1 rounded text-sm hover:bg-indigo-700 transition">
-                            بدء الامتحان
-                        </button>
-                    </div>
-                </div>
-            `).join('');
-        }
+        container.innerHTML = '<div class="text-center p-6 bg-white rounded-xl shadow">الرجاء تسجيل الدخول لعرض الامتحانات</div>';
+        return;
     }
     
-    function refreshExamsList() {
+    // تصفية الامتحانات الخاصة بالمستخدم الحالي فقط
+    const userExams = exams.filter(e => e.creatorId === currentUser.uid);
+    const userResults = results.filter(r => r.userId === currentUser.uid);
+    
+    document.getElementById('totalExams').innerText = userExams.length;
+    document.getElementById('activeExams').innerText = userExams.filter(e => e.isActive !== false).length;
+    
+    const uniqueStudents = new Set(userResults.map(r => r.studentName));
+    document.getElementById('totalStudents').innerText = uniqueStudents.size;
+    document.getElementById('completedExams').innerText = userResults.length;
+    
+    const recent = [...userExams].reverse().slice(0, 5);
+    const container = document.getElementById('recentExamsList');
+    
+    if (recent.length === 0) {
+        container.innerHTML = '<div class="text-center p-6 bg-white rounded-xl shadow">لا توجد امتحانات. قم بإنشاء امتحان جديد</div>';
+    } else {
+        container.innerHTML = recent.map(exam => `
+            <div class="exam-card">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h3 class="font-bold">${exam.title}</h3>
+                        <p class="text-sm text-gray-500">${exam.className || 'بدون صف'} | ${exam.questions?.length || 0} سؤال</p>
+                    </div>
+                    <button onclick="startExam('${exam.id}')" class="bg-indigo-600 text-white px-3 py-1 rounded text-sm hover:bg-indigo-700 transition">
+                        بدء الامتحان
+                    </button>
+                </div>
+            </div>
+        `).join('');
+    }
+}
+    
+function refreshExamsList() {
     const container = document.getElementById('allExamsList');
     
+    // إذا لم يكن هناك مستخدم مسجل الدخول، لا تظهر أي امتحانات
     if (!currentUser) {
         container.innerHTML = '<div class="text-center p-6 bg-white rounded-xl shadow">الرجاء تسجيل الدخول لعرض امتحاناتك</div>';
         return;
     }
     
-    // تصفية الامتحانات: فقط التي أنشأها المستخدم الحالي
+    // تصفية الامتحانات الخاصة بالمستخدم الحالي فقط
     const userExams = exams.filter(e => e.creatorId === currentUser.uid);
     
     if (userExams.length === 0) {
@@ -1056,41 +1070,36 @@
     `).join('');
 }
     
-    function refreshQuestionBank() {
-        const container = document.getElementById('bankQuestionsList');
-        
-        if (!currentUser) {
-            container.innerHTML = '<div class="text-center p-6 bg-white rounded-xl shadow">الرجاء تسجيل الدخول أولاً</div>';
-            return;
-        }
-        
-        if (questions.length === 0) {
-            container.innerHTML = '<div class="text-center p-6 bg-white rounded-xl shadow">لا توجد أسئلة. أضف سؤالاً الآن!</div>';
-        } else {
-            container.innerHTML = questions.map(q => `
-                <div class="bg-white rounded-xl p-4 shadow flex justify-between items-center">
-                    <div>
-                        <p class="font-semibold">${q.text}</p>
-                        <p class="text-sm text-gray-500">${q.type === 'mcq' ? 'اختيار من متعدد' : 'صح/خطأ'}</p>
-                    </div>
-                    <button onclick="deleteQuestion('${q.id}')" class="text-red-500 hover:text-red-700 transition">
-                        <i class="fas fa-trash"></i> حذف
-                    </button>
-                </div>
-            `).join('');
-        }
+function refreshQuestionBank() {
+    const container = document.getElementById('bankQuestionsList');
+    
+    if (!currentUser) {
+        container.innerHTML = '<div class="text-center p-6 bg-white rounded-xl shadow">الرجاء تسجيل الدخول أولاً</div>';
+        return;
     }
     
+    if (questions.length === 0) {
+        container.innerHTML = '<div class="text-center p-6 bg-white rounded-xl shadow">لا توجد أسئلة. أضف سؤالاً الآن!</div>';
+    } else {
+        container.innerHTML = questions.map(q => `
+            <div class="bg-white rounded-xl p-4 shadow flex justify-between items-center">
+                <div>
+                    <p class="font-semibold">${q.text}</p>
+                    <p class="text-sm text-gray-500">${q.type === 'mcq' ? 'اختيار من متعدد' : 'صح/خطأ'}</p>
+                </div>
+                <button onclick="deleteQuestion('${q.id}')" class="text-red-500 hover:text-red-700 transition">
+                    <i class="fas fa-trash"></i> حذف
+                </button>
+            </div>
+        `).join('');
+    }
+}
+    
     function refreshAnalytics() {
-        const myResults = currentUser ? results.filter(r => r.userId === currentUser.uid) : [];
-        const percentages = myResults.map(r => r.percentage);
-        const avg = percentages.length ? (percentages.reduce((a, b) => a + b, 0) / percentages.length).toFixed(1) : 0;
-        const passCount = percentages.filter(p => p >= 50).length;
-        const passRate = percentages.length ? ((passCount / percentages.length) * 100).toFixed(1) : 0;
-        
-        document.getElementById('avgScore').innerText = avg + '%';
-        document.getElementById('passRate').innerText = passRate + '%';
-        
+    // إذا لم يكن هناك مستخدم مسجل الدخول، لا تظهر أي إحصائيات
+    if (!currentUser) {
+        document.getElementById('avgScore').innerText = '0%';
+        document.getElementById('passRate').innerText = '0%';
         const ctx = document.getElementById('statsChart').getContext('2d');
         if (chart) chart.destroy();
         chart = new Chart(ctx, {
@@ -1099,13 +1108,39 @@
                 labels: ['الدرجات'],
                 datasets: [{
                     label: 'الدرجات (%)',
-                    data: percentages.length ? percentages : [0],
+                    data: [0],
                     backgroundColor: '#6366f1',
                     borderRadius: 8
                 }]
             }
         });
+        return;
     }
+    
+    const userResults = results.filter(r => r.userId === currentUser.uid);
+    const percentages = userResults.map(r => r.percentage);
+    const avg = percentages.length ? (percentages.reduce((a, b) => a + b, 0) / percentages.length).toFixed(1) : 0;
+    const passCount = percentages.filter(p => p >= 50).length;
+    const passRate = percentages.length ? ((passCount / percentages.length) * 100).toFixed(1) : 0;
+    
+    document.getElementById('avgScore').innerText = avg + '%';
+    document.getElementById('passRate').innerText = passRate + '%';
+    
+    const ctx = document.getElementById('statsChart').getContext('2d');
+    if (chart) chart.destroy();
+    chart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['الدرجات'],
+            datasets: [{
+                label: 'الدرجات (%)',
+                data: percentages.length ? percentages : [0],
+                backgroundColor: '#6366f1',
+                borderRadius: 8
+            }]
+        }
+    });
+}
     
     function refreshAccountPage() {
         const container = document.getElementById('accountContent');
@@ -1165,24 +1200,32 @@
     }
     
     function refreshPlansPage() {
-        const container = document.getElementById('plansList');
-        container.innerHTML = plans.filter(p => p.id !== 'free').map(plan => `
-            <div class="bg-white rounded-xl shadow-lg p-6 text-center border-2 hover:border-indigo-400 transition">
-                <div class="w-16 h-16 mx-auto bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center mb-4">
-                    <i class="fas fa-gem text-white text-2xl"></i>
-                </div>
-                <h3 class="text-2xl font-bold text-indigo-600">${plan.name}</h3>
-                <p class="text-3xl font-bold my-2">${plan.price} ج</p>
-                <p>${plan.examsCount} امتحان شهرياً</p>
-                <ul class="text-sm text-gray-500 mt-3">
-                    ${plan.features.map(f => `<li><i class="fas fa-check text-green-500 ml-1"></i> ${f}</li>`).join('')}
-                </ul>
-                <button onclick="requestUpgrade('${plan.id}')" class="mt-4 bg-amber-500 text-white px-4 py-2 rounded-lg hover:bg-amber-600 transition">
-                    <i class="fab fa-whatsapp ml-1"></i> اطلب الترقية
-                </button>
-            </div>
-        `).join('');
+    const container = document.getElementById('plansList');
+    // الباقات تظهر للجميع بغض النظر عن تسجيل الدخول
+    const availablePlans = plans.filter(p => p.id !== 'free');
+    
+    if (availablePlans.length === 0) {
+        container.innerHTML = '<div class="text-center p-6 bg-white rounded-xl shadow">لا توجد باقات متاحة</div>';
+        return;
     }
+    
+    container.innerHTML = availablePlans.map(plan => `
+        <div class="bg-white rounded-xl shadow-lg p-6 text-center border-2 hover:border-indigo-400 transition">
+            <div class="w-16 h-16 mx-auto bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center mb-4">
+                <i class="fas fa-gem text-white text-2xl"></i>
+            </div>
+            <h3 class="text-2xl font-bold text-indigo-600">${plan.name}</h3>
+            <p class="text-3xl font-bold my-2">${plan.price} ج</p>
+            <p>${plan.examsCount} امتحان شهرياً</p>
+            <ul class="text-sm text-gray-500 mt-3">
+                ${plan.features.map(f => `<li><i class="fas fa-check text-green-500 ml-1"></i> ${f}</li>`).join('')}
+            </ul>
+            <button onclick="requestUpgrade('${plan.id}')" class="mt-4 bg-amber-500 text-white px-4 py-2 rounded-lg hover:bg-amber-600 transition">
+                <i class="fab fa-whatsapp ml-1"></i> اطلب الترقية
+            </button>
+        </div>
+    `).join('');
+}
     
     async function refreshExamLimit() {
     if (!currentUser) return;
@@ -2757,13 +2800,20 @@
     // ==================== تحميل البيانات ====================
     
     async function loadExams() {
+    try {
         const s = await db.ref('exams').once('value');
         exams = s.val() ? Object.values(s.val()) : [];
         refreshHome();
         refreshExamsList();
+    } catch (error) {
+        console.error('خطأ في تحميل الامتحانات:', error);
+        exams = [];
+        refreshHome();
+        refreshExamsList();
     }
+}
     
-    async function loadResults() {
+async function loadResults() {
     try {
         const s = await db.ref('results').once('value');
         results = s.val() ? Object.values(s.val()) : [];
@@ -2772,6 +2822,8 @@
     } catch (error) {
         console.error('خطأ في تحميل النتائج:', error);
         results = [];
+        refreshHome();
+        refreshAnalytics();
     }
 }
     
@@ -2806,7 +2858,7 @@
     }
 }
     
-    async function loadAllData() {
+async function loadAllData() {
     try {
         await loadExams();
         await loadResults();
@@ -2818,7 +2870,7 @@
         }
     } catch (error) {
         console.error('خطأ في تحميل البيانات:', error);
-        // لا تظهر رسالة خطأ للمستخدم في حالة عدم وجود بيانات
+        // لا تظهر رسالة خطأ للمستخدم
     }
 }
     

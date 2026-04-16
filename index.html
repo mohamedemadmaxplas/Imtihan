@@ -356,6 +356,38 @@
                 width: 260px;
             }
         }
+        /* إخفاء جميع عناصر الموقع الرئيسي عند فتح الامتحان */
+body.exam-mode .sidebar,
+body.exam-mode nav,
+body.exam-mode .footer,
+body.exam-mode .search-overlay,
+body.exam-mode #searchBtn,
+body.exam-mode #userArea,
+body.exam-mode .container > .page:not(#studentExamContainer) {
+    display: none !important;
+}
+
+body.exam-mode .container {
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: 100% !important;
+}
+
+body.exam-mode #studentExamContainer {
+    position: relative !important;
+    background: transparent !important;
+    display: block !important;
+}
+
+body.exam-mode #studentExamContainer .bg-white {
+    margin: 0 auto;
+    box-shadow: none;
+}
+
+/* منع التمرير خلف الامتحان */
+body.exam-mode {
+    overflow: hidden;
+}
     </style>
 </head>
 <body>
@@ -912,7 +944,9 @@
     let studentTimer = null;
     let isAdminLoggedIn = false;
     let resetTargetUser = null;
-    
+    // متغيرات جديدة للتحكم في عرض النتيجة وإعادة الامتحان
+let showResultAfterExam = true;  // افتراضي: إظهار النتيجة
+let completedExams = new Set();   // لتخزين الامتحانات التي تم أداؤها (لمنع إعادة الامتحان)
     // ==================== الخطط الافتراضية ====================
     
     const defaultPlans = [
@@ -1383,73 +1417,82 @@ function refreshQuestionBank() {
     }
     
     async function createNewExam() {
-        if (!currentUser) {
-            showToast('❌ الرجاء تسجيل الدخول أولاً');
-            navigateTo('account');
-            return false;
-        }
-        
-        const title = document.getElementById('examTitle')?.value.trim();
-        const className = document.getElementById('examClass')?.value.trim();
-        const duration = parseInt(document.getElementById('examDuration')?.value) || 30;
-        const passScore = parseInt(document.getElementById('examPassScore')?.value) || 50;
-        
-        if (!title) {
-            showToast('❌ الرجاء إدخال عنوان الامتحان');
-            return false;
-        }
-        
-        if (!className) {
-            showToast('❌ الرجاء إدخال اسم الصف الدراسي');
-            return false;
-        }
-        
-        const questionsList = collectQuestions();
-        if (questionsList.length === 0) {
-            showToast('❌ الرجاء إضافة سؤال واحد على الأقل');
-            return false;
-        }
-        
-        const totalScore = questionsList.reduce((sum, q) => sum + (q.score || 10), 0);
-        const examId = 'EXAM_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8).toUpperCase();
-        const baseUrl = window.location.href.split('?')[0];
-        const examLink = baseUrl + '?exam=' + examId;
-        
-        const examData = {
-            id: examId,
-            title: title,
-            className: className,
-            duration: duration,
-            passScore: passScore,
-            totalScore: totalScore,
-            questions: questionsList,
-            examLink: examLink,
-            isActive: true,
-            creatorId: currentUser.uid,
-            creatorName: currentUser.name,
-            createdAt: new Date().toISOString()
-        };
-        
-        try {
-            await db.ref(`exams/${examId}`).set(examData);
-            exams.push(examData);
-            
-            showExamLinkPopup(examLink, title, className);
-            
-            document.getElementById('examTitle').value = '';
-            document.getElementById('examClass').value = '';
-            document.getElementById('questionsContainer').innerHTML = '';
-            addQuestion();
-            
-            refreshExamsList();
-            refreshHome();
-            return true;
-        } catch (error) {
-            console.error(error);
-            showToast('❌ حدث خطأ في حفظ الامتحان');
-            return false;
-        }
+    if (!currentUser) {
+        showToast('❌ الرجاء تسجيل الدخول أولاً');
+        navigateTo('account');
+        return false;
     }
+    
+    const title = document.getElementById('examTitle')?.value.trim();
+    const className = document.getElementById('examClass')?.value.trim();
+    const duration = parseInt(document.getElementById('examDuration')?.value) || 30;
+    const passScore = parseInt(document.getElementById('examPassScore')?.value) || 50;
+    
+    // جلب قيمة إظهار النتيجة
+    const showResultRadio = document.querySelector('input[name="showResult"]:checked');
+    const showResult = showResultRadio ? showResultRadio.value === 'true' : true;
+    
+    if (!title) {
+        showToast('❌ الرجاء إدخال عنوان الامتحان');
+        return false;
+    }
+    
+    if (!className) {
+        showToast('❌ الرجاء إدخال اسم الصف الدراسي');
+        return false;
+    }
+    
+    const questionsList = collectQuestions();
+    if (questionsList.length === 0) {
+        showToast('❌ الرجاء إضافة سؤال واحد على الأقل');
+        return false;
+    }
+    
+    const totalScore = questionsList.reduce((sum, q) => sum + (q.score || 10), 0);
+    const examId = 'EXAM_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8).toUpperCase();
+    const baseUrl = window.location.href.split('?')[0];
+    const examLink = baseUrl + '?exam=' + examId;
+    
+    const examData = {
+        id: examId,
+        title: title,
+        className: className,
+        duration: duration,
+        passScore: passScore,
+        totalScore: totalScore,
+        questions: questionsList,
+        examLink: examLink,
+        isActive: true,
+        showResult: showResult,  // إضافة هذا الحقل الجديد
+        creatorId: currentUser.uid,
+        creatorName: currentUser.name,
+        createdAt: new Date().toISOString()
+    };
+    
+    try {
+        await db.ref(`exams/${examId}`).set(examData);
+        exams.push(examData);
+        
+        showExamLinkPopup(examLink, title, className);
+        
+        document.getElementById('examTitle').value = '';
+        document.getElementById('examClass').value = '';
+        document.getElementById('questionsContainer').innerHTML = '';
+        addQuestion();
+        
+        // إعادة تعيين خيارات العرض
+        const showTrueRadio = document.querySelector('input[name="showResult"][value="true"]');
+        if (showTrueRadio) showTrueRadio.checked = true;
+        
+        refreshExamsList();
+        refreshHome();
+        return true;
+    } catch (error) {
+        console.error(error);
+        showToast('❌ حدث خطأ في حفظ الامتحان');
+        return false;
+    }
+}
     
     function showExamLinkPopup(link, title, className) {
         const oldModal = document.getElementById('examLinkModal');
@@ -1500,175 +1543,191 @@ function refreshQuestionBank() {
         sessionStorage.setItem('currentExam', JSON.stringify(exam));
         showStudentExam(exam);
     }
-    
     function showStudentExam(exam) {
-        document.getElementById('studentExamContainer').classList.remove('hidden-page');
-        const container = document.getElementById('studentExamContent');
-        container.innerHTML = `
-            <div class="text-center p-8">
-                <i class="fas fa-user-graduate text-6xl text-indigo-600 mb-4"></i>
-                <h2 class="text-2xl font-bold mb-2">${exam.title}</h2>
-                <p class="text-indigo-600 mb-4">📚 ${exam.className || 'بدون صف'}</p>
-                <p class="text-gray-600 mb-6">الرجاء إدخال بياناتك لبدء الامتحان</p>
-                <input type="text" id="studentName" placeholder="الاسم الكامل" class="w-full max-w-md p-3 border rounded-lg mb-3 mx-auto">
-                <input type="text" id="studentNumber" placeholder="رقم الجلوس" class="w-full max-w-md p-3 border rounded-lg mb-6 mx-auto">
-                <button onclick="renderExam('${exam.id}')" class="bg-indigo-600 text-white px-6 py-2 rounded hover:bg-indigo-700 transition">
-                    بدء الامتحان
-                </button>
-            </div>
-        `;
+    // إضافة تأثير الضبابية على الصفحة الرئيسية
+    const mainContent = document.querySelector('.container');
+    const sidebar = document.getElementById('sidebar');
+    const header = document.querySelector('nav');
+    const footer = document.querySelector('.footer');
+    
+    if (mainContent) mainContent.classList.add('blur-background');
+    if (sidebar) sidebar.classList.add('blur-background');
+    if (header) header.classList.add('blur-background');
+    if (footer) footer.classList.add('blur-background');
+    
+    document.getElementById('studentExamContainer').classList.remove('hidden-page');
+    const container = document.getElementById('studentExamContent');
+    container.innerHTML = `
+        <div class="text-center p-8">
+            <i class="fas fa-user-graduate text-6xl text-indigo-600 mb-4"></i>
+            <h2 class="text-2xl font-bold mb-2">${exam.title}</h2>
+            <p class="text-indigo-600 mb-4">📚 ${exam.className || 'بدون صف'}</p>
+            <p class="text-gray-600 mb-6">الرجاء إدخال بياناتك لبدء الامتحان</p>
+            <input type="text" id="studentName" placeholder="الاسم الكامل" class="w-full max-w-md p-3 border rounded-lg mb-3 mx-auto">
+            <input type="text" id="studentNumber" placeholder="رقم الجلوس" class="w-full max-w-md p-3 border rounded-lg mb-6 mx-auto">
+            <button onclick="renderExam('${exam.id}')" class="bg-indigo-600 text-white px-6 py-2 rounded hover:bg-indigo-700 transition">
+                بدء الامتحان
+            </button>
+        </div>
+    `;
+}
+    
+function renderExam(examId) {
+    const exam = exams.find(e => e.id === examId);
+    if (!exam) return;
+    
+    // التحقق إذا كان الطالب قد أدى هذا الامتحان مسبقاً
+    const studentKey = `exam_${examId}_completed`;
+    if (sessionStorage.getItem(studentKey) === 'true') {
+        showSubmissionMessage('لقد قمت بالفعل بإرسال إجابات هذا الامتحان من قبل', false);
+        return;
     }
     
-    function renderExam(examId) {
-        const exam = exams.find(e => e.id === examId);
-        if (!exam) return;
-        
-        const studentName = document.getElementById('studentName')?.value.trim();
-        if (!studentName) {
-            alert('أدخل اسمك');
-            return;
+    const studentName = document.getElementById('studentName')?.value.trim();
+    if (!studentName) {
+        alert('أدخل اسمك');
+        return;
+    }
+    
+    const studentNumber = document.getElementById('studentNumber')?.value.trim() || 'غير محدد';
+    sessionStorage.setItem('studentName', studentName);
+    sessionStorage.setItem('studentNumber', studentNumber);
+    
+    let qHtml = '';
+    exam.questions.forEach((q, idx) => {
+        if (q.type === 'mcq') {
+            qHtml += `
+                <div class="border rounded-lg p-4 mb-4 bg-gray-50">
+                    <p class="font-bold mb-2">${idx + 1}. ${q.text} <span class="text-indigo-600">(${q.score} درجة)</span></p>
+                    ${q.options.map(opt => `
+                        <label class="flex items-center gap-2 py-1 cursor-pointer hover:bg-gray-100 p-1 rounded">
+                            <input type="radio" name="q${idx}" value="${opt}">
+                            <span>${opt}</span>
+                        </label>
+                    `).join('')}
+                </div>
+            `;
+        } else {
+            qHtml += `
+                <div class="border rounded-lg p-4 mb-4 bg-gray-50">
+                    <p class="font-bold mb-2">${idx + 1}. ${q.text} <span class="text-indigo-600">(${q.score} درجة)</span></p>
+                    <label class="flex items-center gap-2 py-1 cursor-pointer hover:bg-gray-100 p-1 rounded">
+                        <input type="radio" name="q${idx}" value="true"> صح
+                    </label>
+                    <label class="flex items-center gap-2 py-1 cursor-pointer hover:bg-gray-100 p-1 rounded">
+                        <input type="radio" name="q${idx}" value="false"> خطأ
+                    </label>
+                </div>
+            `;
         }
-        
-        const studentNumber = document.getElementById('studentNumber')?.value.trim() || 'غير محدد';
-        sessionStorage.setItem('studentName', studentName);
-        sessionStorage.setItem('studentNumber', studentNumber);
-        
-        let qHtml = '';
-        exam.questions.forEach((q, idx) => {
-            if (q.type === 'mcq') {
-                qHtml += `
-                    <div class="border rounded-lg p-4 mb-4 bg-gray-50">
-                        <p class="font-bold mb-2">${idx + 1}. ${q.text} <span class="text-indigo-600">(${q.score} درجة)</span></p>
-                        ${q.options.map(opt => `
-                            <label class="flex items-center gap-2 py-1 cursor-pointer hover:bg-gray-100 p-1 rounded">
-                                <input type="radio" name="q${idx}" value="${opt}">
-                                <span>${opt}</span>
-                            </label>
-                        `).join('')}
-                    </div>
-                `;
-            } else {
-                qHtml += `
-                    <div class="border rounded-lg p-4 mb-4 bg-gray-50">
-                        <p class="font-bold mb-2">${idx + 1}. ${q.text} <span class="text-indigo-600">(${q.score} درجة)</span></p>
-                        <label class="flex items-center gap-2 py-1 cursor-pointer hover:bg-gray-100 p-1 rounded">
-                            <input type="radio" name="q${idx}" value="true"> صح
-                        </label>
-                        <label class="flex items-center gap-2 py-1 cursor-pointer hover:bg-gray-100 p-1 rounded">
-                            <input type="radio" name="q${idx}" value="false"> خطأ
-                        </label>
-                    </div>
-                `;
-            }
-        });
-        
-        const container = document.getElementById('studentExamContent');
-        container.innerHTML = `
-            <div class="flex justify-between items-center mb-4 flex-wrap gap-3">
-                <h2 class="text-xl font-bold">${exam.title}</h2>
-                <div class="bg-gray-100 p-3 rounded text-center">
-                    <div class="text-sm text-gray-500">الوقت المتبقي</div>
-                    <div id="timerDisplay" class="text-2xl font-bold text-indigo-600">${exam.duration}:00</div>
-                </div>
+    });
+    
+    const container = document.getElementById('studentExamContent');
+    container.innerHTML = `
+        <div class="flex justify-between items-center mb-4 flex-wrap gap-3">
+            <h2 class="text-xl font-bold">${exam.title}</h2>
+            <div class="bg-gray-100 p-3 rounded text-center">
+                <div class="text-sm text-gray-500">الوقت المتبقي</div>
+                <div id="timerDisplay" class="text-2xl font-bold text-indigo-600">${exam.duration}:00</div>
             </div>
-            <form id="examForm2" onsubmit="submitStudentExam(event, '${exam.id}')">
-                ${qHtml}
-                <button type="submit" class="w-full bg-green-600 text-white py-3 rounded-lg mt-4 hover:bg-green-700 transition">
-                    <i class="fas fa-paper-plane ml-2"></i> إرسال الإجابات
-                </button>
-            </form>
-            <footer class="mt-6 pt-4 border-t text-center text-gray-400 text-sm">
-                <p>Developed by Mohamed Emad Abd El-Atty | 01144100018</p>
-            </footer>
-        `;
-        
-        let timeLeft = exam.duration * 60;
-        if (studentTimer) clearInterval(studentTimer);
-        studentTimer = setInterval(() => {
-            if (timeLeft <= 0) {
-                clearInterval(studentTimer);
-                submitStudentExam(null, exam.id);
-            } else {
-                timeLeft--;
-                const mins = Math.floor(timeLeft / 60);
-                const secs = timeLeft % 60;
-                document.getElementById('timerDisplay').innerHTML = `${mins}:${secs.toString().padStart(2, '0')}`;
-            }
-        }, 1000);
+        </div>
+        <form id="examForm2" onsubmit="submitStudentExam(event, '${exam.id}')">
+            ${qHtml}
+            <button type="submit" class="w-full bg-green-600 text-white py-3 rounded-lg mt-4 hover:bg-green-700 transition">
+                <i class="fas fa-paper-plane ml-2"></i> إرسال الإجابات
+            </button>
+        </form>
+    `;
+    
+    let timeLeft = exam.duration * 60;
+    if (studentTimer) clearInterval(studentTimer);
+    studentTimer = setInterval(() => {
+        if (timeLeft <= 0) {
+            clearInterval(studentTimer);
+            submitStudentExam(null, exam.id);
+        } else {
+            timeLeft--;
+            const mins = Math.floor(timeLeft / 60);
+            const secs = timeLeft % 60;
+            const timerDisplay = document.getElementById('timerDisplay');
+            if (timerDisplay) timerDisplay.innerHTML = `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+    }, 1000);
+}
+    
+async function submitStudentExam(event, examId) {
+    if (event) event.preventDefault();
+    if (studentTimer) clearInterval(studentTimer);
+    
+    const exam = exams.find(e => e.id === examId);
+    if (!exam) return;
+    
+    // التحقق إذا كان الطالب قد أدى هذا الامتحان مسبقاً
+    const studentKey = `exam_${examId}_completed`;
+    if (sessionStorage.getItem(studentKey) === 'true') {
+        showSubmissionMessage('لقد قمت بالفعل بإرسال إجابات هذا الامتحان من قبل', false);
+        return;
     }
     
-    async function submitStudentExam(event, examId) {
-        if (event) event.preventDefault();
-        if (studentTimer) clearInterval(studentTimer);
-        
-        const exam = exams.find(e => e.id === examId);
-        if (!exam) return;
-        
-        const studentName = sessionStorage.getItem('studentName');
-        const studentNumber = sessionStorage.getItem('studentNumber');
-        let total = 0;
-        let answers = [];
-        
-        exam.questions.forEach((q, idx) => {
-            const selected = document.querySelector(`input[name="q${idx}"]:checked`);
-            const qScore = q.score || 10;
-            const isCorrect = selected && selected.value === q.correct;
-            if (isCorrect) total += qScore;
-            answers.push({
-                question: q.text,
-                userAnswer: selected ? selected.value : 'لم يجب',
-                correctAnswer: q.correct,
-                isCorrect: isCorrect,
-                score: qScore
-            });
+    const studentName = sessionStorage.getItem('studentName');
+    const studentNumber = sessionStorage.getItem('studentNumber');
+    let total = 0;
+    let answers = [];
+    
+    exam.questions.forEach((q, idx) => {
+        const selected = document.querySelector(`input[name="q${idx}"]:checked`);
+        const qScore = q.score || 10;
+        const isCorrect = selected && selected.value === q.correct;
+        if (isCorrect) total += qScore;
+        answers.push({
+            question: q.text,
+            userAnswer: selected ? selected.value : 'لم يجب',
+            correctAnswer: q.correct,
+            isCorrect: isCorrect,
+            score: qScore
         });
-        
-        const totalPossible = exam.totalScore || exam.questions.reduce((sum, q) => sum + (q.score || 10), 0);
-        const percentage = totalPossible > 0 ? (total / totalPossible) * 100 : 0;
-        const passed = percentage >= (exam.passScore || 50);
-        const grade = percentage >= 90 ? 'ممتاز' : percentage >= 75 ? 'جيد جداً' : percentage >= 50 ? 'مقبول' : 'ضعيف';
-        
-        const result = {
-            id: genId(),
-            studentName: studentName,
-            studentNumber: studentNumber,
-            examId: exam.id,
-            examTitle: exam.title,
-            examClass: exam.className,
-            score: total,
-            totalScore: totalPossible,
-            percentage: percentage,
-            passed: passed,
-            grade: grade,
-            answers: answers,
-            userId: exam.creatorId,
-            date: new Date().toISOString()
-        };
-        
-        await db.ref(`results/${result.id}`).set(result);
-        results.push(result);
-        
-        const container = document.getElementById('studentExamContent');
-        container.innerHTML = `
-            <div class="text-center p-8">
-                <i class="fas fa-check-circle text-green-500 text-6xl mb-4"></i>
-                <h2 class="text-2xl font-bold mb-4">تم إرسال الامتحان بنجاح!</h2>
-                <div class="bg-gray-100 p-6 rounded max-w-md mx-auto">
-                    <p class="text-lg">الدرجة: <strong class="text-indigo-600">${total}/${totalPossible}</strong></p>
-                    <p class="text-lg">النسبة: <strong>${percentage.toFixed(1)}%</strong></p>
-                    <p class="text-lg">التقدير: <strong class="${passed ? 'text-green-600' : 'text-red-600'}">${grade}</strong></p>
-                </div>
-                <button onclick="closeStudentExam()" class="mt-6 bg-indigo-600 text-white px-6 py-2 rounded hover:bg-indigo-700 transition">
-                    إغلاق
-                </button>
-            </div>
-            <footer class="mt-6 pt-4 border-t text-center text-gray-400 text-sm">
-                <p>Developed by Mohamed Emad Abd El-Atty | 01144100018</p>
-            </footer>
-        `;
-        
-        if (currentUser && currentUser.uid === exam.creatorId) refreshHome();
+    });
+    
+    const totalPossible = exam.totalScore || exam.questions.reduce((sum, q) => sum + (q.score || 10), 0);
+    const percentage = totalPossible > 0 ? (total / totalPossible) * 100 : 0;
+    const passed = percentage >= (exam.passScore || 50);
+    const grade = percentage >= 90 ? 'ممتاز' : percentage >= 75 ? 'جيد جداً' : percentage >= 50 ? 'مقبول' : 'ضعيف';
+    
+    const result = {
+        id: genId(),
+        studentName: studentName,
+        studentNumber: studentNumber,
+        examId: exam.id,
+        examTitle: exam.title,
+        examClass: exam.className,
+        score: total,
+        totalScore: totalPossible,
+        percentage: percentage,
+        passed: passed,
+        grade: grade,
+        answers: answers,
+        userId: exam.creatorId,
+        date: new Date().toISOString()
+    };
+    
+    await db.ref(`results/${result.id}`).set(result);
+    results.push(result);
+    
+    // حفظ أن هذا الطالب أدى هذا الامتحان
+    sessionStorage.setItem(studentKey, 'true');
+    
+    // عرض رسالة النجاح (بدون العودة للموقع)
+    let message = '';
+    if (exam.showResult !== false) {
+        message = `تم تسجيل إجاباتك بنجاح!\n\nالدرجة: ${total}/${totalPossible}\nالنسبة: ${percentage.toFixed(1)}%\nالتقدير: ${grade}`;
+    } else {
+        message = 'تم تسليم الامتحان بنجاح. شكراً لك!';
     }
+    
+    showSubmissionMessage(message, true);
+    
+    if (currentUser && currentUser.uid === exam.creatorId) refreshHome();
+}
     
     function closeStudentExam() {
         document.getElementById('studentExamContainer').classList.add('hidden-page');
@@ -2993,6 +3052,81 @@ async function loadAllData() {
     if (dropdown) {
         dropdown.classList.add('hidden');
     }
+}
+// تفعيل وضع الامتحان (إخفاء كل شيء)
+function enableExamMode() {
+    document.body.classList.add('exam-mode');
+    
+    // إخفاء شريط التمرير
+    document.body.style.overflow = 'hidden';
+    
+    // إخفاء أي عناصر منبثقة
+    const overlays = document.querySelectorAll('.popup.show');
+    overlays.forEach(overlay => overlay.classList.remove('show'));
+}
+
+// إلغاء وضع الامتحان (إظهار كل شيء)
+function disableExamMode() {
+    document.body.classList.remove('exam-mode');
+    document.body.style.overflow = '';
+}
+
+// فتح الامتحان في وضع منفصل
+function showStudentExam(exam) {
+    // تفعيل وضع الامتحان أولاً
+    enableExamMode();
+    
+    document.getElementById('studentExamContainer').classList.remove('hidden-page');
+    const container = document.getElementById('studentExamContent');
+    container.innerHTML = `
+        <div class="text-center p-8">
+            <i class="fas fa-user-graduate text-6xl text-indigo-600 mb-4"></i>
+            <h2 class="text-2xl font-bold mb-2">${exam.title}</h2>
+            <p class="text-indigo-600 mb-4">📚 ${exam.className || 'بدون صف'}</p>
+            <p class="text-gray-600 mb-6">الرجاء إدخال بياناتك لبدء الامتحان</p>
+            <input type="text" id="studentName" placeholder="الاسم الكامل" class="w-full max-w-md p-3 border rounded-lg mb-3 mx-auto">
+            <input type="text" id="studentNumber" placeholder="رقم الجلوس" class="w-full max-w-md p-3 border rounded-lg mb-6 mx-auto">
+            <button onclick="renderExam('${exam.id}')" class="bg-indigo-600 text-white px-6 py-2 rounded hover:bg-indigo-700 transition">
+                بدء الامتحان
+            </button>
+        </div>
+    `;
+}
+
+// إغلاق الامتحان (لا يعود للموقع الرئيسي)
+function closeStudentExam() {
+    // إخفاء الامتحان
+    document.getElementById('studentExamContainer').classList.add('hidden-page');
+    
+    // إلغاء وضع الامتحان
+    disableExamMode();
+    
+    // تنظيف الـ sessionStorage
+    sessionStorage.clear();
+    
+    // إزالة الـ hash من الرابط
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('exam')) {
+        const newUrl = window.location.pathname;
+        window.history.pushState({}, '', newUrl);
+    }
+    
+    // لا ننتقل إلى أي صفحة، نبقى في الصفحة الرئيسية
+}
+
+// عرض رسالة بعد الإرسال (بدون العودة للموقع)
+function showSubmissionMessage(message, isSuccess = true) {
+    const container = document.getElementById('studentExamContent');
+    container.innerHTML = `
+        <div class="text-center p-8">
+            <i class="fas ${isSuccess ? 'fa-check-circle text-green-500' : 'fa-times-circle text-red-500'} text-6xl mb-4"></i>
+            <h2 class="text-2xl font-bold mb-4">${isSuccess ? '✅ تم الإرسال بنجاح' : '❌ حدث خطأ'}</h2>
+            <p class="text-gray-600 mb-6">${message}</p>
+            <button onclick="closeStudentExam()" class="bg-indigo-600 text-white px-6 py-2 rounded hover:bg-indigo-700 transition">
+                إغلاق
+            </button>
+        </div>
+    `;
 }
     document.getElementById('userAvatar')?.addEventListener('click', toggleUserDropdown);
     

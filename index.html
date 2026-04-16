@@ -1560,35 +1560,7 @@ function refreshQuestionBank() {
         sessionStorage.setItem('currentExam', JSON.stringify(exam));
         showStudentExam(exam);
     }
-    async function showStudentExam(exam) {
-    // التحقق إذا كان هذا المتصفح قد أدى هذا الامتحان مسبقاً
-    const hasTaken = await hasBrowserTakenExam(exam.id);
-    
-    if (hasTaken) {
-        // إذا كان قد أدى الامتحان من قبل، اعرض شاشة "تم الإكمال"
-        showAlreadyCompletedScreen();
-        return;
-    }
-    
-    // تفعيل وضع الامتحان
-    enableExamMode();
-    
-    document.getElementById('studentExamContainer').classList.remove('hidden-page');
-    const container = document.getElementById('studentExamContent');
-    container.innerHTML = `
-        <div class="text-center p-8">
-            <i class="fas fa-user-graduate text-6xl text-indigo-600 mb-4"></i>
-            <h2 class="text-2xl font-bold mb-2">${exam.title}</h2>
-            <p class="text-indigo-600 mb-4">📚 ${exam.className || 'بدون صف'}</p>
-            <p class="text-gray-600 mb-6">الرجاء إدخال بياناتك لبدء الامتحان</p>
-            <input type="text" id="studentName" placeholder="الاسم الكامل" class="w-full max-w-md p-3 border rounded-lg mb-3 mx-auto">
-            <input type="text" id="studentNumber" placeholder="رقم الجلوس" class="w-full max-w-md p-3 border rounded-lg mb-6 mx-auto">
-            <button onclick="renderExam('${exam.id}')" class="bg-indigo-600 text-white px-6 py-2 rounded hover:bg-indigo-700 transition">
-                بدء الامتحان
-            </button>
-        </div>
-    `;
-}
+ 
     
 function renderExam(examId) {
     const exam = exams.find(e => e.id === examId);

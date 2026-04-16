@@ -1013,51 +1013,48 @@
     }
     
     function refreshExamsList() {
-        const container = document.getElementById('allExamsList');
-        
-        if (exams.length === 0) {
-            container.innerHTML = '<div class="text-center p-6 bg-white rounded-xl shadow">لا توجد امتحانات</div>';
-            return;
-        }
-        
-        const userExams = currentUser ? exams.filter(e => e.creatorId === currentUser.uid) : [];
-        
-        if (userExams.length === 0 && currentUser) {
-            container.innerHTML = '<div class="text-center p-6 bg-white rounded-xl shadow">لا توجد امتحانات. قم بإنشاء امتحان جديد</div>';
-            return;
-        }
-        
-        const examsToShow = currentUser ? userExams : exams;
-        
-        container.innerHTML = examsToShow.map(exam => `
-            <div class="exam-card">
-                <div class="flex justify-between items-start flex-wrap gap-3">
-                    <div>
-                        <h3 class="font-bold">${exam.title}</h3>
-                        <p class="text-sm text-gray-500">
-                            <span class="class-badge">📚 ${exam.className || 'بدون صف'}</span>
-                            ${exam.questions?.length || 0} سؤال | ${exam.duration || 30} دقيقة
-                        </p>
-                        <div class="link-box mt-2">
-                            <i class="fas fa-link text-gray-400 ml-1"></i> 
-                            ${window.location.origin}${window.location.pathname}?exam=${exam.id}
-                        </div>
-                    </div>
-                    <div class="flex gap-2">
-                        <button onclick="copyToClipboard('${window.location.origin}${window.location.pathname}?exam=${exam.id}')" 
-                            class="bg-indigo-600 text-white px-3 py-1 rounded text-sm hover:bg-indigo-700 transition">
-                            <i class="fas fa-copy"></i> نسخ الرابط
-                        </button>
-                        ${currentUser && currentUser.uid === exam.creatorId ? `
-                            <button onclick="deleteExam('${exam.id}')" class="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600 transition">
-                                <i class="fas fa-trash"></i> حذف
-                            </button>
-                        ` : ''}
+    const container = document.getElementById('allExamsList');
+    
+    if (!currentUser) {
+        container.innerHTML = '<div class="text-center p-6 bg-white rounded-xl shadow">الرجاء تسجيل الدخول لعرض امتحاناتك</div>';
+        return;
+    }
+    
+    // تصفية الامتحانات: فقط التي أنشأها المستخدم الحالي
+    const userExams = exams.filter(e => e.creatorId === currentUser.uid);
+    
+    if (userExams.length === 0) {
+        container.innerHTML = '<div class="text-center p-6 bg-white rounded-xl shadow">لا توجد امتحانات. قم بإنشاء امتحان جديد</div>';
+        return;
+    }
+    
+    container.innerHTML = userExams.map(exam => `
+        <div class="exam-card">
+            <div class="flex justify-between items-start flex-wrap gap-3">
+                <div>
+                    <h3 class="font-bold">${exam.title}</h3>
+                    <p class="text-sm text-gray-500">
+                        <span class="class-badge">📚 ${exam.className || 'بدون صف'}</span>
+                        ${exam.questions?.length || 0} سؤال | ${exam.duration || 30} دقيقة
+                    </p>
+                    <div class="link-box mt-2">
+                        <i class="fas fa-link text-gray-400 ml-1"></i> 
+                        ${window.location.origin}${window.location.pathname}?exam=${exam.id}
                     </div>
                 </div>
+                <div class="flex gap-2">
+                    <button onclick="copyToClipboard('${window.location.origin}${window.location.pathname}?exam=${exam.id}')" 
+                        class="bg-indigo-600 text-white px-3 py-1 rounded text-sm hover:bg-indigo-700 transition">
+                        <i class="fas fa-copy"></i> نسخ الرابط
+                    </button>
+                    <button onclick="deleteExam('${exam.id}')" class="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600 transition">
+                        <i class="fas fa-trash"></i> حذف
+                    </button>
+                </div>
             </div>
-        `).join('');
-    }
+        </div>
+    `).join('');
+}
     
     function refreshQuestionBank() {
         const container = document.getElementById('bankQuestionsList');

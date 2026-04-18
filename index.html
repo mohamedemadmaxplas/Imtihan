@@ -587,12 +587,12 @@ body.exam-mode {
                 
                 <div class="mb-4">
                     <label class="block text-gray-700 font-semibold mb-2">عنوان الامتحان</label>
-                    <input type="text" id="examTitle" placeholder="مثال: اختبار الرياضيات - الفصل الأول" class="w-full p-3 border rounded-lg" required>
+                    <input type="text" id="examTitle" placeholder="مثال: اختبار الرياضيات - " class="w-full p-3 border rounded-lg" required>
                 </div>
                 
                 <div class="mb-4">
                     <label class="block text-gray-700 font-semibold mb-2">اسم الصف الدراسي</label>
-                    <input type="text" id="examClass" placeholder="مثال: الصف الثالث الثانوي - شعبة علمي" class="w-full p-3 border rounded-lg" required>
+                    <input type="text" id="examClass" placeholder="مثال: الصف الثالث الثانوي -  " class="w-full p-3 border rounded-lg" required>
                 </div>
                 
                 <div class="grid grid-cols-2 gap-4 mb-4">
@@ -608,7 +608,24 @@ body.exam-mode {
                     </div>
                     
                 </div>
-                
+                <!-- خيار إظهار/إخفاء النتيجة -->
+<div class="mb-4">
+    <label class="block text-gray-700 font-semibold mb-2">عرض النتيجة بعد الامتحان:</label>
+    <div class="flex gap-4">
+        <label class="flex items-center gap-2 cursor-pointer">
+            <input type="radio" name="showResult" value="true" checked class="w-4 h-4 text-indigo-600">
+            <span>✅ نعم، اعرض النتيجة للطالب</span>
+        </label>
+        <label class="flex items-center gap-2 cursor-pointer">
+            <input type="radio" name="showResult" value="false" class="w-4 h-4 text-gray-600">
+            <span>❌ لا، أخفي النتيجة (يظهر رسالة فقط)</span>
+        </label>
+    </div>
+    <p class="text-xs text-gray-500 mt-2">
+        <i class="fas fa-info-circle ml-1"></i> 
+        إذا اخترت "لا"، سيظهر للطالب رسالة "تم إرسال الامتحان بنجاح" فقط بدون درجته
+    </p>
+</div>
                 <div class="mb-4">
                     <label class="block text-gray-700 font-semibold mb-2">الأسئلة</label>
                     <div id="questionsContainer" class="space-y-4 mb-4"></div>

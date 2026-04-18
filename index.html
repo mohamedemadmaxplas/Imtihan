@@ -983,10 +983,11 @@ let showResultAfterExam = true;  // افتراضي: إظهار النتيجة
 let completedExams = new Set();   // لتخزين الامتحانات التي تم أداؤها (لمنع إعادة الامتحان)
     // ==================== الخطط الافتراضية ====================
     
-    const defaultPlans = [
-        { id: "free", name: "مجاني", examsCount: 8, price: 0, features: ["8 امتحان شهرياً", "تصحيح تلقائي"] },
-        { id: "pro", name: "Pro", examsCount: 999, price: 100, features: ["امتحانات غير محدودة", "تقارير متقدمة", "دعم優先"] }
-    ];
+   // ==================== الخطط الافتراضية ====================
+const defaultPlans = [
+    { id: "free", name: "مجاني", examsCount: 8, price: 0, features: ["8 امتحان شهرياً", "تصحيح تلقائي"] },
+    { id: "pro", name: "Pro", examsCount: 999, price: 100, features: ["امتحانات غير محدودة", "تقارير متقدمة", "دعم優先"] }
+];
     
     // ==================== دوال مساعدة ====================
     
@@ -1306,44 +1307,66 @@ function refreshAccountPage() {
     `).join('');
 }
     
-    async function refreshExamLimit() {
+   async function refreshExamLimit() {
     if (!currentUser) return;
     
     try {
+        // التأكد من تحميل الخطط
         if (plans.length === 0) {
             await loadPlans();
         }
         
-        const plan = plans.find(p => p.id === currentUser.plan) || plans[0];
-        if (!plan) return;
-        
-        const now = new Date();
-        const startMonth = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
-        const used = results.filter(r => r.userId === currentUser.uid && new Date(r.date).getTime() >= startMonth).length;
-        const remaining = Math.max(0, plan.examsCount - used);
-        
-        const userSub = subscriptions.find(s => s.userId === currentUser.uid);
-        let expiryText = 'غير محدد';
-        if (userSub && userSub.expiryDate) {
-            expiryText = new Date(userSub.expiryDate).toLocaleDateString('ar-EG');
+        // الحصول على خطة المستخدم
+        let userPlan = plans.find(p => p.id === currentUser.plan);
+        if (!userPlan) {
+            userPlan = plans.find(p => p.id === 'free') || defaultPlans[0];
         }
         
+        const maxExams = userPlan.examsCount || 8;
+        
+        // حساب عدد الامتحانات التي أنشأها المستخدم هذا الشهر
+        const now = new Date();
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+        
+        // الامتحانات التي أنشأها المستخدم
+        const userExams = exams.filter(e => e.creatorId === currentUser.uid);
+        
+        // النتائج التي حصل عليها المستخدم (الطلاب الذين امتحنوا)
+        const userResultsThisMonth = results.filter(r => 
+            r.userId === currentUser.uid && new Date(r.date).getTime() >= startOfMonth
+        );
+        
+        // عدد الامتحانات المستخدمة = عدد الامتحانات التي أنشأها + عدد الطلاب الذين امتحنوا
+        const usedExams = userExams.length + userResultsThisMonth.length;
+        const remaining = Math.max(0, maxExams - usedExams);
+        
+        // تحديث الواجهة
         const warning = document.getElementById('examLimitWarning');
         const limitMsg = document.getElementById('limitMsg');
         const accountRemaining = document.getElementById('accountRemaining');
-        const accountExpiry = document.getElementById('accountExpiry');
         
         if (remaining <= 0 && warning) {
             warning.classList.remove('hidden');
-            if (limitMsg) limitMsg.innerText = `⚠️ لقد استنفذت حدك الشهري (${plan.examsCount} امتحان). قم بالترقية لإنشاء المزيد.`;
+            if (limitMsg) {
+                limitMsg.innerText = `⚠️ لقد استنفذت حدك الشهري (${maxExams} امتحان). قم بالترقية لإنشاء المزيد.`;
+            }
         } else if (warning) {
             warning.classList.add('hidden');
         }
         
-        if (accountRemaining) accountRemaining.innerText = `الامتحانات المتبقية: ${remaining} من ${plan.examsCount}`;
-        if (accountExpiry) accountExpiry.innerText = `تاريخ التجديد: ${expiryText}`;
+        if (accountRemaining) {
+            accountRemaining.innerText = `الامتحانات المتبقية: ${remaining} من ${maxExams}`;
+        }
+        
+        console.log(`الخطة: ${userPlan.name}, الحد الأقصى: ${maxExams}, المستخدم: ${usedExams}, المتبقي: ${remaining}`);
+        
     } catch (error) {
         console.error('خطأ في تحديث حد الامتحانات:', error);
+        // في حالة الخطأ، عرض القيم الافتراضية
+        const accountRemaining = document.getElementById('accountRemaining');
+        if (accountRemaining) {
+            accountRemaining.innerText = `الامتحانات المتبقية: 8 من 8`;
+        }
     }
 }
     
@@ -1578,16 +1601,24 @@ function refreshAccountPage() {
     
     // ==================== دوال الامتحانات للطلاب ====================
     
-    function startExam(examId) {
-        const exam = exams.find(e => e.id === examId);
-        if (!exam) return;
-        if (exam.isActive === false) {
-            showToast('الامتحان متوقف حالياً');
-            return;
-        }
-        sessionStorage.setItem('currentExam', JSON.stringify(exam));
-        showStudentExam(exam);
+   function startExam(examId) {
+    const exam = exams.find(e => e.id === examId);
+    if (!exam) return;
+    
+    if (exam.isActive === false) {
+        showToast('الامتحان متوقف حالياً');
+        return;
     }
+    
+    // ✅ التحقق إذا كان هذا المتصفح قد أدى هذا الامتحان مسبقاً
+    if (hasTakenExam(examId)) {
+        showAlreadyTakenScreen(exam.title);
+        return;
+    }
+    
+    sessionStorage.setItem('currentExam', JSON.stringify(exam));
+    showStudentExam(exam);
+}
     function showStudentExam(exam) {
     // إضافة تأثير الضبابية على الصفحة الرئيسية
     const mainContent = document.querySelector('.container');
@@ -1609,7 +1640,7 @@ function refreshAccountPage() {
             <p class="text-indigo-600 mb-4">📚 ${exam.className || 'بدون صف'}</p>
             <p class="text-gray-600 mb-6">الرجاء إدخال بياناتك لبدء الامتحان</p>
             <input type="text" id="studentName" placeholder="الاسم الكامل" class="w-full max-w-md p-3 border rounded-lg mb-3 mx-auto">
-            <input type="text" id="studentNumber" placeholder="رقم الجلوس" class="w-full max-w-md p-3 border rounded-lg mb-6 mx-auto">
+            <input type="text" id="studentNumber" placeholder="كود الطالب" class="w-full max-w-md p-3 border rounded-lg mb-6 mx-auto">
             <button onclick="renderExam('${exam.id}')" class="bg-indigo-600 text-white px-6 py-2 rounded hover:bg-indigo-700 transition">
                 بدء الامتحان
             </button>
@@ -1707,10 +1738,9 @@ async function submitStudentExam(event, examId) {
     const exam = exams.find(e => e.id === examId);
     if (!exam) return;
     
-    // التحقق إذا كان الطالب قد أدى هذا الامتحان مسبقاً
-    const studentKey = `exam_${examId}_completed`;
-    if (sessionStorage.getItem(studentKey) === 'true') {
-        showCompletionMessage();
+    // ✅ التحقق مرة أخرى قبل الإرسال
+    if (hasTakenExam(examId)) {
+        showAlreadyTakenScreen(exam.title);
         return;
     }
     
@@ -1752,19 +1782,32 @@ async function submitStudentExam(event, examId) {
         grade: grade,
         answers: answers,
         userId: exam.creatorId,
+        browserFingerprint: getBrowserFingerprint(), // ✅ حفظ بصمة المتصفح
         date: new Date().toISOString()
     };
     
     await db.ref(`results/${result.id}`).set(result);
     results.push(result);
     
-    // حفظ أن هذا الطالب أدى هذا الامتحان
-    sessionStorage.setItem(studentKey, 'true');
+    // ✅ تسجيل أن هذا المتصفح أدى هذا الامتحان
+    markExamAsTaken(examId);
     
-    // عرض رسالة الإكمال (بدون العودة للموقع)
+    // عرض رسالة النجاح
     showCompletionMessage();
     
     if (currentUser && currentUser.uid === exam.creatorId) refreshHome();
+}
+// دالة لإعادة تعيين بصمة المتصفح (للتجربة - يمكن إزالتها في الإنتاج)
+function resetBrowserFingerprint() {
+    localStorage.removeItem('browser_fingerprint');
+    // حذف جميع محاولات الامتحانات
+    for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('exam_attempt_')) {
+            localStorage.removeItem(key);
+        }
+    }
+    showToast('✅ تم إعادة تعيين بصمة المتصفح');
 }
     
 function closeStudentExam() {
@@ -2771,7 +2814,7 @@ function resetToNormalMode() {
                             <div class="flex items-center gap-2">
                                 <span class="font-bold text-gray-500">${index + 1}.</span>
                                 <span class="font-semibold">${r.studentName}</span>
-                                <span class="text-xs text-gray-400">(رقم الجلوس: ${r.studentNumber || '-'})</span>
+                                <span class="text-xs text-gray-400">(كود الطالب: ${r.studentNumber || '-'})</span>
                             </div>
                             <div class="flex items-center gap-3">
                                 <span class="text-sm">
@@ -2818,7 +2861,7 @@ function resetToNormalMode() {
                             <tr style="background-color: #4f46e5; color: white;">
                                 <th style="padding: 10px; border: 1px solid #ddd;">#</th>
                                 <th style="padding: 10px; border: 1px solid #ddd;">اسم الطالب</th>
-                                <th style="padding: 10px; border: 1px solid #ddd;">رقم الجلوس</th>
+                                <th style="padding: 10px; border: 1px solid #ddd;">كود الطالب</th>
                                 <th style="padding: 10px; border: 1px solid #ddd;">الدرجة</th>
                                 <th style="padding: 10px; border: 1px solid #ddd;">النسبة</th>
                                 <th style="padding: 10px; border: 1px solid #ddd;">التقدير</th>
@@ -2911,7 +2954,7 @@ function resetToNormalMode() {
         if (studentResults.length === 0) return;
         
         const result = studentResults[0];
-        document.getElementById('detailsStudentName').innerHTML = `${studentName} <span class="text-sm text-gray-500">(رقم الجلوس: ${result.studentNumber || '-'})</span>`;
+        document.getElementById('detailsStudentName').innerHTML = `${studentName} <span class="text-sm text-gray-500">(كود الطالب: ${result.studentNumber || '-'})</span>`;
         
         let wrongAnswersHtml = '';
         if (result.answers) {
@@ -3006,6 +3049,7 @@ async function loadResults() {
     }
     
     async function loadPlans() {
+    try {
         const s = await db.ref('plans').once('value');
         if (s.val()) {
             plans = Object.values(s.val());
@@ -3016,12 +3060,22 @@ async function loadResults() {
             }
         }
         refreshPlansPage();
+        refreshExamLimit(); // تحديث الحد بعد تحميل الخطط
+    } catch (error) {
+        console.error('خطأ في تحميل الخطط:', error);
+        plans = defaultPlans;
+        refreshExamLimit();
     }
+}
     
-    async function loadSubscriptions() {
+   async function loadSubscriptions() {
     try {
         const s = await db.ref('subscriptions').once('value');
-        subscriptions = s.val() ? Object.values(s.val()) : [];
+        if (s.val()) {
+            subscriptions = Object.values(s.val());
+        } else {
+            subscriptions = [];
+        }
     } catch (error) {
         console.error('خطأ في تحميل الاشتراكات:', error);
         subscriptions = [];
@@ -3043,7 +3097,124 @@ async function loadAllData() {
         // لا تظهر رسالة خطأ للمستخدم
     }
 }
+    // حساب عدد الامتحانات المستخدمة هذا الشهر
+function getMonthlyExamUsage() {
+    if (!currentUser) return 0;
     
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+    
+    // الامتحانات التي أنشأها المستخدم هذا الشهر
+    const userExams = exams.filter(e => 
+        e.creatorId === currentUser.uid && 
+        new Date(e.createdAt).getTime() >= startOfMonth
+    );
+    
+    // النتائج التي حصل عليها المستخدم هذا الشهر
+    const userResults = results.filter(r => 
+        r.userId === currentUser.uid && 
+        new Date(r.date).getTime() >= startOfMonth
+    );
+    
+    return userExams.length + userResults.length;
+}
+// ==================== نظام منع إعادة الامتحان ====================
+
+// الحصول على بصمة فريدة للمتصفح
+function getBrowserFingerprint() {
+    let fingerprint = localStorage.getItem('browser_fingerprint');
+    
+    if (!fingerprint) {
+        // إنشاء بصمة فريدة بناءً على معلومات المتصفح
+        const screenInfo = `${screen.width}x${screen.height}x${screen.colorDepth}`;
+        const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        const language = navigator.language;
+        const platform = navigator.platform;
+        const userAgent = navigator.userAgent.substring(0, 100);
+        
+        // إنشاء معرف فريد
+        const fingerprintData = `${screenInfo}|${timezone}|${language}|${platform}|${userAgent}`;
+        
+        // تشفير بسيط
+        let hash = 0;
+        for (let i = 0; i < fingerprintData.length; i++) {
+            hash = ((hash << 5) - hash) + fingerprintData.charCodeAt(i);
+            hash = hash & hash;
+        }
+        
+        fingerprint = 'BROWSER_' + Math.abs(hash) + '_' + Date.now().toString(36);
+        localStorage.setItem('browser_fingerprint', fingerprint);
+    }
+    
+    return fingerprint;
+}
+
+// الحصول على مفتاح فريد للامتحان (معرف المتصفح + معرف الامتحان)
+function getExamAttemptKey(examId) {
+    const browserId = getBrowserFingerprint();
+    return `exam_attempt_${examId}_${browserId}`;
+}
+
+// التحقق إذا كان هذا المتصفح قد أدى هذا الامتحان مسبقاً
+function hasTakenExam(examId) {
+    const examKey = getExamAttemptKey(examId);
+    return localStorage.getItem(examKey) === 'true';
+}
+
+// تسجيل أن هذا المتصفح أدى هذا الامتحان
+function markExamAsTaken(examId) {
+    const examKey = getExamAttemptKey(examId);
+    localStorage.setItem(examKey, 'true');
+}
+
+// عرض شاشة "تم إكمال الامتحان مسبقاً"
+function showAlreadyTakenScreen(examTitle) {
+    // إخفاء كل محتوى الموقع الأصلي
+    const mainContainer = document.querySelector('.container');
+    const sidebar = document.getElementById('sidebar');
+    const header = document.querySelector('nav');
+    const footer = document.querySelector('.footer');
+    
+    if (mainContainer) mainContainer.style.display = 'none';
+    if (sidebar) sidebar.style.display = 'none';
+    if (header) header.style.display = 'none';
+    if (footer) footer.style.display = 'none';
+    
+    // إخفاء الامتحان إذا كان مفتوحاً
+    const examContainer = document.getElementById('studentExamContainer');
+    if (examContainer) examContainer.classList.add('hidden-page');
+    
+    // إنشاء شاشة "تم الإكمال مسبقاً"
+    const messageDiv = document.createElement('div');
+    messageDiv.id = 'alreadyTakenScreen';
+    messageDiv.className = 'fixed inset-0 bg-gradient-to-br from-amber-900 to-red-900 flex items-center justify-center z-50';
+    messageDiv.innerHTML = `
+        <div class="text-center p-8 max-w-md mx-auto">
+            <div class="w-24 h-24 mx-auto bg-amber-500 rounded-full flex items-center justify-center mb-6 animate-bounce">
+                <i class="fas fa-exclamation-triangle text-white text-5xl"></i>
+            </div>
+            <h2 class="text-3xl font-bold text-white mb-4">⛔ لا يمكن إعادة الامتحان!</h2>
+            <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-6 mb-6">
+                <p class="text-white text-lg mb-2">📝 ${examTitle}</p>
+                <p class="text-amber-200 text-md mb-2">لقد قمت بالفعل بإكمال هذا الامتحان من هذا المتصفح</p>
+                <p class="text-white/70 text-sm mt-4">⚠️ يرجى انتظار إجابتك لدى المعلم</p>
+            </div>
+            <div class="text-white/80 text-sm">
+                <i class="fas fa-envelope ml-1"></i> يمكنك التواصل مع المعلم لمتابعة نتيجتك
+            </div>
+            <button onclick="location.reload()" class="mt-6 bg-white text-amber-600 px-6 py-2 rounded-lg font-bold hover:bg-gray-100 transition">
+                تحديث الصفحة
+            </button>
+        </div>
+    `;
+    
+    // إزالة أي شاشة سابقة
+    const oldScreen = document.getElementById('alreadyTakenScreen');
+    if (oldScreen) oldScreen.remove();
+    
+    document.body.appendChild(messageDiv);
+    document.body.style.overflow = 'hidden';
+}
     // ==================== البحث ====================
     
     document.getElementById('searchBtn')?.addEventListener('click', () => {
@@ -3196,7 +3367,7 @@ function showStudentExam(exam) {
             <p class="text-indigo-600 mb-4">📚 ${exam.className || 'بدون صف'}</p>
             <p class="text-gray-600 mb-6">الرجاء إدخال بياناتك لبدء الامتحان</p>
             <input type="text" id="studentName" placeholder="الاسم الكامل" class="w-full max-w-md p-3 border rounded-lg mb-3 mx-auto">
-            <input type="text" id="studentNumber" placeholder="رقم الجلوس" class="w-full max-w-md p-3 border rounded-lg mb-6 mx-auto">
+            <input type="text" id="studentNumber" placeholder="كود الطالب" class="w-full max-w-md p-3 border rounded-lg mb-6 mx-auto">
             <button onclick="renderExam('${exam.id}')" class="bg-indigo-600 text-white px-6 py-2 rounded hover:bg-indigo-700 transition">
                 بدء الامتحان
             </button>

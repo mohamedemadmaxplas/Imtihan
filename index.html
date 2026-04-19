@@ -3395,7 +3395,25 @@ function closeStudentExam() {
     
     // لا ننتقل إلى أي صفحة، نبقى في الصفحة الرئيسية
 }
+// تسجيل عدد زوار الموقع
+function trackVisitor() {
+    const visitorsRef = db.ref('visitors');
+    visitorsRef.transaction(currentCount => {
+        return (currentCount || 0) + 1;
+    });
+    
+    // تسجيل الزوار الفريدين باستخدام sessionStorage
+    if (!sessionStorage.getItem('visited')) {
+        const uniqueVisitorsRef = db.ref('uniqueVisitors');
+        uniqueVisitorsRef.transaction(currentCount => {
+            return (currentCount || 0) + 1;
+        });
+        sessionStorage.setItem('visited', 'true');
+    }
+}
 
+// استدعاء الدالة عند تحميل الصفحة
+trackVisitor();
 // عرض رسالة بعد الإرسال (بدون العودة للموقع)
 function showSubmissionMessage(message, isSuccess = true) {
     const container = document.getElementById('studentExamContent');

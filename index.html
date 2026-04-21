@@ -1269,7 +1269,13 @@ function refreshAccountPage() {
                 <p>ليس لديك حساب؟ <a onclick="showRegisterPopup()" class="text-indigo-600 cursor-pointer hover:underline">إنشاء حساب</a></p>
             </div>
         `;
-        
+        // داخل دالة refreshAccountPage، بعد سطر container.innerHTML = ...
+if (currentUser) {
+    // ... بعد إنشاء الـ HTML
+    setTimeout(() => {
+        loadUserSubscription();
+    }, 100);
+}
         // ✅ منع التهيئة المتكررة لـ Google Sign-In مع الـ Client ID الجديد
         if (typeof google !== 'undefined' && !window.googleInitialized) {
             window.googleInitialized = true;
@@ -1285,15 +1291,22 @@ function refreshAccountPage() {
         }
     }
 }
-    // التأكد من تحميل الخطط والاشتراكات
+   // التأكد من تحميل الخطط والاشتراكات
 async function loadUserSubscription() {
     if (!currentUser) return;
+    
+    // التحقق من وجود العنصر قبل استخدامه
+    const accountExpiryElement = document.getElementById('accountExpiry');
+    if (!accountExpiryElement) {
+        console.log('عنصر accountExpiry غير موجود بعد');
+        return;
+    }
     
     try {
         const subSnapshot = await db.ref(`subscriptions/${currentUser.uid}`).once('value');
         if (subSnapshot.exists()) {
             const sub = subSnapshot.val();
-            document.getElementById('accountExpiry').innerText = `تاريخ التجديد: ${new Date(sub.expiryDate).toLocaleDateString('ar-EG')}`;
+            accountExpiryElement.innerText = `تاريخ التجديد: ${new Date(sub.expiryDate).toLocaleDateString('ar-EG')}`;
         } else {
             // إنشاء اشتراك افتراضي للمستخدم الجديد
             const defaultSub = {
@@ -1307,11 +1320,11 @@ async function loadUserSubscription() {
                 renewedCount: 0
             };
             await db.ref(`subscriptions/${currentUser.uid}`).set(defaultSub);
-            document.getElementById('accountExpiry').innerText = `تاريخ التجديد: ${new Date(defaultSub.expiryDate).toLocaleDateString('ar-EG')}`;
+            accountExpiryElement.innerText = `تاريخ التجديد: ${new Date(defaultSub.expiryDate).toLocaleDateString('ar-EG')}`;
         }
     } catch (error) {
         console.error('خطأ في تحميل الاشتراك:', error);
-        document.getElementById('accountExpiry').innerText = `تاريخ التجديد: غير محدد`;
+        accountExpiryElement.innerText = `تاريخ التجديد: غير محدد`;
     }
 }
     function refreshPlansPage() {

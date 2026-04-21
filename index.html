@@ -1270,19 +1270,19 @@ function refreshAccountPage() {
             </div>
         `;
         
-        // ✅ منع التهيئة المتكررة لـ Google Sign-In
-        if (typeof google !== 'undefined' && !window.googleInitialized) {
-            window.googleInitialized = true;
-            google.accounts.id.initialize({
-                client_id: "501314955450-r7tcdfbocl0vpa6f9s0clac43215tmuf.apps.googleusercontent.com",
-                callback: handleGoogleLogin
-            });
-            google.accounts.id.renderButton(document.getElementById("googleBtn"), {
-                theme: "outline",
-                size: "large",
-                width: "100%"
-            });
-        }
+        // منع التهيئة المتكررة لـ Google Sign-In
+if (typeof google !== 'undefined' && !window.googleInitialized) {
+    window.googleInitialized = true;
+    google.accounts.id.initialize({
+        client_id: "764038463015-7dq76h1otro36g79aa9ndscro5efs24q.apps.googleusercontent.com",
+        callback: handleGoogleLogin
+    });
+    google.accounts.id.renderButton(document.getElementById("googleBtn"), {
+        theme: "outline",
+        size: "large",
+        width: "100%"
+    });
+}
     }
 }
     

@@ -1285,7 +1285,35 @@ function refreshAccountPage() {
         }
     }
 }
+    // التأكد من تحميل الخطط والاشتراكات
+async function loadUserSubscription() {
+    if (!currentUser) return;
     
+    try {
+        const subSnapshot = await db.ref(`subscriptions/${currentUser.uid}`).once('value');
+        if (subSnapshot.exists()) {
+            const sub = subSnapshot.val();
+            document.getElementById('accountExpiry').innerText = `تاريخ التجديد: ${new Date(sub.expiryDate).toLocaleDateString('ar-EG')}`;
+        } else {
+            // إنشاء اشتراك افتراضي للمستخدم الجديد
+            const defaultSub = {
+                userId: currentUser.uid,
+                planId: 'free',
+                planName: 'مجاني',
+                examsLimit: 8,
+                startDate: new Date().toISOString(),
+                expiryDate: new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString(),
+                isActive: true,
+                renewedCount: 0
+            };
+            await db.ref(`subscriptions/${currentUser.uid}`).set(defaultSub);
+            document.getElementById('accountExpiry').innerText = `تاريخ التجديد: ${new Date(defaultSub.expiryDate).toLocaleDateString('ar-EG')}`;
+        }
+    } catch (error) {
+        console.error('خطأ في تحميل الاشتراك:', error);
+        document.getElementById('accountExpiry').innerText = `تاريخ التجديد: غير محدد`;
+    }
+}
     function refreshPlansPage() {
     const container = document.getElementById('plansList');
     // الباقات تظهر للجميع بغض النظر عن تسجيل الدخول
@@ -3095,6 +3123,7 @@ async function loadAllData() {
         await loadResults();
         await loadPlans();
         await loadSubscriptions();
+        await loadUserSubscription();
         if (currentUser) {
             await loadQuestions();
             refreshExamLimit();

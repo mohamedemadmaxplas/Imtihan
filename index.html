@@ -3477,6 +3477,76 @@ function showSubmissionMessage(message, isSuccess = true) {
         </div>
     `;
 }
+// ==================== استقبال بيانات تسجيل الدخول من تكنو شرك ====================
+(async function checkAutoLogin() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('token');
+    
+    if (!token) return;
+    
+    try {
+        // فك تشفير البيانات
+        const userData = JSON.parse(atob(token));
+        
+        // التحقق من صلاحية الرمز
+        if (userData.expires < Date.now()) {
+            showToast('⚠️ انتهت صلاحية رابط تسجيل الدخول');
+            return;
+        }
+        
+        // التحقق من وجود المستخدم في قاعدة البيانات
+        const userSnapshot = await db.ref(`users/${userData.uid}`).once('value');
+        
+        if (!userSnapshot.exists()) {
+            // إذا لم يكن موجوداً، قم بإنشائه
+            const newUser = {
+                name: userData.name,
+                username: userData.username,
+                email: userData.email,
+                plan: userData.plan || 'free',
+                createdAt: new Date().toISOString()
+            };
+            await db.ref(`users/${userData.uid}`).set(newUser);
+        }
+        
+        // محاولة تسجيل الدخول إلى Firebase Authentication
+        try {
+            await auth.signInWithEmailAndPassword(userData.email, userData.password);
+        } catch (authError) {
+            if (authError.code === 'auth/user-not-found') {
+                await auth.createUserWithEmailAndPassword(userData.email, userData.password);
+            }
+        }
+        
+        // تعيين المستخدم الحالي
+        const userVal = userSnapshot.val() || {};
+        currentUser = {
+            uid: userData.uid,
+            name: userData.name,
+            username: userData.username,
+            email: userData.email,
+            plan: userData.plan || 'free',
+            ...userVal
+        };
+        
+        // تحديث واجهة المستخدم
+        updateUserUI();
+        showToast(`✅ مرحباً ${currentUser.name || currentUser.username}`);
+        
+        // تحميل البيانات
+        await loadAllData();
+        
+        // تنظيف الرابط من التوكين
+        window.history.replaceState({}, document.title, window.location.pathname);
+        
+        // الانتقال إلى الصفحة الرئيسية
+        navigateTo('home');
+        
+    } catch (error) {
+        console.error('خطأ في معالجة تسجيل الدخول:', error);
+        showToast('حدث خطأ في تسجيل الدخول التلقائي');
+    }
+})();
     document.getElementById('userAvatar')?.addEventListener('click', toggleUserDropdown);
     
 </script>

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Redirecting...</title>
+    <script type="text/javascript">
+      // هذا المتغير مهم جداً لمشروعك!
+      // قيمته تحدد عدد أجزاء المسار التي سيتم الاحتفاظ بها.
+      // اتركه كما هو (1) طالما موقعك على: username.github.io/nabd-wabsaite
+      var pathSegmentsToKeep = 1;
+
+      (function() {
+        var l = window.location;
+        var pathname = l.pathname;
+        var segments = pathname.split('/').filter(function(v) { return v !== ''; });
+        var newPathname = '';
+        if (segments.length > pathSegmentsToKeep) {
+          newPathname = '/' + segments.slice(pathSegmentsToKeep).join('/');
+        }
+        var redirectUrl = l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
+                          '/' + segments.slice(0, pathSegmentsToKeep).join('/') +
+                          '/?redirect=' + encodeURIComponent(newPathname + l.search + l.hash);
+        l.replace(redirectUrl);
+      })();
+    </script>
+  </head>
+  <body>
+    <p>جاري التحميل، يرجى الانتظار...</p>
+  </body>
+</html>

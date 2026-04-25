@@ -1011,10 +1011,77 @@ let showResultAfterExam = true;  // افتراضي: إظهار النتيجة
 let completedExams = new Set();   // لتخزين الامتحانات التي تم أداؤها (لمنع إعادة الامتحان)
     // ==================== الخطط الافتراضية ====================
     
-   // ==================== الخطط الافتراضية ====================
-const defaultPlans = [
-    { id: "free", name: "مجاني", examsCount: 8, price: 0, features: ["8 امتحان شهرياً", "تصحيح تلقائي"] },
-    { id: "pro", name: "Pro", examsCount: 999, price: 100, features: ["امتحانات غير محدودة", "تقارير متقدمة", "دعم優先"] }
+   const defaultPlans = [
+    {
+        id: "free",
+        name: "📖 مجاني",
+        examsCount: 5,
+        price: 0,
+        features: [
+            "✅ 5 امتحانات شهرياً",
+            "✅ تصحيح تلقائي",
+            "✅ تقارير أساسية",
+            "✅ رابط امتحان غير محدود"
+        ]
+    },
+    {
+        id: "basic",
+        name: "🥉 أساسي",
+        examsCount: 30,
+        price: 50,
+        features: [
+            "✅ 30 امتحان شهرياً",
+            "✅ تصحيح تلقائي",
+            "✅ تقارير متقدمة",
+            "✅ تحليلات بسيطة",
+            "✅ دعم عبر الواتساب"
+        ]
+    },
+    {
+        id: "pro",
+        name: "🥈 Pro",
+        examsCount: 100,
+        price: 120,
+        features: [
+            "✅ 100 امتحان شهرياً",
+            "✅ تصحيح تلقائي متقدم",
+            "✅ تقارير وتحليلات كاملة",
+            "✅ بنك أسئلة غير محدود",
+            "✅ إدارة عدة معلمين",
+            "✅ دعم أولوية 24/7"
+        ]
+    },
+    {
+        id: "ultimate",
+        name: "🥇 Ultimate",
+        examsCount: 999,
+        price: 250,
+        features: [
+            "✅ امتحانات غير محدودة",
+            "✅ جميع المميزات السابقة",
+            "✅ تقارير احترافية PDF",
+            "✅ استيراد/تصدير الأسئلة",
+            "✅ إدارة 10 معلمين",
+            "✅ دعم VIP 24/7",
+            "✅ تدريب مخصص للمعلمين"
+        ]
+    },
+    {
+        id: "school",
+        name: "🏫 مدرسة كاملة",
+        examsCount: 9999,
+        price: 500,
+        features: [
+            "✅ امتحانات غير محدودة لكل المعلمين",
+            "✅ جميع مميزات Ultimate",
+            "✅ إدارة 50+ معلم",
+            "✅ 500+ طالب",
+            "✅ لوحة تحكم خاصة بالمدرسة",
+            "✅ تقارير متقدمة لكل الفصول",
+            "✅ دعم مخصص للمدرسة",
+            "✅ تدريب مجاني للمعلمين"
+        ]
+    }
 ];
     
     // ==================== دوال مساعدة ====================
@@ -1350,9 +1417,8 @@ async function loadUserSubscription() {
         accountExpiryElement.innerText = `تاريخ التجديد: غير محدد`;
     }
 }
-    function refreshPlansPage() {
+   function refreshPlansPage() {
     const container = document.getElementById('plansList');
-    // الباقات تظهر للجميع بغض النظر عن تسجيل الدخول
     const availablePlans = plans.filter(p => p.id !== 'free');
     
     if (availablePlans.length === 0) {
@@ -1360,23 +1426,94 @@ async function loadUserSubscription() {
         return;
     }
     
-    container.innerHTML = availablePlans.map(plan => `
-        <div class="bg-white rounded-xl shadow-lg p-6 text-center border-2 hover:border-indigo-400 transition">
-            <div class="w-16 h-16 mx-auto bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center mb-4">
-                <i class="fas fa-gem text-white text-2xl"></i>
+    // ترتيب الباقات حسب السعر
+    const sortedPlans = [...availablePlans].sort((a, b) => a.price - b.price);
+    
+    container.innerHTML = sortedPlans.map(plan => {
+        // تحديد لون الباقة
+        let bgColor = "";
+        let btnColor = "";
+        let badgeColor = "";
+        
+        if (plan.id === 'basic') {
+            bgColor = "from-blue-500 to-blue-600";
+            btnColor = "bg-blue-600 hover:bg-blue-700";
+            badgeColor = "bg-blue-100 text-blue-800";
+        } else if (plan.id === 'pro') {
+            bgColor = "from-purple-500 to-purple-600";
+            btnColor = "bg-purple-600 hover:bg-purple-700";
+            badgeColor = "bg-purple-100 text-purple-800";
+        } else if (plan.id === 'ultimate') {
+            bgColor = "from-amber-500 to-amber-600";
+            btnColor = "bg-amber-600 hover:bg-amber-700";
+            badgeColor = "bg-amber-100 text-amber-800";
+        } else if (plan.id === 'school') {
+            bgColor = "from-emerald-500 to-emerald-600";
+            btnColor = "bg-emerald-600 hover:bg-emerald-700";
+            badgeColor = "bg-emerald-100 text-emerald-800";
+        } else {
+            bgColor = "from-indigo-500 to-indigo-600";
+            btnColor = "bg-indigo-600 hover:bg-indigo-700";
+            badgeColor = "bg-gray-100 text-gray-800";
+        }
+        
+        // حساب السعر بعد الخصم (إذا كان موجود)
+        const originalPrice = plan.price;
+        let discountedPrice = originalPrice;
+        let discountBadge = "";
+        
+        if (plan.id === 'basic') {
+            discountedPrice = Math.round(originalPrice * 0.8);
+            discountBadge = `<span class="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full">-20%</span>`;
+        } else if (plan.id === 'pro') {
+            discountedPrice = Math.round(originalPrice * 0.7);
+            discountBadge = `<span class="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full">-30%</span>`;
+        } else if (plan.id === 'ultimate') {
+            discountedPrice = Math.round(originalPrice * 0.6);
+            discountBadge = `<span class="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full">-40%</span>`;
+        } else if (plan.id === 'school') {
+            discountedPrice = Math.round(originalPrice * 0.5);
+            discountBadge = `<span class="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full">-50%</span>`;
+        }
+        
+        const hasDiscount = discountedPrice < originalPrice;
+        
+        return `
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden border-2 hover:scale-105 transition-all duration-300 relative">
+                ${discountBadge}
+                <div class="bg-gradient-to-r ${bgColor} p-4 text-center text-white">
+                    <div class="text-4xl mb-2">
+                        ${plan.id === 'basic' ? '🥉' : plan.id === 'pro' ? '🥈' : plan.id === 'ultimate' ? '🥇' : '🏫'}
+                    </div>
+                    <h3 class="text-2xl font-bold">${plan.name}</h3>
+                    <div class="flex items-center justify-center gap-2 mt-2">
+                        ${hasDiscount ? `<span class="text-sm line-through opacity-70">${originalPrice} ج</span>` : ''}
+                        <span class="text-3xl font-bold">${hasDiscount ? discountedPrice : originalPrice} ج</span>
+                        <span class="text-sm">/ شهرياً</span>
+                    </div>
+                    <div class="text-xs mt-1 opacity-80">${plan.examsCount} امتحان شهرياً</div>
+                </div>
+                <div class="p-4">
+                    <ul class="space-y-2 text-sm">
+                        ${plan.features.map(f => `
+                            <li class="flex items-center gap-2">
+                                <i class="fas fa-check-circle text-green-500 text-xs"></i>
+                                <span>${f}</span>
+                            </li>
+                        `).join('')}
+                    </ul>
+                    <button onclick="requestUpgrade('${plan.id}')" class="mt-4 w-full ${btnColor} text-white py-2 rounded-lg transition font-bold">
+                        <i class="fab fa-whatsapp ml-1"></i> اطلب الترقية
+                    </button>
+                    <p class="text-center text-xs text-gray-400 mt-3">
+                        <i class="fas fa-shield-alt ml-1"></i> دفع آمن
+                    </p>
+                </div>
             </div>
-            <h3 class="text-2xl font-bold text-indigo-600">${plan.name}</h3>
-            <p class="text-3xl font-bold my-2">${plan.price} ج</p>
-            <p>${plan.examsCount} امتحان شهرياً</p>
-            <ul class="text-sm text-gray-500 mt-3">
-                ${plan.features.map(f => `<li><i class="fas fa-check text-green-500 ml-1"></i> ${f}</li>`).join('')}
-            </ul>
-            <button onclick="requestUpgrade('${plan.id}')" class="mt-4 bg-amber-500 text-white px-4 py-2 rounded-lg hover:bg-amber-600 transition">
-                <i class="fab fa-whatsapp ml-1"></i> اطلب الترقية
-            </button>
-        </div>
-    `).join('');
+        `;
+    }).join('');
 }
+
     
    async function refreshExamLimit() {
     if (!currentUser) return;

@@ -945,7 +945,30 @@ body.exam-mode {
     <p>📞 01144100018</p>
     <p class="text-xs mt-2">© 2026 Imtihan - منصة الامتحانات الإلكترونية</p>
 </footer>
-
+<!-- نافذة تعديل الباقة -->
+<div id="editPlanPopup" class="popup">
+    <div class="popup-content">
+        <h3 class="text-xl font-bold mb-4"><i class="fas fa-edit ml-2"></i> تعديل الباقة</h3>
+        <input type="hidden" id="editPlanId">
+        
+        <input type="text" id="editPlanName" placeholder="اسم الباقة" class="w-full p-2 border rounded mb-3">
+        
+        <input type="number" id="editPlanExams" placeholder="عدد الامتحانات" class="w-full p-2 border rounded mb-3">
+        
+        <input type="number" id="editPlanPrice" placeholder="السعر" class="w-full p-2 border rounded mb-3">
+        
+        <textarea id="editPlanFeatures" placeholder="المميزات (كل سطر ميزة)" rows="3" class="w-full p-2 border rounded mb-3"></textarea>
+        
+        <div class="flex gap-3">
+            <button onclick="savePlanEdit()" class="flex-1 bg-indigo-600 text-white py-2 rounded hover:bg-indigo-700 transition">
+                <i class="fas fa-save ml-1"></i> حفظ التعديلات
+            </button>
+            <button onclick="closeEditPlanPopup()" class="flex-1 bg-gray-300 py-2 rounded hover:bg-gray-400 transition">
+                إلغاء
+            </button>
+        </div>
+    </div>
+</div>
 <!-- ==================== جافا سكريبت ==================== -->
 
 <script>
@@ -2497,29 +2520,113 @@ function resetToNormalMode() {
         loadAdminData();
     }
     
-    function renderAdminPlans() {
-        const container = document.getElementById('adminPlansList');
-        if (!container) return;
-        
-        if (!plans || plans.length === 0) {
-            container.innerHTML = '<div class="text-center p-4 text-gray-500">لا توجد باقات</div>';
-            return;
-        }
-        
-        container.innerHTML = plans.map(p => `
-            <div class="flex justify-between items-center border-b py-3">
-                <div>
-                    <span class="font-bold">${p.name || 'بدون اسم'}</span> - 
-                    ${p.examsCount || 0} امتحان - 
-                    ${p.price || 0} ج
-                    ${p.features ? `<div class="text-xs text-gray-500">${p.features.join(', ')}</div>` : ''}
-                </div>
-                <button onclick="deletePlanAdmin('${p.id}')" class="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600" ${p.id === 'free' ? 'disabled' : ''}>
-                    حذف
+   function renderAdminPlans() {
+    const container = document.getElementById('adminPlansList');
+    if (!container) return;
+    
+    if (!plans || plans.length === 0) {
+        container.innerHTML = '<div class="text-center p-4 text-gray-500">لا توجد باقات</div>';
+        return;
+    }
+    
+    container.innerHTML = plans.map(p => `
+        <div class="flex justify-between items-center border-b py-3">
+            <div>
+                <span class="font-bold">${p.name || 'بدون اسم'}</span> - 
+                ${p.examsCount || 0} امتحان - 
+                ${p.price || 0} ج
+                ${p.features ? `<div class="text-xs text-gray-500">${p.features.join(', ')}</div>` : ''}
+            </div>
+            <div class="flex gap-2">
+                <button onclick="editPlan('${p.id}')" class="bg-amber-500 text-white px-3 py-1 rounded text-sm hover:bg-amber-600 transition">
+                    <i class="fas fa-edit ml-1"></i> تعديل
+                </button>
+                <button onclick="deletePlanAdmin('${p.id}')" class="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600 transition" ${p.id === 'free' ? 'disabled' : ''}>
+                    <i class="fas fa-trash ml-1"></i> حذف
                 </button>
             </div>
-        `).join('');
+        </div>
+    `).join('');
+}
+// نافذة تعديل الباقة
+function editPlan(planId) {
+    const plan = plans.find(p => p.id === planId);
+    if (!plan) {
+        showToast('❌ الباقة غير موجودة');
+        return;
     }
+    
+    // تعبئة البيانات في الحقول
+    document.getElementById('editPlanId').value = plan.id;
+    document.getElementById('editPlanName').value = plan.name || '';
+    document.getElementById('editPlanExams').value = plan.examsCount || 0;
+    document.getElementById('editPlanPrice').value = plan.price || 0;
+    document.getElementById('editPlanFeatures').value = plan.features ? plan.features.join('\n') : '';
+    
+    // عرض النافذة
+    document.getElementById('editPlanPopup').classList.add('show');
+}
+
+// حفظ التعديلات
+async function savePlanEdit() {
+    const planId = document.getElementById('editPlanId').value;
+    const name = document.getElementById('editPlanName').value.trim();
+    const examsCount = parseInt(document.getElementById('editPlanExams').value);
+    const price = parseInt(document.getElementById('editPlanPrice').value);
+    const featuresText = document.getElementById('editPlanFeatures').value;
+    
+    if (!name) {
+        showToast('❌ الرجاء إدخال اسم الباقة');
+        return;
+    }
+    
+    if (isNaN(examsCount) || examsCount <= 0) {
+        showToast('❌ الرجاء إدخال عدد صحيح للامتحانات');
+        return;
+    }
+    
+    if (isNaN(price) || price < 0) {
+        showToast('❌ الرجاء إدخال سعر صحيح');
+        return;
+    }
+    
+    const features = featuresText ? featuresText.split('\n').filter(f => f.trim().length > 0) : [`${examsCount} امتحان شهرياً`];
+    
+    const updatedPlan = {
+        id: planId,
+        name: name,
+        examsCount: examsCount,
+        period: 'month',
+        price: price,
+        features: features,
+        updatedAt: new Date().toISOString()
+    };
+    
+    try {
+        await db.ref(`plans/${planId}`).set(updatedPlan);
+        
+        // تحديث المصفوفة المحلية
+        const index = plans.findIndex(p => p.id === planId);
+        if (index !== -1) {
+            plans[index] = updatedPlan;
+        }
+        
+        // تحديث الواجهات
+        renderAdminPlans();
+        refreshPlansPage();
+        
+        closeEditPlanPopup();
+        showToast('✅ تم تحديث الباقة بنجاح!');
+        
+    } catch (error) {
+        console.error('خطأ في تحديث الباقة:', error);
+        showToast('❌ حدث خطأ في تحديث الباقة');
+    }
+}
+
+function closeEditPlanPopup() {
+    document.getElementById('editPlanPopup').classList.remove('show');
+}
     
     async function deletePlanAdmin(id) {
         await db.ref(`plans/${id}`).remove();

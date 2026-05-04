@@ -1,17 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
   
-  <!-- الصفحة الرئيسية -->
+  <!-- ==================== الصفحة الرئيسية ==================== -->
   <url>
-    <loc>https://اسم-موقعك.vercel.app/</loc>
+    <loc>https://imtihan-eight.vercel.app/</loc>
     <lastmod>2026-05-04</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
   
+  <!-- ==================== الصفحات الرئيسية (الأقسام) ==================== -->
+  
   <!-- صفحة إنشاء امتحان -->
   <url>
-    <loc>https://اسم-موقعك.vercel.app/#createExam</loc>
+    <loc>https://imtihan-eight.vercel.app/#createExam</loc>
     <lastmod>2026-05-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
@@ -19,42 +22,76 @@
   
   <!-- صفحة قائمة الامتحانات -->
   <url>
-    <loc>https://اسم-موقعك.vercel.app/#examsList</loc>
+    <loc>https://imtihan-eight.vercel.app/#examsList</loc>
     <lastmod>2026-05-04</lastmod>
     <changefreq>daily</changefreq>
-    <priority>0.8</priority>
+    <priority>0.9</priority>
   </url>
   
   <!-- صفحة بنك الأسئلة -->
   <url>
-    <loc>https://اسم-موقعك.vercel.app/#questionBank</loc>
+    <loc>https://imtihan-eight.vercel.app/#questionBank</loc>
+    <lastmod>2026-05-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <!-- صفحة التحليلات والإحصائيات -->
+  <url>
+    <loc>https://imtihan-eight.vercel.app/#analytics</loc>
     <lastmod>2026-05-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   
-  <!-- صفحة التحليلات -->
+  <!-- صفحة الحساب الشخصي -->
   <url>
-    <loc>https://اسم-موقعك.vercel.app/#analytics</loc>
+    <loc>https://imtihan-eight.vercel.app/#account</loc>
     <lastmod>2026-05-04</lastmod>
-    <changefreq>weekly</changefreq>
+    <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   
-  <!-- صفحة الحساب -->
+  <!-- صفحة باقات الترقية -->
   <url>
-    <loc>https://اسم-موقعك.vercel.app/#account</loc>
+    <loc>https://imtihan-eight.vercel.app/#upgrade</loc>
+    <lastmod>2026-05-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <!-- ==================== صفحات إضافية مهمة ==================== -->
+  
+  <!-- صفحة تسجيل الدخول -->
+  <url>
+    <loc>https://imtihan-eight.vercel.app/#login</loc>
     <lastmod>2026-05-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   
-  <!-- صفحة الترقية -->
+  <!-- صفحة إنشاء حساب جديد -->
   <url>
-    <loc>https://اسم-موقعك.vercel.app/#upgrade</loc>
+    <loc>https://imtihan-eight.vercel.app/#register</loc>
     <lastmod>2026-05-04</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  
+  <!-- صفحة استعادة كلمة المرور -->
+  <url>
+    <loc>https://imtihan-eight.vercel.app/#forgotPassword</loc>
+    <lastmod>2026-05-04</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  
+  <!-- صفحة لوحة تحكم المدير (للأدمن فقط، لكن محركات البحث هتشوف الرابط) -->
+  <url>
+    <loc>https://imtihan-eight.vercel.app/#admin</loc>
+    <lastmod>2026-05-04</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
   </url>
   
 </urlset>

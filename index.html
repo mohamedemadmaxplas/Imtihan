@@ -1142,7 +1142,48 @@ let completedExams = new Set();   // لتخزين الامتحانات التي 
     function genId() {
         return Math.random().toString(36).substring(2, 10).toUpperCase();
     }
-    
+    // ==================== دالة مساعدة لجلب بيانات المستخدم بشكل موحد ====================
+async function getUserProfile(uid) {
+    try {
+        // أولاً: محاولة القراءة من الهيكل الجديد (users/uid/profile)
+        const profileSnapshot = await db.ref(`users/${uid}/profile`).once('value');
+        if (profileSnapshot.exists()) {
+            const profile = profileSnapshot.val();
+            return {
+                uid: uid,
+                name: profile.name || '',
+                username: profile.username || '',
+                email: profile.email || '',
+                phone: profile.phone || '',
+                password: profile.password || '',
+                plan: profile.plan || 'free',
+                address: profile.address || '',
+                createdAt: profile.createdAt || new Date().toISOString()
+            };
+        }
+        
+        // ثانياً: محاولة القراءة من الهيكل القديم (users/uid مباشرة)
+        const userSnapshot = await db.ref(`users/${uid}`).once('value');
+        if (userSnapshot.exists()) {
+            const userData = userSnapshot.val();
+            return {
+                uid: uid,
+                name: userData.name || userData.profileName || '',
+                username: userData.username || '',
+                email: userData.email || '',
+                phone: userData.phone || '',
+                password: userData.password || '',
+                plan: userData.plan || 'free',
+                createdAt: userData.createdAt || new Date().toISOString()
+            };
+        }
+        
+        return null;
+    } catch (error) {
+        console.error('خطأ في جلب بيانات المستخدم:', error);
+        return null;
+    }
+}
     function copyToClipboard(text) {
         if (!text) return;
         navigator.clipboard.writeText(text).then(() => {
@@ -2292,19 +2333,23 @@ function resetToNormalMode() {
     }
     
     async function activateFreePlan(userId) {
-        const subscription = {
-            userId: userId,
-            planId: 'free',
-            planName: 'مجاني',
-            examsLimit: 8,
-            startDate: new Date().toISOString(),
-            expiryDate: new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString(),
-            isActive: true,
-            renewedCount: 0
-        };
-        await db.ref(`subscriptions/${userId}`).set(subscription);
-        subscriptions.push(subscription);
-    }
+    // التحقق من وجود اشتراك مسبق
+    const existingSub = await db.ref(`subscriptions/${userId}`).once('value');
+    if (existingSub.exists()) return;
+    
+    const subscription = {
+        userId: userId,
+        planId: 'free',
+        planName: 'مجاني',
+        examsLimit: 8,
+        startDate: new Date().toISOString(),
+        expiryDate: new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString(),
+        isActive: true,
+        renewedCount: 0
+    };
+    await db.ref(`subscriptions/${userId}`).set(subscription);
+    subscriptions.push(subscription);
+}
     
     function showTecnoPopup() {
         document.getElementById('tecnoLoginPopup').classList.add('show');
@@ -2555,7 +2600,7 @@ function resetToNormalMode() {
         await loadAllData();
     }
     
-    function updateUserUI() {
+  function updateUserUI() {
     const loginArea = document.getElementById('loginBtnArea');
     const avatarArea = document.getElementById('userAvatarArea');
     
@@ -2567,20 +2612,72 @@ function resetToNormalMode() {
         if (avatarInitial) {
             avatarInitial.innerText = currentUser.name?.charAt(0).toUpperCase() || 'U';
         }
-        
-        // التحقق من وجود عناصر القائمة المنسدلة قبل استخدامها
-        const dropdownName = document.getElementById('dropdownName');
-        const dropdownEmail = document.getElementById('dropdownEmail');
-        
-        if (dropdownName) dropdownName.innerText = currentUser.name || '';
-        if (dropdownEmail) dropdownEmail.innerText = currentUser.email || '';
-        
     } else {
         if (loginArea) loginArea.classList.remove('hidden');
         if (avatarArea) avatarArea.classList.add('hidden');
     }
 }
+  // ==================== استقبال بيانات تسجيل الدخول من تكنو شرك ====================
+(async function checkAutoLogin() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('token');
     
+    if (!token) return;
+    
+    try {
+        const userData = JSON.parse(atob(token));
+        
+        if (userData.expires < Date.now()) {
+            showToast('⚠️ انتهت صلاحية رابط تسجيل الدخول');
+            return;
+        }
+        
+        // التحقق من وجود المستخدم
+        let existingUser = await getUserProfile(userData.uid);
+        
+        if (!existingUser) {
+            // حفظ المستخدم في الهيكل الجديد
+            await db.ref(`users/${userData.uid}/profile`).set({
+                name: userData.name,
+                username: userData.username,
+                email: userData.email,
+                phone: userData.phone || '',
+                plan: userData.plan || 'free',
+                createdAt: new Date().toISOString()
+            });
+            
+            await db.ref(`users_simple/${userData.uid}`).set({
+                name: userData.name,
+                username: userData.username,
+                email: userData.email,
+                phone: userData.phone || ''
+            });
+        }
+        
+        // محاولة تسجيل الدخول إلى Firebase Authentication
+        try {
+            await auth.signInWithEmailAndPassword(userData.email, userData.password || 'temppass123');
+        } catch (authError) {
+            if (authError.code === 'auth/user-not-found') {
+                await auth.createUserWithEmailAndPassword(userData.email, userData.password || 'temppass123');
+            }
+        }
+        
+        // جلب البيانات المحدثة
+        currentUser = await getUserProfile(userData.uid);
+        updateUserUI();
+        showToast(`✅ مرحباً ${currentUser?.name || userData.name}`);
+        await loadAllData();
+        
+        // تنظيف الرابط
+        window.history.replaceState({}, document.title, window.location.pathname);
+        navigateTo('home');
+        
+    } catch (error) {
+        console.error('خطأ في معالجة تسجيل الدخول:', error);
+        showToast('حدث خطأ في تسجيل الدخول التلقائي');
+    }
+})();  
     // ==================== دوال الإدارة ====================
     
     function showAdminLogin() {
@@ -3457,14 +3554,13 @@ async function loadAllData() {
         await loadResults();
         await loadPlans();
         await loadSubscriptions();
-        await loadUserSubscription();
+        
         if (currentUser) {
             await loadQuestions();
             refreshExamLimit();
         }
     } catch (error) {
         console.error('خطأ في تحميل البيانات:', error);
-        // لا تظهر رسالة خطأ للمستخدم
     }
 }
     // حساب عدد الامتحانات المستخدمة هذا الشهر
@@ -3646,37 +3742,65 @@ function showAlreadyTakenScreen(examTitle) {
         });
     }
     
-    // ==================== بدء التشغيل ====================
-    
-    auth.onAuthStateChanged(async (user) => {
-        if (user) {
-            const snap = await db.ref(`users/${user.uid}`).once('value');
-            if (snap.val()) {
-                currentUser = { uid: user.uid, ...snap.val() };
-            } else {
-                currentUser = {
-                    uid: user.uid,
-                    name: user.displayName || user.email.split('@')[0],
-                    email: user.email,
-                    plan: 'free'
-                };
-                await db.ref(`users/${user.uid}`).set(currentUser);
-                await activateFreePlan(user.uid);
-            }
+   // ==================== مراقبة حالة تسجيل الدخول ====================
+auth.onAuthStateChanged(async (user) => {
+    if (user) {
+        // جلب بيانات المستخدم من قاعدة البيانات بشكل موحد
+        const userProfile = await getUserProfile(user.uid);
+        
+        if (userProfile) {
+            currentUser = userProfile;
         } else {
-            currentUser = null;
+            // إذا لم يكن موجوداً، قم بإنشاء حساب جديد
+            const email = user.email || '';
+            const name = user.displayName || email.split('@')[0] || 'مستخدم';
+            
+            const newUser = {
+                uid: user.uid,
+                name: name,
+                email: email,
+                username: email.split('@')[0] + '@tecno.shark',
+                phone: user.phoneNumber || '',
+                plan: 'free',
+                createdAt: new Date().toISOString()
+            };
+            
+            // حفظ في الهيكل الجديد (مع profile)
+            await db.ref(`users/${user.uid}/profile`).set({
+                name: newUser.name,
+                username: newUser.username,
+                email: newUser.email,
+                phone: newUser.phone,
+                plan: newUser.plan,
+                createdAt: newUser.createdAt
+            });
+            
+            // حفظ نسخة مبسطة للبحث
+            await db.ref(`users_simple/${user.uid}`).set({
+                name: newUser.name,
+                username: newUser.username,
+                email: newUser.email,
+                phone: newUser.phone
+            });
+            
+            currentUser = newUser;
+            await activateFreePlan(user.uid);
         }
-        
-        updateUserUI();
-        await loadAllData();
-        
-        const urlParams = new URLSearchParams(window.location.search);
-        const examId = urlParams.get('exam');
-        if (examId) {
-            const exam = exams.find(e => e.id === examId);
-            if (exam) setTimeout(() => startExam(examId), 500);
-        }
-    });
+    } else {
+        currentUser = null;
+    }
+    
+    updateUserUI();
+    await loadAllData();
+    
+    // التحقق من وجود رابط امتحان في URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const examId = urlParams.get('exam');
+    if (examId) {
+        const exam = exams.find(e => e.id === examId);
+        if (exam) setTimeout(() => startExam(examId), 500);
+    }
+});
     
     window.addEventListener('load', () => {
         if (document.getElementById('questionsContainer')?.children.length === 0) {

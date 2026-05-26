@@ -1605,23 +1605,7 @@ async function loadUserSubscription() {
     }).join('');
 }
 
-    // تشغيل هذا الكود في Console لتحميل الباقات إلى Firebase
-(async function() {
-    const plans = [
-        {id: "free", name: "📖 مجاني", examsCount: 5, price: 0, features: ["✅ 5 امتحانات شهرياً", "✅ تصحيح تلقائي", "✅ تقارير أساسية"]},
-        {id: "basic", name: "🥉 أساسي", examsCount: 30, price: 40, features: ["✅ 30 امتحان شهرياً", "✅ تصحيح تلقائي", "✅ تقارير متقدمة", "✅ دعم واتساب"]},
-        {id: "pro", name: "🥈 Pro", examsCount: 80, price: 70, features: ["✅ امتحانات غير محدودة", "✅ تصحيح متقدم", "✅ تقارير كاملة", "✅ دعم أولوية"]},
-        {id: "ultimate", name: "🥇 Ultimate", examsCount: 160, price: 150, features: ["✅ امتحانات غير محدودة", "✅ تقارير PDF", "✅ دعم VIP", "✅ تدريب مخصص"]},
-        {id: "school", name: "🏫 مدرسة كاملة", examsCount: 600, price: 250, features: ["✅ امتحانات غير محدودة", "✅ إدارة 50 معلم", "✅ دعم للمدرسة", "✅ تدريب مجاني"]}
-    ];
-    
-    for(let plan of plans) {
-        await firebase.database().ref(`plans/${plan.id}`).set(plan);
-        console.log(`تم حفظ ${plan.name}`);
-    }
-    console.log('✅ تم تحميل جميع الباقات بنجاح!');
-    
-})();
+   
    async function refreshExamLimit() {
     if (!currentUser) return;
     
@@ -3123,13 +3107,14 @@ function editPlan(planId) {
     document.getElementById('editPlanPopup').classList.add('show');
 }
 
-// حفظ التعديلات
 async function savePlanEdit() {
     const planId = document.getElementById('editPlanId').value;
     const name = document.getElementById('editPlanName').value.trim();
     const examsCount = parseInt(document.getElementById('editPlanExams').value);
-    const price = parseInt(document.getElementById('editPlanPrice').value);
+    const finalPrice = parseInt(document.getElementById('editFinalPrice').innerText);
     const featuresText = document.getElementById('editPlanFeatures').value;
+    const originalPrice = parseFloat(document.getElementById('editOriginalPrice').value) || finalPrice;
+    const discountPercent = parseFloat(document.getElementById('editDiscountPercent').value) || 0;
     
     if (!name) {
         showToast('❌ الرجاء إدخال اسم الباقة');
@@ -3141,11 +3126,6 @@ async function savePlanEdit() {
         return;
     }
     
-    if (isNaN(price) || price < 0) {
-        showToast('❌ الرجاء إدخال سعر صحيح');
-        return;
-    }
-    
     const features = featuresText ? featuresText.split('\n').filter(f => f.trim().length > 0) : [`${examsCount} امتحان شهرياً`];
     
     const updatedPlan = {
@@ -3153,7 +3133,9 @@ async function savePlanEdit() {
         name: name,
         examsCount: examsCount,
         period: 'month',
-        price: price,
+        price: finalPrice,
+        originalPrice: originalPrice,
+        discountPercent: discountPercent,
         features: features,
         updatedAt: new Date().toISOString()
     };
@@ -3165,6 +3147,9 @@ async function savePlanEdit() {
         const index = plans.findIndex(p => p.id === planId);
         if (index !== -1) {
             plans[index] = updatedPlan;
+        } else {
+            // إذا لم توجد في المصفوفة نضيفها
+            plans.push(updatedPlan);
         }
         
         // تحديث الواجهات
@@ -3176,7 +3161,7 @@ async function savePlanEdit() {
         
     } catch (error) {
         console.error('خطأ في تحديث الباقة:', error);
-        showToast('❌ حدث خطأ في تحديث الباقة');
+        showToast('❌ حدث خطأ في تحديث الباقة: ' + error.message);
     }
 }
 
@@ -3184,13 +3169,23 @@ function closeEditPlanPopup() {
     document.getElementById('editPlanPopup').classList.remove('show');
 }
     
-    async function deletePlanAdmin(id) {
+   async function deletePlanAdmin(id) {
+    if (id === 'free') {
+        showToast('❌ لا يمكن حذف الباقة المجانية');
+        return;
+    }
+    
+    try {
         await db.ref(`plans/${id}`).remove();
         plans = plans.filter(p => p.id !== id);
         renderAdminPlans();
         refreshPlansPage();
-        showToast('تم حذف الباقة');
+        showToast('✅ تم حذف الباقة بنجاح');
+    } catch (error) {
+        console.error('خطأ في حذف الباقة:', error);
+        showToast('❌ حدث خطأ في حذف الباقة');
     }
+}
     
     function renderSubscriptionsList() {
         const container = document.getElementById('subscriptionsList');
@@ -3770,22 +3765,27 @@ async function loadResults() {
         }
     }
     
-    async function loadPlans() {
+   async function loadPlans() {
     try {
         const s = await db.ref('plans').once('value');
         if (s.val()) {
             plans = Object.values(s.val());
+            console.log('✅ تم تحميل الباقات من قاعدة البيانات:', plans.length);
         } else {
+            console.log('⚠️ لا توجد باقات في قاعدة البيانات، جاري إنشاء الباقات الافتراضية...');
             plans = defaultPlans;
             for (let p of plans) {
                 await db.ref(`plans/${p.id}`).set(p);
             }
         }
         refreshPlansPage();
-        refreshExamLimit(); // تحديث الحد بعد تحميل الخطط
+        refreshExamLimit();
     } catch (error) {
         console.error('خطأ في تحميل الخطط:', error);
-        plans = defaultPlans;
+        // فقط في حالة الخطأ الحرج نستخدم الافتراضية مؤقتاً
+        if (plans.length === 0) {
+            plans = defaultPlans;
+        }
         refreshExamLimit();
     }
 }

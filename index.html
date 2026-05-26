@@ -1714,40 +1714,60 @@ async function loadUserSubscription() {
         updateType(div.querySelector('.q-type'));
     }
     
-    function updateType(select) {
-        const div = select.closest('.question-builder');
-        const area = div.querySelector('.options-area');
-        const type = select.value;
-        const randomId = 'q_' + Date.now() + '_' + Math.random();
-        div.setAttribute('data-id', randomId);
-        
-        if (type === 'mcq') {
-            area.innerHTML = `
-                <div class="option-row">
-                    <input type="text" placeholder="الخيار 1" class="flex-1 p-2 border rounded">
-                    <input type="radio" name="correct-${randomId}" value="0">
-                </div>
-                <div class="option-row">
-                    <input type="text" placeholder="الخيار 2" class="flex-1 p-2 border rounded">
-                    <input type="radio" name="correct-${randomId}" value="1">
-                </div>
-                <button type="button" onclick="addOption(this)" class="text-green-600 text-sm mt-1 hover:text-green-700">
-                    + إضافة خيار
-                </button>
-            `;
-        } else {
-            area.innerHTML = `
-                <div class="option-row">
-                    <input type="text" value="صح" readonly class="flex-1 p-2 border rounded bg-gray-100">
-                    <input type="radio" name="correct-${randomId}" value="صح">
-                </div>
-                <div class="option-row">
-                    <input type="text" value="خطأ" readonly class="flex-1 p-2 border rounded bg-gray-100">
-                    <input type="radio" name="correct-${randomId}" value="خطأ">
-                </div>
-            `;
-        }
+  function updateType(select) {
+    const div = select.closest('.question-builder');
+    const area = div.querySelector('.options-area');
+    const type = select.value;
+    const randomId = 'q_' + Date.now() + '_' + Math.random();
+    div.setAttribute('data-id', randomId);
+    
+    if (type === 'mcq') {
+        area.innerHTML = `
+            <div class="option-row">
+                <input type="text" placeholder="الخيار 1" class="flex-1 p-2 border rounded">
+                <input type="radio" name="correct-${randomId}" value="0">
+            </div>
+            <div class="option-row">
+                <input type="text" placeholder="الخيار 2" class="flex-1 p-2 border rounded">
+                <input type="radio" name="correct-${randomId}" value="1">
+            </div>
+            <button type="button" onclick="addOption(this)" class="text-green-600 text-sm mt-1 hover:text-green-700">
+                + إضافة خيار
+            </button>
+        `;
+    } else if (type === 'truefalse') {
+        area.innerHTML = `
+            <div class="option-row">
+                <input type="text" value="صح" readonly class="flex-1 p-2 border rounded bg-gray-100">
+                <input type="radio" name="correct-${randomId}" value="صح">
+            </div>
+            <div class="option-row">
+                <input type="text" value="خطأ" readonly class="flex-1 p-2 border rounded bg-gray-100">
+                <input type="radio" name="correct-${randomId}" value="خطأ">
+            </div>
+        `;
+    } else if (type === 'essay') {
+        // السؤال المقالي: حقل للسؤال + حقل للإجابة النموذجية
+        area.innerHTML = `
+            <div class="bg-blue-50 p-3 rounded-lg border border-blue-200 mb-2">
+                <label class="block text-sm font-bold text-blue-700 mb-2">
+                    <i class="fas fa-question-circle ml-1"></i> السؤال:
+                </label>
+                <textarea placeholder="اكتب السؤال هنا..." rows="2" class="essay-question w-full p-2 border rounded"></textarea>
+            </div>
+            <div class="bg-green-50 p-3 rounded-lg border border-green-200">
+                <label class="block text-sm font-bold text-green-700 mb-2">
+                    <i class="fas fa-check-circle ml-1"></i> الإجابة النموذجية (الكلمات المفتاحية):
+                </label>
+                <textarea placeholder="اكتب الإجابة النموذجية هنا (سيتم مقارنتها مع إجابة الطالب)..." rows="3" class="essay-answer w-full p-2 border rounded"></textarea>
+                <p class="text-xs text-gray-500 mt-2">
+                    <i class="fas fa-info-circle ml-1"></i>
+                    سيتم تصحيح إجابة الطالب تلقائياً بمقارنتها مع هذه الإجابة النموذجية.
+                </p>
+            </div>
+        `;
     }
+}
     
     function addOption(btn) {
         const area = btn.closest('.options-area');
@@ -1762,42 +1782,51 @@ async function loadUserSubscription() {
         area.insertBefore(row, btn);
     }
     
-    function collectQuestions() {
-        const qs = [];
-        document.querySelectorAll('#questionsContainer .question-builder').forEach((div, index) => {
-            const text = div.querySelector('.q-text')?.value;
-            const type = div.querySelector('.q-type')?.value;
-            const score = parseInt(div.querySelector('.q-score')?.value) || 10;
-            let correct = '';
-            let options = [];
-            
-            if (type === 'mcq') {
-                const rows = div.querySelectorAll('.option-row');
-                rows.forEach((row, i) => {
-                    const opt = row.querySelector('input[type="text"]')?.value;
-                    if (opt && opt.trim()) options.push(opt.trim());
-                    const radio = row.querySelector('input[type="radio"]');
-                    if (radio && radio.checked) correct = opt;
-                });
-            } else if (type === 'truefalse') {
-                const radio = div.querySelector('input[type="radio"]:checked');
-                correct = radio ? radio.value : '';
-                options = ['صح', 'خطأ'];
-            }
-            
-            if (text && text.trim() && correct) {
-                qs.push({
-                    id: Date.now() + index,
-                    text: text.trim(),
-                    type: type,
-                    options: options,
-                    correct: correct,
-                    score: score
-                });
-            }
-        });
-        return qs;
-    }
+  function collectQuestions() {
+    const qs = [];
+    document.querySelectorAll('#questionsContainer .question-builder').forEach((div, index) => {
+        const type = div.querySelector('.q-type')?.value;
+        const score = parseInt(div.querySelector('.q-score')?.value) || 10;
+        let text = '';
+        let correct = '';
+        let options = [];
+        
+        if (type === 'mcq') {
+            text = div.querySelector('.q-text')?.value;
+            const rows = div.querySelectorAll('.option-row');
+            rows.forEach((row, i) => {
+                const opt = row.querySelector('input[type="text"]')?.value;
+                if (opt && opt.trim()) options.push(opt.trim());
+                const radio = row.querySelector('input[type="radio"]');
+                if (radio && radio.checked) correct = opt;
+            });
+        } else if (type === 'truefalse') {
+            text = div.querySelector('.q-text')?.value;
+            const radio = div.querySelector('input[type="radio"]:checked');
+            correct = radio ? radio.value : '';
+            options = ['صح', 'خطأ'];
+        } else if (type === 'essay') {
+            // السؤال المقالي: نأخذ السؤال من textarea المخصص
+            const essayQuestion = div.querySelector('.essay-question')?.value;
+            const essayAnswer = div.querySelector('.essay-answer')?.value;
+            text = essayQuestion || div.querySelector('.q-text')?.value;
+            correct = essayAnswer || '';
+            options = [];
+        }
+        
+        if (text && text.trim() && correct) {
+            qs.push({
+                id: Date.now() + index,
+                text: text.trim(),
+                type: type,
+                options: options,
+                correct: correct.trim(),  // الإجابة النموذجية
+                score: score
+            });
+        }
+    });
+    return qs;
+}
     
     async function createNewExam() {
     if (!currentUser) {
@@ -1967,7 +1996,6 @@ function renderExam(examId) {
     const exam = exams.find(e => e.id === examId);
     if (!exam) return;
     
-    // التحقق إذا كان الطالب قد أدى هذا الامتحان مسبقاً
     const studentKey = `exam_${examId}_completed`;
     if (sessionStorage.getItem(studentKey) === 'true') {
         showSubmissionMessage('لقد قمت بالفعل بإرسال إجابات هذا الامتحان من قبل', false);
@@ -1998,16 +2026,33 @@ function renderExam(examId) {
                     `).join('')}
                 </div>
             `;
-        } else {
+        } else if (q.type === 'truefalse') {
             qHtml += `
                 <div class="border rounded-lg p-4 mb-4 bg-gray-50">
                     <p class="font-bold mb-2">${idx + 1}. ${q.text} <span class="text-indigo-600">(${q.score} درجة)</span></p>
                     <label class="flex items-center gap-2 py-1 cursor-pointer hover:bg-gray-100 p-1 rounded">
-                        <input type="radio" name="q${idx}" value="true"> صح
+                        <input type="radio" name="q${idx}" value="صح"> صح
                     </label>
                     <label class="flex items-center gap-2 py-1 cursor-pointer hover:bg-gray-100 p-1 rounded">
-                        <input type="radio" name="q${idx}" value="false"> خطأ
+                        <input type="radio" name="q${idx}" value="خطأ"> خطأ
                     </label>
+                </div>
+            `;
+        } else if (q.type === 'essay') {
+            // السؤال المقالي: عرض السؤال وحقل إجابة للطالب
+            qHtml += `
+                <div class="border rounded-lg p-4 mb-4 bg-gray-50">
+                    <div class="mb-3">
+                        <p class="font-bold mb-2">${idx + 1}. ${q.text} <span class="text-indigo-600">(${q.score} درجة)</span></p>
+                    </div>
+                    <div class="mb-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">✍️ إجابتك:</label>
+                        <textarea name="q${idx}" rows="5" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500" placeholder="اكتب إجابتك هنا..."></textarea>
+                    </div>
+                    <p class="text-xs text-amber-600 mt-2 flex items-center gap-1">
+                        <i class="fas fa-info-circle"></i>
+                        سيتم تصحيح إجابتك تلقائياً بناءً على الإجابة النموذجية للمعلم.
+                    </p>
                 </div>
             `;
         }
@@ -2045,6 +2090,24 @@ function renderExam(examId) {
         }
     }, 1000);
 }
+// تسجيل عدد زوار الموقع
+function trackVisitor() {
+    const visitorsRef = db.ref('visitors');
+    visitorsRef.transaction(currentCount => {
+        return (currentCount || 0) + 1;
+    });
+    
+    if (!sessionStorage.getItem('visited')) {
+        const uniqueVisitorsRef = db.ref('uniqueVisitors');
+        uniqueVisitorsRef.transaction(currentCount => {
+            return (currentCount || 0) + 1;
+        });
+        sessionStorage.setItem('visited', 'true');
+    }
+}
+
+// استدعاء الدالة عند تحميل الصفحة
+trackVisitor();
     
 async function submitStudentExam(event, examId) {
     if (event) event.preventDefault();
@@ -2053,7 +2116,6 @@ async function submitStudentExam(event, examId) {
     const exam = exams.find(e => e.id === examId);
     if (!exam) return;
     
-    // ✅ التحقق مرة أخرى قبل الإرسال
     if (hasTakenExam(examId)) {
         showAlreadyTakenScreen(exam.title);
         return;
@@ -2065,16 +2127,56 @@ async function submitStudentExam(event, examId) {
     let answers = [];
     
     exam.questions.forEach((q, idx) => {
-        const selected = document.querySelector(`input[name="q${idx}"]:checked`);
         const qScore = q.score || 10;
-        const isCorrect = selected && selected.value === q.correct;
-        if (isCorrect) total += qScore;
+        let userAnswer = 'لم يجب';
+        let isCorrect = false;
+        
+        if (q.type === 'essay') {
+            // السؤال المقالي: مقارنة إجابة الطالب مع الإجابة النموذجية
+            const essayAnswer = document.querySelector(`textarea[name="q${idx}"]`)?.value || '';
+            userAnswer = essayAnswer;
+            
+            // مقارنة بسيطة: التحقق من وجود الكلمات المفتاحية من الإجابة النموذجية
+            const modelAnswer = q.correct.toLowerCase();
+            const studentAnswerLower = userAnswer.toLowerCase();
+            
+            // حساب نسبة التشابه (يمكن تحسين هذه الخوارزمية)
+            const modelWords = modelAnswer.split(/[\s،,\.]+/).filter(w => w.length > 2);
+            let matchedWords = 0;
+            modelWords.forEach(word => {
+                if (studentAnswerLower.includes(word)) {
+                    matchedWords++;
+                }
+            });
+            
+            const matchPercentage = modelWords.length > 0 ? (matchedWords / modelWords.length) : 0;
+            
+            // إذا تطابق أكثر من 60% من الكلمات المفتاحية، تعتبر الإجابة صحيحة
+            if (matchPercentage >= 0.6) {
+                isCorrect = true;
+                total += qScore;
+            } else if (matchPercentage >= 0.3) {
+                // إجابة متوسطة: نصف الدرجة
+                isCorrect = 'partial';
+                total += (qScore / 2);
+            } else {
+                isCorrect = false;
+            }
+            
+        } else {
+            const selected = document.querySelector(`input[name="q${idx}"]:checked`);
+            userAnswer = selected ? selected.value : 'لم يجب';
+            isCorrect = selected && selected.value === q.correct;
+            if (isCorrect) total += qScore;
+        }
+        
         answers.push({
             question: q.text,
-            userAnswer: selected ? selected.value : 'لم يجب',
+            userAnswer: userAnswer,
             correctAnswer: q.correct,
-            isCorrect: isCorrect,
-            score: qScore
+            isCorrect: isCorrect === true ? true : (isCorrect === 'partial' ? 'جزئي' : false),
+            score: (isCorrect === true) ? qScore : (isCorrect === 'partial' ? (qScore / 2) : 0),
+            needsReview: q.type === 'essay' && isCorrect !== true && isCorrect !== 'partial'
         });
     });
     
@@ -2097,20 +2199,174 @@ async function submitStudentExam(event, examId) {
         grade: grade,
         answers: answers,
         userId: exam.creatorId,
-        browserFingerprint: getBrowserFingerprint(), // ✅ حفظ بصمة المتصفح
+        browserFingerprint: getBrowserFingerprint(),
         date: new Date().toISOString()
     };
     
     await db.ref(`results/${result.id}`).set(result);
     results.push(result);
     
-    // ✅ تسجيل أن هذا المتصفح أدى هذا الامتحان
     markExamAsTaken(examId);
     
-    // عرض رسالة النجاح
-    showCompletionMessage();
+    if (exam.showResult === true) {
+        showResultToStudent(result, exam);
+    } else {
+        showCompletionMessage();
+    }
     
     if (currentUser && currentUser.uid === exam.creatorId) refreshHome();
+}
+function showResultToStudent(result, exam) {
+    document.getElementById('studentExamContainer').classList.add('hidden-page');
+    
+    const mainContainer = document.querySelector('.container');
+    const sidebar = document.getElementById('sidebar');
+    const header = document.querySelector('nav');
+    const footer = document.querySelector('.footer');
+    
+    if (mainContainer) mainContainer.style.display = 'none';
+    if (sidebar) sidebar.style.display = 'none';
+    if (header) header.style.display = 'none';
+    if (footer) footer.style.display = 'none';
+    
+    const resultDiv = document.createElement('div');
+    resultDiv.id = 'resultScreen';
+    resultDiv.className = 'fixed inset-0 bg-gradient-to-br from-indigo-900 to-purple-900 flex items-center justify-center z-50 overflow-y-auto';
+    
+    const wrongAnswers = result.answers.filter(a => a.isCorrect === false);
+    const partialAnswers = result.answers.filter(a => a.isCorrect === 'جزئي');
+    const correctAnswers = result.answers.filter(a => a.isCorrect === true);
+    
+    resultDiv.innerHTML = `
+        <div class="text-center p-8 max-w-2xl mx-auto">
+            <div class="w-24 h-24 mx-auto ${result.passed ? 'bg-green-500' : 'bg-red-500'} rounded-full flex items-center justify-center mb-6 animate-bounce">
+                <i class="fas ${result.passed ? 'fa-check-circle' : 'fa-times-circle'} text-white text-5xl"></i>
+            </div>
+            <h2 class="text-3xl font-bold text-white mb-2">${result.passed ? '🎉 مبروك! لقد نجحت' : '😔 للأسف، لم تنجح'}</h2>
+            <p class="text-indigo-200 mb-6">${exam.title} | ${exam.className || ''}</p>
+            
+            <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-6 mb-6">
+                <div class="grid grid-cols-3 gap-4 mb-4">
+                    <div>
+                        <p class="text-indigo-200 text-sm">الدرجة</p>
+                        <p class="text-2xl font-bold text-white">${result.score}</p>
+                        <p class="text-xs text-indigo-200">من ${result.totalScore}</p>
+                    </div>
+                    <div>
+                        <p class="text-indigo-200 text-sm">النسبة</p>
+                        <p class="text-2xl font-bold text-white">${result.percentage.toFixed(1)}%</p>
+                    </div>
+                    <div>
+                        <p class="text-indigo-200 text-sm">التقدير</p>
+                        <p class="text-2xl font-bold text-yellow-300">${result.grade}</p>
+                    </div>
+                </div>
+                <div class="w-full bg-gray-700 rounded-full h-4">
+                    <div class="bg-indigo-500 h-4 rounded-full transition-all duration-1000" style="width: ${result.percentage}%"></div>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-3 gap-3 mb-6">
+                <div class="bg-green-500/20 rounded-xl p-3">
+                    <p class="text-green-300 text-xl font-bold">${correctAnswers.length}</p>
+                    <p class="text-green-200 text-sm">إجابات صحيحة</p>
+                </div>
+                <div class="bg-yellow-500/20 rounded-xl p-3">
+                    <p class="text-yellow-300 text-xl font-bold">${partialAnswers.length}</p>
+                    <p class="text-yellow-200 text-sm">إجابات جزئية</p>
+                </div>
+                <div class="bg-red-500/20 rounded-xl p-3">
+                    <p class="text-red-300 text-xl font-bold">${wrongAnswers.length}</p>
+                    <p class="text-red-200 text-sm">إجابات خاطئة</p>
+                </div>
+            </div>
+            
+            ${result.answers.filter(a => a.isCorrect !== true).length > 0 ? `
+            <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-6 mb-6 text-right">
+                <h3 class="text-xl font-bold text-white mb-3">📝 تفاصيل الإجابات</h3>
+                <div class="space-y-3 max-h-60 overflow-y-auto">
+                    ${result.answers.map(a => `
+                        <div class="border-b border-white/20 pb-2">
+                            <p class="text-white font-semibold">${a.question}</p>
+                            <p class="text-gray-300 text-sm">✍️ إجابتك: ${a.userAnswer || 'لم يجب'}</p>
+                            ${a.isCorrect !== true ? `
+                                <p class="text-green-300 text-sm">✓ الإجابة النموذجية: ${a.correctAnswer}</p>
+                                <p class="text-amber-300 text-xs">${a.isCorrect === 'جزئي' ? '⚠️ إجابة جزئية (نصف درجة)' : '❌ إجابة خاطئة'}</p>
+                            ` : '<p class="text-green-300 text-sm">✅ إجابة صحيحة</p>'}
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+            ` : ''}
+            
+            <button onclick="closeResultScreen()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-xl font-bold transition transform hover:scale-105">
+                <i class="fas fa-home ml-2"></i> العودة للرئيسية
+            </button>
+        </div>
+    `;
+    
+    document.body.appendChild(resultDiv);
+    document.body.style.overflow = 'hidden';
+}
+
+function closeResultScreen() {
+    const resultScreen = document.getElementById('resultScreen');
+    if (resultScreen) resultScreen.remove();
+    
+    const mainContainer = document.querySelector('.container');
+    const sidebar = document.getElementById('sidebar');
+    const header = document.querySelector('nav');
+    const footer = document.querySelector('.footer');
+    
+    if (mainContainer) mainContainer.style.display = '';
+    if (sidebar) sidebar.style.display = '';
+    if (header) header.style.display = '';
+    if (footer) footer.style.display = '';
+    
+    document.body.style.overflow = '';
+    location.reload();
+}
+
+function closeResultScreen() {
+    const resultScreen = document.getElementById('resultScreen');
+    if (resultScreen) resultScreen.remove();
+    
+    // إظهار المحتوى الأصلي مرة أخرى
+    const mainContainer = document.querySelector('.container');
+    const sidebar = document.getElementById('sidebar');
+    const header = document.querySelector('nav');
+    const footer = document.querySelector('.footer');
+    
+    if (mainContainer) mainContainer.style.display = '';
+    if (sidebar) sidebar.style.display = '';
+    if (header) header.style.display = '';
+    if (footer) footer.style.display = '';
+    
+    document.body.style.overflow = '';
+    location.reload();
+}
+function addQuestion() {
+    const container = document.getElementById('questionsContainer');
+    const id = Date.now();
+    const div = document.createElement('div');
+    div.className = 'question-builder';
+    div.setAttribute('data-id', id);
+    div.innerHTML = `
+        <div class="flex justify-between items-center mb-2">
+            <strong>سؤال جديد</strong>
+            <button type="button" onclick="this.closest('.question-builder').remove()" class="text-red-500 hover:text-red-700">✖</button>
+        </div>
+        <input type="text" placeholder="نص السؤال" class="q-text w-full p-2 border rounded mb-2">
+        <select class="q-type w-full p-2 border rounded mb-2" onchange="updateType(this)">
+            <option value="mcq">اختيار من متعدد</option>
+            <option value="truefalse">صح/خطأ</option>
+            <option value="essay">📝 مقالي (سؤال وجواب)</option>
+        </select>
+        <div class="options-area"></div>
+        <input type="number" placeholder="درجة السؤال" class="q-score w-full p-2 border rounded mt-2" value="10">
+    `;
+    container.appendChild(div);
+    updateType(div.querySelector('.q-type'));
 }
 // دالة لإعادة تعيين بصمة المتصفح (للتجربة - يمكن إزالتها في الإنتاج)
 function resetBrowserFingerprint() {

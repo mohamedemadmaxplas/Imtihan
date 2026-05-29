@@ -1229,10 +1229,7 @@ async function getUserProfile(uid) {
         }
     }
     
-    // ==================== دوال العرض والتحديث ====================
-    
-    function refreshHome() {
-    // إذا لم يكن هناك مستخدم مسجل الدخول، لا تظهر أي بيانات
+   function refreshHome() {
     if (!currentUser) {
         document.getElementById('totalExams').innerText = '0';
         document.getElementById('activeExams').innerText = '0';
@@ -1243,9 +1240,12 @@ async function getUserProfile(uid) {
         return;
     }
     
-    // تصفية الامتحانات الخاصة بالمستخدم الحالي فقط
+    // للمستخدم العادي: يرى فقط امتحاناته
     const userExams = exams.filter(e => e.creatorId === currentUser.uid);
-    const userResults = results.filter(r => r.userId === currentUser.uid);
+    const userResults = results.filter(r => {
+        const exam = exams.find(e => e.id === r.examId);
+        return exam && exam.creatorId === currentUser.uid;
+    });
     
     document.getElementById('totalExams').innerText = userExams.length;
     document.getElementById('activeExams').innerText = userExams.filter(e => e.isActive !== false).length;
@@ -1279,13 +1279,12 @@ async function getUserProfile(uid) {
 function refreshExamsList() {
     const container = document.getElementById('allExamsList');
     
-    // إذا لم يكن هناك مستخدم مسجل الدخول، لا تظهر أي امتحانات
     if (!currentUser) {
         container.innerHTML = '<div class="text-center p-6 bg-white rounded-xl shadow">الرجاء تسجيل الدخول لعرض امتحاناتك</div>';
         return;
     }
     
-    // تصفية الامتحانات الخاصة بالمستخدم الحالي فقط
+    // للمستخدم العادي: يرى فقط امتحاناته
     const userExams = exams.filter(e => e.creatorId === currentUser.uid);
     
     if (userExams.length === 0) {
@@ -1346,8 +1345,7 @@ function refreshQuestionBank() {
     }
 }
     
-    function refreshAnalytics() {
-    // إذا لم يكن هناك مستخدم مسجل الدخول، لا تظهر أي إحصائيات
+  function refreshAnalytics() {
     if (!currentUser) {
         document.getElementById('avgScore').innerText = '0%';
         document.getElementById('passRate').innerText = '0%';
@@ -1368,7 +1366,12 @@ function refreshQuestionBank() {
         return;
     }
     
-    const userResults = results.filter(r => r.userId === currentUser.uid);
+    // للمستخدم العادي: يرى فقط نتائج امتحاناته
+    const userResults = results.filter(r => {
+        const exam = exams.find(e => e.id === r.examId);
+        return exam && exam.creatorId === currentUser.uid;
+    });
+    
     const percentages = userResults.map(r => r.percentage);
     const avg = percentages.length ? (percentages.reduce((a, b) => a + b, 0) / percentages.length).toFixed(1) : 0;
     const passCount = percentages.filter(p => p >= 50).length;
@@ -2944,43 +2947,34 @@ function resetToNormalMode() {
     
     async function loadAdminData() {
     try {
+        // الأدمن يجلب كل البيانات من قاعدة البيانات
         const usersSnap = await db.ref('users').once('value');
         allUsers = usersSnap.val() ? Object.entries(usersSnap.val()).map(([id, d]) => ({ id, ...d })) : [];
         
-        // محاولة تحميل الأرباح مع معالجة الخطأ
-        try {
-            const profitsSnap = await db.ref('profits').once('value');
-            profits = profitsSnap.val() ? Object.values(profitsSnap.val()) : [];
-        } catch (profitError) {
-            console.log('لا توجد صلاحية لقراءة الأرباح');
-            profits = [];
-        }
+        const examsSnap = await db.ref('exams').once('value');
+        exams = examsSnap.val() ? Object.values(examsSnap.val()) : [];
+        
+        const resultsSnap = await db.ref('results').once('value');
+        results = resultsSnap.val() ? Object.values(resultsSnap.val()) : [];
         
         try {
             const subsSnap = await db.ref('subscriptions').once('value');
             subscriptions = subsSnap.val() ? Object.values(subsSnap.val()) : [];
         } catch (subError) {
-            console.log('لا توجد صلاحية لقراءة الاشتراكات');
             subscriptions = [];
         }
         
         let visitors = parseInt(localStorage.getItem('visitors') || '0');
-        if (!sessionStorage.getItem('visited')) {
-            visitors++;
-            localStorage.setItem('visitors', visitors);
-            sessionStorage.setItem('visited', 'true');
-        }
         
         renderUsersTable();
         renderAdminPlans();
         renderSubscriptionsList();
+        renderAdminReports(visitors);
         
-        const reportsTab = document.getElementById('adminReportsTab');
-        if (reportsTab && reportsTab.style.display !== 'none') {
-            renderAdminReports(visitors);
-        }
+        showToast('✅ تم تحميل بيانات لوحة التحكم');
+        
     } catch (error) {
-        console.error('خطأ في تحميل بيانات الإدارة:', error);
+        console.error('خطأ:', error);
         showToast('حدث خطأ في تحميل البيانات');
     }
 }
@@ -3413,22 +3407,14 @@ function closeEditPlanPopup() {
             `;
         }
     } else if (type === 'active') {
-        title = '✅ الامتحانات النشطة';
-        const activeExams = exams.filter(e => e.isActive !== false);
-        if (activeExams.length === 0) {
-            content = '<p class="text-gray-500">لا توجد امتحانات نشطة</p>';
-        } else {
-            content = `
-                <div class="space-y-2 text-right">
-                    ${activeExams.map(exam => `
-                        <div class="border-b pb-2">
-                            <p class="font-bold">${exam.title}</p>
-                            <p class="text-sm text-gray-500">📚 ${exam.className || 'بدون صف'} | بواسطة: ${exam.creatorName || 'مدرس'}</p>
-                        </div>
-                    `).join('')}
-                </div>
-            `;
-        }
+    title = '✅ الامتحانات النشطة';
+    // المستخدم العادي يرى فقط امتحاناته النشطة
+    let activeExams;
+    if (isAdminLoggedIn) {
+        activeExams = exams.filter(e => e.isActive !== false);
+    } else {
+        activeExams = exams.filter(e => e.isActive !== false && e.creatorId === currentUser?.uid);
+    }
     } else if (type === 'students') {
         title = '👥 الطلاب والنتائج';
         
@@ -3729,10 +3715,22 @@ function closeEditPlanPopup() {
     
     // ==================== تحميل البيانات ====================
     
-    async function loadExams() {
+   async function loadExams() {
+    if (!currentUser) {
+        exams = [];
+        refreshHome();
+        refreshExamsList();
+        return;
+    }
+    
     try {
+        // تحميل الامتحانات من قاعدة البيانات
         const s = await db.ref('exams').once('value');
-        exams = s.val() ? Object.values(s.val()) : [];
+        const allExams = s.val() ? Object.values(s.val()) : [];
+        
+        // تصفية الامتحانات: عرض فقط الامتحانات التي أنشأها المستخدم الحالي
+        exams = allExams.filter(exam => exam.creatorId === currentUser.uid);
+        
         refreshHome();
         refreshExamsList();
     } catch (error) {
@@ -3742,11 +3740,28 @@ function closeEditPlanPopup() {
         refreshExamsList();
     }
 }
-    
+
+// 2. دالة loadResults: تحميل نتائج الطلاب الخاصة بامتحانات المستخدم فقط
 async function loadResults() {
+    if (!currentUser) {
+        results = [];
+        refreshHome();
+        refreshAnalytics();
+        return;
+    }
+    
     try {
+        // تحميل جميع النتائج من قاعدة البيانات
         const s = await db.ref('results').once('value');
-        results = s.val() ? Object.values(s.val()) : [];
+        const allResults = s.val() ? Object.values(s.val()) : [];
+        
+        // تصفية النتائج: عرض فقط نتائج الطلاب الذين امتحنوا امتحانات المستخدم الحالي
+        // أولاً: الحصول على قائمة IDs الامتحانات التي أنشأها المستخدم
+        const userExamIds = exams.map(e => e.id);
+        
+        // ثانياً: تصفية النتائج التي تتوافق مع امتحانات المستخدم
+        results = allResults.filter(result => userExamIds.includes(result.examId));
+        
         refreshHome();
         refreshAnalytics();
     } catch (error) {
@@ -3756,6 +3771,7 @@ async function loadResults() {
         refreshAnalytics();
     }
 }
+
     
     async function loadQuestions() {
         if (currentUser) {

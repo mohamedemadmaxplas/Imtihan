@@ -619,6 +619,11 @@ body.exam-mode {
             </div>
             
             <form id="examForm">
+                <div class="mb-4">
+    <label class="block text-gray-700 font-semibold mb-2">👨‍🏫 اسم المدرس</label>
+    <input type="text" id="examTeacher" placeholder="مثال: أحمد محمد" class="w-full p-3 border rounded-lg" required>
+    <p class="text-xs text-gray-500 mt-1">سيظهر هذا الاسم للطلاب عند بدء الامتحان</p>
+</div>
                 
                 <div class="mb-4">
                     <label class="block text-gray-700 font-semibold mb-2">عنوان الامتحان</label>
@@ -2129,7 +2134,7 @@ function refreshPlansPage() {
     return qs;
 }
     
-  async function createNewExam() {
+ async function createNewExam() {
     if (!currentUser) {
         showToast('❌ الرجاء تسجيل الدخول أولاً');
         navigateTo('account');
@@ -2165,6 +2170,7 @@ function refreshPlansPage() {
     // جلب البيانات من النموذج
     const title = document.getElementById('examTitle')?.value.trim();
     const className = document.getElementById('examClass')?.value.trim();
+    const teacherName = document.getElementById('examTeacher')?.value.trim() || currentUser.name || 'مدرس';
     const duration = parseInt(document.getElementById('examDuration')?.value) || 30;
     const passScore = parseInt(document.getElementById('examPassScore')?.value) || 50;
     
@@ -2197,6 +2203,7 @@ function refreshPlansPage() {
         id: examId,
         title: title,
         className: className,
+        teacherName: teacherName, // ✅ إضافة اسم المدرس
         duration: duration,
         passScore: passScore,
         totalScore: totalScore,
@@ -2219,6 +2226,7 @@ function refreshPlansPage() {
         // تنظيف النموذج
         document.getElementById('examTitle').value = '';
         document.getElementById('examClass').value = '';
+        document.getElementById('examTeacher').value = '';
         document.getElementById('questionsContainer').innerHTML = '';
         addQuestion();
         
@@ -2242,7 +2250,60 @@ function refreshPlansPage() {
         return false;
     }
 }
+    // ==================== التجديد التلقائي للاشتراكات ====================
+
+async function autoRenewSubscriptions() {
+    if (!currentUser) return;
     
+    try {
+        const subSnapshot = await db.ref(`subscriptions/${currentUser.uid}`).once('value');
+        if (!subSnapshot.exists()) return;
+        
+        const sub = subSnapshot.val();
+        const now = new Date();
+        const expiryDate = new Date(sub.expiryDate);
+        
+        // ✅ إذا انتهت صلاحية الاشتراك أو تبقى أقل من يوم
+        const daysRemaining = (expiryDate - now) / (1000 * 60 * 60 * 24);
+        
+        if (daysRemaining <= 1) {
+            console.log('🔄 جاري تجديد الاشتراك...');
+            
+            // ✅ حساب تاريخ التجديد الجديد (شهر من الآن)
+            const newExpiry = new Date();
+            newExpiry.setMonth(newExpiry.getMonth() + 1);
+            
+            // ✅ تحديث الاشتراك
+            const updatedSub = {
+                ...sub,
+                startDate: now.toISOString(),
+                expiryDate: newExpiry.toISOString(),
+                isActive: true,
+                renewedCount: (sub.renewedCount || 0) + 1
+            };
+            
+            await db.ref(`subscriptions/${currentUser.uid}`).set(updatedSub);
+            
+            // ✅ تحديث المصفوفة المحلية
+            const index = subscriptions.findIndex(s => s.userId === currentUser.uid);
+            if (index !== -1) {
+                subscriptions[index] = updatedSub;
+            } else {
+                subscriptions.push(updatedSub);
+            }
+            
+            showToast('🔄 تم تجديد اشتراكك المجاني تلقائياً!');
+            console.log('✅ تم تجديد الاشتراك حتى:', newExpiry.toLocaleDateString('ar-EG'));
+            
+            // ✅ تحديث الواجهة
+            refreshExamLimit();
+            refreshAccountPage();
+        }
+        
+    } catch (error) {
+        console.error('❌ خطأ في تجديد الاشتراك:', error);
+    }
+}
     function showExamLinkPopup(link, title, className) {
         const oldModal = document.getElementById('examLinkModal');
         if (oldModal) oldModal.remove();
@@ -2304,7 +2365,7 @@ function refreshPlansPage() {
     sessionStorage.setItem('currentExam', JSON.stringify(exam));
     showStudentExam(exam);
 }
-    function showStudentExam(exam) {
+  function showStudentExam(exam) {
     // إضافة تأثير الضبابية على الصفحة الرئيسية
     const mainContent = document.querySelector('.container');
     const sidebar = document.getElementById('sidebar');
@@ -2322,7 +2383,8 @@ function refreshPlansPage() {
         <div class="text-center p-8">
             <i class="fas fa-user-graduate text-6xl text-indigo-600 mb-4"></i>
             <h2 class="text-2xl font-bold mb-2">${exam.title}</h2>
-            <p class="text-indigo-600 mb-4">📚 ${exam.className || 'بدون صف'}</p>
+            <p class="text-indigo-600 mb-1">📚 ${exam.className || 'بدون صف'}</p>
+            <p class="text-gray-500 text-sm mb-4">👨‍🏫 المدرس: <span class="font-bold text-indigo-600">${exam.teacherName || exam.creatorName || 'غير محدد'}</span></p>
             <p class="text-gray-600 mb-6">الرجاء إدخال بياناتك لبدء الامتحان</p>
             <input type="text" id="studentName" placeholder="الاسم الكامل" class="w-full max-w-md p-3 border rounded-lg mb-3 mx-auto">
             <input type="text" id="studentNumber" placeholder="كود الطالب" class="w-full max-w-md p-3 border rounded-lg mb-6 mx-auto">
@@ -2584,7 +2646,8 @@ function showResultToStudent(result, exam) {
                 <i class="fas ${result.passed ? 'fa-check-circle' : 'fa-times-circle'} text-white text-5xl"></i>
             </div>
             <h2 class="text-3xl font-bold text-white mb-2">${result.passed ? '🎉 مبروك! لقد نجحت' : '😔 للأسف، لم تنجح'}</h2>
-            <p class="text-indigo-200 mb-6">${exam.title} | ${exam.className || ''}</p>
+            <p class="text-indigo-200 mb-1">${exam.title}</p>
+            <p class="text-indigo-200 text-sm mb-4">📚 ${exam.className || ''} | 👨‍🏫 ${exam.teacherName || exam.creatorName || 'مدرس'}</p>
             
             <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-6 mb-6">
                 <div class="grid grid-cols-3 gap-4 mb-4">
@@ -2930,22 +2993,28 @@ function resetToNormalMode() {
     }
     
     async function activateFreePlan(userId) {
-    // التحقق من وجود اشتراك مسبق
     const existingSub = await db.ref(`subscriptions/${userId}`).once('value');
     if (existingSub.exists()) return;
+    
+    const now = new Date();
+    const expiry = new Date(now);
+    expiry.setMonth(expiry.getMonth() + 1); // ✅ شهر واحد من الآن
     
     const subscription = {
         userId: userId,
         planId: 'free',
         planName: 'مجاني',
         examsLimit: 8,
-        startDate: new Date().toISOString(),
-        expiryDate: new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString(),
+        startDate: now.toISOString(),
+        expiryDate: expiry.toISOString(),
         isActive: true,
         renewedCount: 0
     };
+    
     await db.ref(`subscriptions/${userId}`).set(subscription);
     subscriptions.push(subscription);
+    
+    console.log('✅ تم تفعيل الاشتراك المجاني حتى:', expiry.toLocaleDateString('ar-EG'));
 }
     
     function showTecnoPopup() {
@@ -4287,8 +4356,10 @@ async function loadAllData() {
         
         if (currentUser) {
             await loadQuestions();
-            // ✅ تحديث العداد بعد تحميل كل البيانات
             setTimeout(() => refreshExamLimit(), 300);
+            
+            // ✅ التحقق من التجديد التلقائي
+            setTimeout(() => autoRenewSubscriptions(), 1000);
         }
     } catch (error) {
         console.error('خطأ في تحميل البيانات:', error);
@@ -4473,7 +4544,7 @@ function showAlreadyTakenScreen(examTitle) {
         });
     }
     
-   // ==================== مراقبة حالة تسجيل الدخول ====================
+  // ==================== مراقبة حالة تسجيل الدخول ====================
 auth.onAuthStateChanged(async (user) => {
     if (user) {
         // جلب بيانات المستخدم من قاعدة البيانات بشكل موحد
@@ -4517,19 +4588,28 @@ auth.onAuthStateChanged(async (user) => {
             currentUser = newUser;
             await activateFreePlan(user.uid);
         }
+        
+        // ✅ تحديث واجهة المستخدم
+        updateUserUI();
+        
+        // ✅ تحميل جميع البيانات
+        await loadAllData();
+        
+        // ✅ التحقق من التجديد التلقائي للاشتراكات المجانية
+        setTimeout(() => autoRenewSubscriptions(), 1000);
+        
+        // التحقق من وجود رابط امتحان في URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const examId = urlParams.get('exam');
+        if (examId) {
+            const exam = exams.find(e => e.id === examId);
+            if (exam) setTimeout(() => startExam(examId), 500);
+        }
+        
     } else {
         currentUser = null;
-    }
-    
-    updateUserUI();
-    await loadAllData();
-    
-    // التحقق من وجود رابط امتحان في URL
-    const urlParams = new URLSearchParams(window.location.search);
-    const examId = urlParams.get('exam');
-    if (examId) {
-        const exam = exams.find(e => e.id === examId);
-        if (exam) setTimeout(() => startExam(examId), 500);
+        updateUserUI();
+        await loadAllData();
     }
 });
     

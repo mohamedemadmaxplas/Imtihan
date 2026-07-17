@@ -1438,6 +1438,7 @@ function refreshQuestionBank() {
     
 function refreshAccountPage() {
     const container = document.getElementById('accountContent');
+    if (!container) return;
     
     if (currentUser) {
         const plan = plans.find(p => p.id === currentUser.plan) || plans[0];
@@ -1450,10 +1451,11 @@ function refreshAccountPage() {
                 <p class="text-gray-500 mb-4">${currentUser.email || ''}</p>
                 <div class="bg-gray-50 p-4 rounded-lg mb-4">
                     <p>الباقة: <strong class="text-indigo-600">${plan.name}</strong></p>
-                    <p id="accountRemaining">الامتحانات المتبقية: --</p>
+                    <p id="accountRemaining">الامتحانات المتبقية: <span id="remainingCount">جاري التحميل...</span></p>
                     <p id="accountExpiry">📅 تاريخ التجديد: <span id="expiryDateText">جاري التحميل...</span></p>
                 </div>
                 
+                <!-- زر تسجيل الدخول بـ تكنو شرك -->
                 <a href="https://mohamedemadmaxplas.github.io/NABD_/" target="_blank" 
                    class="w-full bg-emerald-600 text-white py-2 rounded-lg mb-2 hover:bg-emerald-700 transition text-center block">
                     <i class="fas fa-coins ml-2"></i> تسجيل الدخول بـ تكنو شرك
@@ -1468,10 +1470,11 @@ function refreshAccountPage() {
             </div>
         `;
         
-        // ✅ تحميل بيانات الاشتراك بعد إنشاء الـ HTML
+        // ✅ تحديث العداد وتاريخ التجديد بعد إنشاء الـ HTML
         setTimeout(() => {
+            refreshExamLimit();
             loadUserSubscription();
-        }, 100);
+        }, 200);
         
     } else {
         container.innerHTML = `
@@ -1484,6 +1487,7 @@ function refreshAccountPage() {
                     <span class="absolute top-[-12px] left-1/2 transform -translate-x-1/2 bg-white px-2 text-gray-500">أو</span>
                 </div>
                 
+                <!-- زر تسجيل الدخول بـ تكنو شرك للمستخدم غير المسجل -->
                 <a href="https://mohamedemadmaxplas.github.io/NABD_/" target="_blank" 
                    class="w-full bg-emerald-600 text-white py-2 rounded-lg mb-3 hover:bg-emerald-700 transition text-center block">
                     <i class="fas fa-coins ml-2"></i> تسجيل الدخول بـ تكنو شرك
@@ -1493,6 +1497,7 @@ function refreshAccountPage() {
             </div>
         `;
         
+        // تهيئة Google Sign-In
         if (typeof google !== 'undefined' && !window.googleInitialized) {
             window.googleInitialized = true;
             google.accounts.id.initialize({
@@ -1810,8 +1815,11 @@ function refreshPlansPage() {
 }
 
    
-  async function refreshExamLimit() {
-    if (!currentUser) return;
+ async function refreshExamLimit() {
+    if (!currentUser) {
+        console.log('⚠️ لا يوجد مستخدم مسجل');
+        return;
+    }
     
     try {
         // التأكد من تحميل الخطط
@@ -1839,118 +1847,112 @@ function refreshPlansPage() {
         const usedExams = userExams.length + userResultsThisMonth.length;
         const remaining = Math.max(0, maxExams - usedExams);
         
-        // ✅ الحصول على تاريخ التجديد من الاشتراك
-        let expiryDate = null;
-        try {
-            const subSnapshot = await db.ref(`subscriptions/${currentUser.uid}`).once('value');
-            if (subSnapshot.exists()) {
-                const sub = subSnapshot.val();
-                expiryDate = sub.expiryDate ? new Date(sub.expiryDate) : null;
-            }
-        } catch (e) {
-            console.log('⚠️ لا يمكن قراءة الاشتراك');
+        // ✅ تحديث عداد الامتحانات في صفحة الحساب
+        const accountRemaining = document.getElementById('accountRemaining');
+        if (accountRemaining) {
+            accountRemaining.innerText = `الامتحانات المتبقية: ${remaining} من ${maxExams}`;
+        } else {
+            console.log('⚠️ عنصر accountRemaining غير موجود');
         }
         
-        const isFree = userPlan.id === 'free';
-        const expiryDateStr = expiryDate ? expiryDate.toLocaleDateString('ar-EG', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        }) : 'غير محدد';
-        
-        // تحديث الواجهة
-        const warning = document.getElementById('examLimitWarning');
+        // ✅ تحديث العداد في صفحة إنشاء الامتحان
         const limitMsg = document.getElementById('limitMsg');
-        const accountRemaining = document.getElementById('accountRemaining');
+        const warning = document.getElementById('examLimitWarning');
         
-        const createExamBtn = document.querySelector('#createExamPage button[type="submit"]');
-        const createExamLink = document.querySelector('button[onclick="navigateTo(\'createExam\')"]');
-        
-        if (remaining <= 0) {
-            // ✅ عرض رسالة مخصصة حسب نوع الباقة
-            if (warning) {
+        if (limitMsg && warning) {
+            if (remaining <= 0) {
                 warning.classList.remove('hidden');
-                if (limitMsg) {
-                    if (isFree) {
-                        // 📌 نسخة مجانية - انتهى العدد
-                        limitMsg.innerHTML = `
-                            <div class="text-right">
-                                <div class="flex items-center gap-3 mb-2">
-                                    <i class="fas fa-exclamation-triangle text-amber-600 text-2xl"></i>
-                                    <span class="font-bold text-amber-800 text-lg">⚠️ لقد استنفذت عدد الامتحانات المجانية!</span>
-                                </div>
-                                <p class="text-gray-700 mb-2">
-                                    <i class="fas fa-calendar-alt ml-1"></i> 
-                                    <strong>تاريخ التجديد:</strong> ${expiryDateStr}
-                                </p>
-                                <p class="text-gray-600 mb-3">
-                                    💡 قم بالترقية إلى باقة مدفوعة للحصول على امتحانات غير محدودة ومميزات إضافية.
-                                </p>
-                                <button onclick="navigateTo('upgrade')" 
-                                    class="bg-gradient-to-r from-amber-500 to-orange-500 text-white px-6 py-2 rounded-lg font-bold hover:shadow-lg transition transform hover:scale-105">
-                                    🚀 اشترك الآن
-                                </button>
-                            </div>
-                        `;
-                    } else {
-                        // 📌 نسخة مدفوعة - انتهى العدد الشهري
-                        limitMsg.innerHTML = `
-                            <div class="text-right">
-                                <div class="flex items-center gap-3 mb-2">
-                                    <i class="fas fa-clock text-blue-600 text-2xl"></i>
-                                    <span class="font-bold text-blue-800 text-lg">⏳ تم استنفاذ عدد الامتحانات الشهرية!</span>
-                                </div>
-                                <p class="text-gray-700 mb-2">
-                                    <i class="fas fa-calendar-alt ml-1"></i> 
-                                    <strong>تاريخ التجديد:</strong> ${expiryDateStr}
-                                </p>
-                                <p class="text-gray-600 mb-3">
-                                    💡 قم بتجديد باقاتك الآن للاستمرار في إنشاء الامتحانات.
-                                </p>
-                                <button onclick="navigateTo('upgrade')" 
-                                    class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-2 rounded-lg font-bold hover:shadow-lg transition transform hover:scale-105">
-                                    🔄 جدد باقتك الآن
-                                </button>
-                            </div>
-                        `;
+                warning.className = 'bg-amber-50 border border-amber-200 rounded-xl p-3 mb-4';
+                
+                const isFree = userPlan.id === 'free';
+                let expiryDateStr = 'غير محدد';
+                
+                // جلب تاريخ التجديد
+                try {
+                    const subSnapshot = await db.ref(`subscriptions/${currentUser.uid}`).once('value');
+                    if (subSnapshot.exists()) {
+                        const sub = subSnapshot.val();
+                        if (sub.expiryDate) {
+                            const expiry = new Date(sub.expiryDate);
+                            expiryDateStr = expiry.toLocaleDateString('ar-EG', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric'
+                            });
+                        }
                     }
+                } catch (e) {}
+                
+                if (isFree) {
+                    limitMsg.innerHTML = `
+                        <div class="text-right">
+                            <div class="flex items-center gap-3 mb-2">
+                                <i class="fas fa-exclamation-triangle text-amber-600 text-2xl"></i>
+                                <span class="font-bold text-amber-800 text-lg">⚠️ لقد استنفذت عدد الامتحانات المجانية!</span>
+                            </div>
+                            <p class="text-gray-700 mb-2">
+                                <i class="fas fa-calendar-alt ml-1"></i> 
+                                <strong>تاريخ التجديد:</strong> ${expiryDateStr}
+                            </p>
+                            <p class="text-gray-600 mb-3">
+                                💡 قم بالترقية إلى باقة مدفوعة للحصول على امتحانات غير محدودة ومميزات إضافية.
+                            </p>
+                            <button onclick="navigateTo('upgrade')" 
+                                class="bg-gradient-to-r from-amber-500 to-orange-500 text-white px-6 py-2 rounded-lg font-bold hover:shadow-lg transition transform hover:scale-105">
+                                🚀 اشترك الآن
+                            </button>
+                        </div>
+                    `;
+                } else {
+                    limitMsg.innerHTML = `
+                        <div class="text-right">
+                            <div class="flex items-center gap-3 mb-2">
+                                <i class="fas fa-clock text-blue-600 text-2xl"></i>
+                                <span class="font-bold text-blue-800 text-lg">⏳ تم استنفاذ عدد الامتحانات الشهرية!</span>
+                            </div>
+                            <p class="text-gray-700 mb-2">
+                                <i class="fas fa-calendar-alt ml-1"></i> 
+                                <strong>تاريخ التجديد:</strong> ${expiryDateStr}
+                            </p>
+                            <p class="text-gray-600 mb-3">
+                                💡 قم بتجديد باقاتك الآن للاستمرار في إنشاء الامتحانات.
+                            </p>
+                            <button onclick="navigateTo('upgrade')" 
+                                class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-2 rounded-lg font-bold hover:shadow-lg transition transform hover:scale-105">
+                                🔄 جدد باقتك الآن
+                            </button>
+                        </div>
+                    `;
                 }
-            }
-            
-            // تعطيل زر إنشاء الامتحان
-            if (createExamBtn) {
-                createExamBtn.disabled = true;
-                createExamBtn.classList.add('opacity-50', 'cursor-not-allowed');
-                createExamBtn.title = isFree ? 'انتهى عدد الامتحانات المجانية، قم بالاشتراك' : 'انتهى عدد الامتحانات الشهرية، قم بالتجديد';
-            }
-            
-            if (createExamLink) {
-                createExamLink.style.opacity = '0.5';
-                createExamLink.style.pointerEvents = 'none';
-                createExamLink.title = isFree ? 'انتهى عدد الامتحانات المجانية، قم بالاشتراك' : 'انتهى عدد الامتحانات الشهرية، قم بالتجديد';
-            }
-            
-        } else {
-            // ✅ إخفاء التحذير وإظهار العداد المتبقي
-            if (warning) {
-                warning.classList.add('hidden');
-            }
-            
-            if (createExamBtn) {
-                createExamBtn.disabled = false;
-                createExamBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-                createExamBtn.title = '';
-            }
-            
-            if (createExamLink) {
-                createExamLink.style.opacity = '1';
-                createExamLink.style.pointerEvents = 'auto';
-                createExamLink.title = '';
-            }
-            
-            // ✅ عرض العداد المتبقي مع تاريخ التجديد
-            if (limitMsg && warning) {
-                // عند وجود امتحانات متبقية، نعرض رسالة تشجيعية
+                
+                // تعطيل زر الإنشاء
+                const createBtn = document.querySelector('#createExamPage button[type="submit"]');
+                if (createBtn) {
+                    createBtn.disabled = true;
+                    createBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                }
+                
+            } else {
+                // ✅ عرض العداد المتبقي بشكل إيجابي
+                warning.classList.remove('hidden');
+                warning.className = 'bg-green-50 border border-green-200 rounded-xl p-3 mb-4';
+                
+                let expiryDateStr = 'غير محدد';
+                try {
+                    const subSnapshot = await db.ref(`subscriptions/${currentUser.uid}`).once('value');
+                    if (subSnapshot.exists()) {
+                        const sub = subSnapshot.val();
+                        if (sub.expiryDate) {
+                            const expiry = new Date(sub.expiryDate);
+                            expiryDateStr = expiry.toLocaleDateString('ar-EG', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric'
+                            });
+                        }
+                    }
+                } catch (e) {}
+                
                 limitMsg.innerHTML = `
                     <div class="flex items-center justify-between flex-wrap gap-2">
                         <div>
@@ -1962,19 +1964,21 @@ function refreshPlansPage() {
                         </div>
                     </div>
                 `;
-                warning.classList.remove('hidden');
-                warning.className = 'bg-green-50 border border-green-200 rounded-xl p-3 mb-4';
+                
+                // تمكين زر الإنشاء
+                const createBtn = document.querySelector('#createExamPage button[type="submit"]');
+                if (createBtn) {
+                    createBtn.disabled = false;
+                    createBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                }
             }
-        }
-        
-        if (accountRemaining) {
-            accountRemaining.innerText = `الامتحانات المتبقية: ${remaining} من ${maxExams}`;
         }
         
         console.log(`📊 الخطة: ${userPlan.name}, الحد: ${maxExams}, المستخدم: ${usedExams}, المتبقي: ${remaining}`);
         
     } catch (error) {
-        console.error('خطأ في تحديث حد الامتحانات:', error);
+        console.error('❌ خطأ في تحديث حد الامتحانات:', error);
+        // عرض رسالة خطأ في العداد
         const accountRemaining = document.getElementById('accountRemaining');
         if (accountRemaining) {
             accountRemaining.innerText = `الامتحانات المتبقية: --`;
@@ -2125,7 +2129,7 @@ function refreshPlansPage() {
     return qs;
 }
     
-    async function createNewExam() {
+  async function createNewExam() {
     if (!currentUser) {
         showToast('❌ الرجاء تسجيل الدخول أولاً');
         navigateTo('account');
@@ -2149,11 +2153,16 @@ function refreshPlansPage() {
     const remaining = maxExams - usedExams;
     
     if (remaining <= 0) {
-        showToast(`❌ لقد تجاوزت الحد الشهري (${maxExams} امتحان). الامتحانات القديمة متاحة لكن لا يمكنك إنشاء المزيد. قم بالترقية`);
+        const isFree = userPlan.id === 'free';
+        const msg = isFree 
+            ? `❌ لقد استنفذت عدد الامتحانات المجانية (${maxExams} امتحان). قم بالترقية للاستمرار`
+            : `❌ لقد استنفذت عدد الامتحانات الشهرية (${maxExams} امتحان). قم بتجديد باقتك`;
+        showToast(msg);
         navigateTo('upgrade');
         return false;
     }
     
+    // جلب البيانات من النموذج
     const title = document.getElementById('examTitle')?.value.trim();
     const className = document.getElementById('examClass')?.value.trim();
     const duration = parseInt(document.getElementById('examDuration')?.value) || 30;
@@ -2204,8 +2213,10 @@ function refreshPlansPage() {
         await db.ref(`exams/${examId}`).set(examData);
         exams.push(examData);
         
+        // عرض رابط الامتحان
         showExamLinkPopup(examLink, title, className);
         
+        // تنظيف النموذج
         document.getElementById('examTitle').value = '';
         document.getElementById('examClass').value = '';
         document.getElementById('questionsContainer').innerHTML = '';
@@ -2215,14 +2226,19 @@ function refreshPlansPage() {
         const showTrueRadio = document.querySelector('input[name="showResult"][value="true"]');
         if (showTrueRadio) showTrueRadio.checked = true;
         
+        // تحديث الواجهات
         refreshExamsList();
         refreshHome();
-        refreshExamLimit(); // تحديث العداد بعد الإنشاء
         
+        // ✅ تحديث العداد بعد الإنشاء
+        setTimeout(() => refreshExamLimit(), 300);
+        
+        showToast('✅ تم إنشاء الامتحان بنجاح!');
         return true;
+        
     } catch (error) {
-        console.error(error);
-        showToast('❌ حدث خطأ في حفظ الامتحان');
+        console.error('❌ خطأ في حفظ الامتحان:', error);
+        showToast('❌ حدث خطأ في حفظ الامتحان: ' + error.message);
         return false;
     }
 }
@@ -4271,7 +4287,8 @@ async function loadAllData() {
         
         if (currentUser) {
             await loadQuestions();
-            refreshExamLimit();
+            // ✅ تحديث العداد بعد تحميل كل البيانات
+            setTimeout(() => refreshExamLimit(), 300);
         }
     } catch (error) {
         console.error('خطأ في تحميل البيانات:', error);

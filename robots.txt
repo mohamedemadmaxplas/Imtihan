@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /private/
+
+Sitemap: https://imtihan-494010.web.app/sitemap.xml
+
+# الكلمات المفتاحية للزحف
+# imtihan, امتحانات, منصة امتحانات, اختبارات, تعليم, مدرسة, معلمين

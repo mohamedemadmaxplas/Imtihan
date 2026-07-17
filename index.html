@@ -3747,52 +3747,53 @@ function closeEditPlanPopup() {
         document.getElementById('statDetailsPopup').classList.remove('show');
     }
     
-    // ==================== دوال تفاصيل الطالب ====================
-    
     function showStudentDetails(studentName, examId) {
-        const studentResults = results.filter(r => r.studentName === studentName && r.examId === examId);
-        if (studentResults.length === 0) return;
-        
-        const result = studentResults[0];
-        document.getElementById('detailsStudentName').innerHTML = `${studentName} <span class="text-sm text-gray-500">(كود الطالب: ${result.studentNumber || '-'})</span>`;
-        
-        let wrongAnswersHtml = '';
-        if (result.answers) {
-            const wrongAnswers = result.answers.filter(a => !a.isCorrect);
-            if (wrongAnswers.length === 0) {
-                wrongAnswersHtml = '<p class="text-green-600">✅ جميع الإجابات صحيحة! أحسنت</p>';
-            } else {
-                wrongAnswersHtml = wrongAnswers.map(a => `
-                    <div class="border-b pb-2 mb-2">
-                        <p class="font-semibold">${a.question}</p>
-                        <p class="text-red-600">❌ إجابتك: ${a.userAnswer || 'لم يجب'}</p>
-                        <p class="text-green-600">✓ الإجابة الصحيحة: ${a.correctAnswer}</p>
-                    </div>
-                `).join('');
-            }
+    const studentResults = results.filter(r => r.studentName === studentName && r.examId === examId);
+    if (studentResults.length === 0) return;
+    
+    const result = studentResults[0];
+    document.getElementById('detailsStudentName').innerHTML = `${studentName} <span class="text-sm text-gray-500">(كود الطالب: ${result.studentNumber || '-'})</span>`;
+    
+    let wrongAnswersHtml = '';
+    if (result.answers) {
+        const wrongAnswers = result.answers.filter(a => !a.isCorrect);
+        if (wrongAnswers.length === 0) {
+            wrongAnswersHtml = '<p class="text-green-600">✅ جميع الإجابات صحيحة! أحسنت</p>';
+        } else {
+            wrongAnswersHtml = wrongAnswers.map(a => `
+                <div class="border-b pb-2 mb-2">
+                    <p class="font-semibold">${a.question}</p>
+                    <p class="text-red-600">❌ إجابتك: ${a.userAnswer || 'لم يجب'}</p>
+                    <p class="text-green-600">✓ الإجابة الصحيحة: ${a.correctAnswer}</p>
+                </div>
+            `).join('');
         }
-        
-        document.getElementById('detailsContent').innerHTML = `
-            <div class="text-right">
-                <div class="bg-gray-50 p-3 rounded-lg mb-4">
-                    <p><strong>📝 الامتحان:</strong> ${result.examTitle}</p>
-                    <p><strong>📚 الصف:</strong> ${result.examClass || 'غير محدد'}</p>
-                    <p><strong>📅 التاريخ:</strong> ${new Date(result.date).toLocaleDateString('ar-EG')}</p>
-                </div>
-                <div class="bg-gray-50 p-3 rounded-lg mb-4">
-                    <p><strong>🎯 الدرجة:</strong> ${result.score}/${result.totalScore}</p>
-                    <p><strong>📊 النسبة:</strong> ${result.percentage.toFixed(1)}%</p>
-                    <p><strong>⭐ التقدير:</strong> <span class="${result.passed ? 'text-green-600' : 'text-red-600'} font-bold">${result.grade}</span></p>
-                </div>
-                <div class="bg-gray-50 p-3 rounded-lg">
-                    <p class="font-bold mb-2">❌ الأخطاء:</p>
-                    ${wrongAnswersHtml}
-                </div>
-            </div>
-        `;
-        
-        document.getElementById('studentDetailsPopup').classList.add('show');
     }
+    
+    document.getElementById('detailsContent').innerHTML = `
+        <div class="text-right">
+            <div class="bg-gray-50 p-3 rounded-lg mb-4">
+                <p><strong>📝 الامتحان:</strong> ${result.examTitle}</p>
+                <p><strong>📚 الصف:</strong> ${result.examClass || 'غير محدد'}</p>
+                <p><strong>📅 التاريخ:</strong> ${new Date(result.date).toLocaleDateString('ar-EG')}</p>
+            </div>
+            <div class="bg-gray-50 p-3 rounded-lg mb-4">
+                <p><strong>🎯 الدرجة:</strong> ${result.score}/${result.totalScore}</p>
+                <p><strong>📊 النسبة:</strong> ${result.percentage.toFixed(1)}%</p>
+                <p><strong>⭐ التقدير:</strong> <span class="${result.passed ? 'text-green-600' : 'text-red-600'} font-bold">${result.grade}</span></p>
+            </div>
+            <div class="bg-gray-50 p-3 rounded-lg">
+                <p class="font-bold mb-2">❌ الأخطاء:</p>
+                ${wrongAnswersHtml}
+            </div>
+        </div>
+    `;
+    
+    // ✅ إظهار النافذة مع أولوية عرض عالية (z-index)
+    const popup = document.getElementById('studentDetailsPopup');
+    popup.style.zIndex = '9999';
+    popup.classList.add('show');
+}
     
     function closeStudentDetailsPopup() {
         document.getElementById('studentDetailsPopup').classList.remove('show');

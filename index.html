@@ -475,6 +475,81 @@ body.exam-mode {
     0%, 100% { background-position: 0% 50%; }
     50% { background-position: 100% 50%; }
 }
+/* ==================== تنسيق بطاقات الباقات ==================== */
+
+#plansList .grid {
+    direction: rtl;
+}
+
+#plansList .grid > div {
+    transition: all 0.3s ease;
+}
+
+#plansList .grid > div:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px -10px rgba(0,0,0,0.2);
+}
+
+/* تحسين عرض الباقات على الشاشات الصغيرة */
+@media (max-width: 640px) {
+    #plansList .grid {
+        grid-template-columns: 1fr !important;
+        gap: 1.5rem;
+    }
+    
+    #plansList .grid > div {
+        max-width: 100%;
+        margin: 0 auto;
+    }
+}
+
+/* تحسين عرض الباقات على الشاشات المتوسطة */
+@media (min-width: 641px) and (max-width: 1024px) {
+    #plansList .grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 1.5rem;
+    }
+}
+
+/* تحسين عرض الباقات على الشاشات الكبيرة */
+@media (min-width: 1025px) {
+    #plansList .grid {
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 2rem;
+    }
+}
+
+/* تنسيق شارة الخصم */
+#plansList .absolute.top-2.right-2 {
+    animation: pulse-discount 2s ease-in-out infinite;
+}
+
+@keyframes pulse-discount {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+/* تنسيق زر الاشتراك */
+#plansList button {
+    position: relative;
+    overflow: hidden;
+}
+
+#plansList button::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+#plansList button:hover::after {
+    opacity: 1;
+}
     </style>
 </head>
 <body>
@@ -1686,7 +1761,6 @@ function refreshPlansPage() {
                         });
                     }
                 }
-                // تحديث العنصر بعد جلب التاريخ
                 const expiryElement = document.getElementById('userExpiryDate');
                 if (expiryElement) {
                     expiryElement.innerText = userExpiryDate;
@@ -1697,13 +1771,12 @@ function refreshPlansPage() {
         }
     }
     
-    // ✅ بناء HTML الباقات
+    // ✅ بناء HTML الباقات مع تحسين التوزيع
     let plansHtml = sortedPlans.map(plan => {
         let bgColor = "";
         let btnColor = "";
         let icon = "";
         let isCurrentPlan = currentUser && currentUser.plan === plan.id;
-        let isLocked = false;
         
         switch(plan.id) {
             case 'basic':
@@ -1761,14 +1834,12 @@ function refreshPlansPage() {
                 </div>
             `;
         } else if (isFree) {
-            // مستخدم مجاني
             actionButton = `
                 <button onclick="requestUpgrade('${plan.id}')" class="mt-5 w-full ${btnColor} text-white py-3 rounded-lg transition font-bold text-base">
                     <i class="fas fa-rocket ml-2"></i> اشترك الآن
                 </button>
             `;
         } else {
-            // مستخدم مدفوع يريد الترقية أو التجديد
             actionButton = `
                 <button onclick="requestUpgrade('${plan.id}')" class="mt-5 w-full ${btnColor} text-white py-3 rounded-lg transition font-bold text-base">
                     <i class="fas fa-sync-alt ml-2"></i> جدد باقتك
@@ -1813,7 +1884,7 @@ function refreshPlansPage() {
     if (currentUser) {
         const userPlan = plans.find(p => p.id === currentUser.plan) || plans[0];
         subscriptionInfo = `
-            <div class="col-span-full mt-6 p-4 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl border border-indigo-200">
+            <div class="col-span-1 md:col-span-2 lg:col-span-3 mt-6 p-4 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl border border-indigo-200">
                 <div class="flex flex-wrap items-center justify-between gap-3">
                     <div>
                         <p class="font-bold text-indigo-700">
@@ -1838,9 +1909,18 @@ function refreshPlansPage() {
         `;
     }
     
-    // ✅ عرض الباقات مع معلومات الاشتراك
+    // ✅ عرض الباقات مع توزيع متجاوب حسب عدد الباقات
+    let gridCols = 'grid-cols-1';
+    if (sortedPlans.length === 2) {
+        gridCols = 'grid-cols-1 md:grid-cols-2';
+    } else if (sortedPlans.length === 3) {
+        gridCols = 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3';
+    } else if (sortedPlans.length >= 4) {
+        gridCols = 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4';
+    }
+    
     container.innerHTML = `
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="grid ${gridCols} gap-6 max-w-7xl mx-auto">
             ${plansHtml}
         </div>
         ${subscriptionInfo}

@@ -550,7 +550,7 @@ body.exam-mode {
 #plansList button:hover::after {
     opacity: 1;
 }
-/* ==================== تنسيق بطاقات الباقات ==================== */
+/* ==================== تنسيق بطاقات الباقات (عريضة) ==================== */
 
 #plansList {
     direction: rtl;
@@ -558,43 +558,61 @@ body.exam-mode {
 
 #plansList .grid {
     display: grid;
-    gap: 1.5rem;
+    gap: 2rem;
 }
 
-/* على الموبايل: عمود واحد */
+/* على الموبايل: عمود واحد عريض */
 @media (max-width: 767px) {
     #plansList .grid {
         grid-template-columns: 1fr !important;
+        gap: 1.5rem;
+    }
+    
+    #plansList .grid > div {
+        max-width: 100% !important;
+        width: 100% !important;
     }
 }
 
-/* على التابلت: عمودين */
+/* على التابلت: عمودين عريضين */
 @media (min-width: 768px) and (max-width: 1023px) {
     #plansList .grid {
         grid-template-columns: repeat(2, 1fr) !important;
+        gap: 1.5rem;
     }
 }
 
-/* على الشاشات الكبيرة: 3 أعمدة */
-@media (min-width: 1024px) {
+/* على الشاشات الكبيرة: 2 أو 3 أعمدة حسب العرض */
+@media (min-width: 1024px) and (max-width: 1279px) {
+    #plansList .grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 2rem;
+    }
+}
+
+@media (min-width: 1280px) {
     #plansList .grid {
         grid-template-columns: repeat(3, 1fr) !important;
+        gap: 2rem;
     }
 }
 
-/* تنسيق البطاقة */
+/* تنسيق البطاقة عريضة */
 #plansList .grid > div {
     background: white;
-    border-radius: 16px;
-    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+    border-radius: 20px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
     transition: all 0.3s ease;
     overflow: hidden;
     border: 2px solid #e5e7eb;
+    min-height: 420px;
+    display: flex;
+    flex-direction: column;
 }
 
 #plansList .grid > div:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 20px 40px -10px rgba(0,0,0,0.2);
+    transform: translateY(-10px);
+    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
 }
 
 /* الباقة النشطة */
@@ -604,7 +622,7 @@ body.exam-mode {
 }
 
 /* شارة الخصم */
-#plansList .absolute.top-2.right-2 {
+#plansList .absolute.top-3.right-3 {
     animation: pulse-discount 2s ease-in-out infinite;
 }
 
@@ -617,6 +635,15 @@ body.exam-mode {
 #plansList button {
     position: relative;
     overflow: hidden;
+    font-weight: bold;
+    padding: 12px;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+#plansList button:hover {
+    transform: scale(1.02);
+    box-shadow: 0 10px 25px -5px rgba(0,0,0,0.2);
 }
 
 #plansList button::after {
@@ -626,13 +653,36 @@ body.exam-mode {
     left: -50%;
     width: 200%;
     height: 200%;
-    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
+    background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 60%);
     opacity: 0;
     transition: opacity 0.3s ease;
 }
 
 #plansList button:hover::after {
     opacity: 1;
+}
+
+/* توسيع المسافات الداخلية */
+#plansList .grid > div .p-5 {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+#plansList .grid > div .p-5 ul {
+    flex: 1;
+}
+
+/* تنسيق القائمة */
+#plansList .grid > div ul li {
+    padding: 6px 0;
+    font-size: 14px;
+    color: #374151;
+}
+
+#plansList .grid > div ul li i {
+    font-size: 16px;
+    width: 20px;
 }
     </style>
 </head>
@@ -1830,7 +1880,6 @@ function refreshPlansPage() {
         userPlanId = currentUser.plan || 'free';
         isFree = userPlanId === 'free';
         
-        // محاولة جلب تاريخ التجديد من الاشتراك
         try {
             const subSnapshot = db.ref(`subscriptions/${currentUser.uid}`).once('value');
             subSnapshot.then(snap => {
@@ -1855,13 +1904,12 @@ function refreshPlansPage() {
         }
     }
     
-    // ✅ بناء HTML الباقات
+    // ✅ بناء HTML الباقات (بطاقات عريضة)
     let plansHtml = sortedPlans.map(plan => {
         let bgColor = "";
         let btnColor = "";
         let icon = "";
         let isCurrentPlan = currentUser && currentUser.plan === plan.id;
-        let isLocked = false;
         
         switch(plan.id) {
             case 'basic':
@@ -1933,10 +1981,11 @@ function refreshPlansPage() {
         }
         
         return `
-            <div class="bg-white rounded-xl shadow-lg overflow-hidden border-2 hover:scale-105 transition-all duration-300 relative ${isCurrentPlan ? 'border-green-500 ring-2 ring-green-200' : 'border-gray-200'}">
-                ${isCurrentPlan ? `<div class="absolute top-2 left-2 bg-green-500 text-white text-xs px-3 py-1 rounded-full font-bold z-10">✓ نشط</div>` : ''}
-                ${hasDiscount ? `<div class="absolute top-2 right-2 bg-red-500 text-white text-sm px-3 py-1 rounded-full font-bold z-10">-${discountPercent}%</div>` : ''}
-                <div class="bg-gradient-to-r ${bgColor} p-5 text-center text-white">
+            <div class="bg-white rounded-2xl shadow-lg overflow-hidden border-2 hover:shadow-2xl transition-all duration-300 relative ${isCurrentPlan ? 'border-green-500 ring-2 ring-green-200' : 'border-gray-200'}">
+                ${isCurrentPlan ? `<div class="absolute top-3 left-3 bg-green-500 text-white text-xs px-3 py-1 rounded-full font-bold z-10">✓ نشط</div>` : ''}
+                ${hasDiscount ? `<div class="absolute top-3 right-3 bg-red-500 text-white text-sm px-3 py-1 rounded-full font-bold z-10">-${discountPercent}%</div>` : ''}
+                
+                <div class="bg-gradient-to-r ${bgColor} p-6 text-center text-white">
                     <div class="text-5xl mb-3">${icon}</div>
                     <h3 class="text-2xl font-bold">${plan.name}</h3>
                     <div class="mt-3">
@@ -1946,10 +1995,11 @@ function refreshPlansPage() {
                     </div>
                     <div class="text-sm mt-2 opacity-90">📊 ${plan.examsCount.toLocaleString()} امتحان شهرياً</div>
                 </div>
-                <div class="p-4">
+                
+                <div class="p-5">
                     <ul class="space-y-2 text-sm">
                         ${plan.features.map(f => `
-                            <li class="flex items-center gap-2">
+                            <li class="flex items-center gap-2 py-1 border-b border-gray-50 last:border-0">
                                 <i class="fas fa-check-circle text-green-500 text-sm"></i>
                                 <span>${f}</span>
                             </li>
@@ -1969,10 +2019,10 @@ function refreshPlansPage() {
     if (currentUser) {
         const userPlan = plans.find(p => p.id === currentUser.plan) || plans[0];
         subscriptionInfo = `
-            <div class="col-span-full mt-6 p-4 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl border border-indigo-200">
-                <div class="flex flex-wrap items-center justify-between gap-3">
+            <div class="col-span-full mt-8 p-5 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl border-2 border-indigo-200">
+                <div class="flex flex-wrap items-center justify-between gap-4">
                     <div>
-                        <p class="font-bold text-indigo-700">
+                        <p class="font-bold text-indigo-700 text-lg">
                             <i class="fas fa-user-check ml-2"></i>
                             باقتك الحالية: <span class="text-indigo-900">${userPlan.name}</span>
                         </p>
@@ -1985,7 +2035,7 @@ function refreshPlansPage() {
                         </p>
                     </div>
                     <div>
-                        <button onclick="navigateTo('account')" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition text-sm">
+                        <button onclick="navigateTo('account')" class="bg-indigo-600 text-white px-5 py-2.5 rounded-lg hover:bg-indigo-700 transition text-sm">
                             <i class="fas fa-user ml-1"></i> حسابي
                         </button>
                     </div>
@@ -1994,16 +2044,16 @@ function refreshPlansPage() {
         `;
     }
     
-    // ✅ عرض الباقات مع توزيع Grid متجاوب (نسخة بسيطة)
+    // ✅ عرض الباقات مع توزيع عريض
     container.innerHTML = `
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6 max-w-6xl mx-auto">
             ${plansHtml}
         </div>
         ${subscriptionInfo}
         
         <!-- ✅ زر العودة للرئيسية -->
-        <div class="mt-8 text-center">
-            <button onclick="navigateTo('home')" class="bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700 transition">
+        <div class="mt-10 text-center">
+            <button onclick="navigateTo('home')" class="bg-gray-600 text-white px-8 py-3 rounded-lg hover:bg-gray-700 transition text-lg">
                 <i class="fas fa-home ml-2"></i> العودة للرئيسية
             </button>
         </div>

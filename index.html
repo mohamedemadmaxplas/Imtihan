@@ -2899,15 +2899,24 @@ function resetToNormalMode() {
     }
     
     async function logout() {
-        await auth.signOut();
-        currentUser = null;
-        updateUserUI();
-        showToast('تم تسجيل الخروج');
-        navigateTo('home');
-        await loadAllData();
-    }
+    await auth.signOut();
+    currentUser = null;
     
-  function updateUserUI() {
+    // ✅ مسح localStorage
+    localStorage.removeItem('user_uid');
+    localStorage.removeItem('user_name');
+    localStorage.removeItem('user_username');
+    localStorage.removeItem('user_email');
+    localStorage.removeItem('user_password');
+    localStorage.removeItem('user_plan');
+    
+    updateUserUI();
+    showToast('تم تسجيل الخروج');
+    navigateTo('home');
+    await loadAllData();
+}
+    
+ function updateUserUI() {
     const loginArea = document.getElementById('loginBtnArea');
     const avatarArea = document.getElementById('userAvatarArea');
     
@@ -2917,12 +2926,40 @@ function resetToNormalMode() {
         
         const avatarInitial = document.getElementById('avatarInitial');
         if (avatarInitial) {
-            avatarInitial.innerText = currentUser.name?.charAt(0).toUpperCase() || 'U';
+            // ✅ استخدام اسم المستخدم بدلاً من U
+            avatarInitial.innerText = currentUser.name?.charAt(0).toUpperCase() || 
+                                     currentUser.username?.charAt(0).toUpperCase() || 'U';
         }
     } else {
         if (loginArea) loginArea.classList.remove('hidden');
         if (avatarArea) avatarArea.classList.add('hidden');
     }
+}
+// ==================== استعادة الجلسة من localStorage ====================
+function restoreSession() {
+    const uid = localStorage.getItem('user_uid');
+    const name = localStorage.getItem('user_name');
+    const username = localStorage.getItem('user_username');
+    const email = localStorage.getItem('user_email');
+    const plan = localStorage.getItem('user_plan') || 'free';
+    
+    if (uid && name) {
+        currentUser = {
+            uid: uid,
+            name: name,
+            username: username,
+            email: email,
+            plan: plan
+        };
+        updateUserUI();
+        return true;
+    }
+    return false;
+}
+
+// استدعاء عند تحميل الصفحة
+if (!currentUser) {
+    restoreSession();
 }
   // ==================== استقبال بيانات تسجيل الدخول من تكنو شرك ====================
 (async function checkAutoLogin() {
@@ -2932,24 +2969,27 @@ function resetToNormalMode() {
     if (!token) return;
     
     try {
+        // فك تشفير البيانات
         const userData = JSON.parse(atob(token));
         
+        // التحقق من صلاحية الرمز
         if (userData.expires < Date.now()) {
             showToast('⚠️ انتهت صلاحية رابط تسجيل الدخول');
             return;
         }
         
-        // التحقق من وجود المستخدم
-        let existingUser = await getUserProfile(userData.uid);
+        // ✅ التحقق من وجود المستخدم في قاعدة البيانات بالهيكل الجديد
+        let userProfile = await getUserProfile(userData.uid);
         
-        if (!existingUser) {
-            // حفظ المستخدم في الهيكل الجديد
+        if (!userProfile) {
+            // إذا لم يكن موجوداً، قم بإنشائه في الهيكل الجديد
             await db.ref(`users/${userData.uid}/profile`).set({
                 name: userData.name,
                 username: userData.username,
                 email: userData.email,
                 phone: userData.phone || '',
                 plan: userData.plan || 'free',
+                password: userData.password || '',
                 createdAt: new Date().toISOString()
             });
             
@@ -2957,34 +2997,76 @@ function resetToNormalMode() {
                 name: userData.name,
                 username: userData.username,
                 email: userData.email,
-                phone: userData.phone || ''
+                phone: userData.phone || '',
+                password: userData.password || ''
             });
+            
+            userProfile = {
+                uid: userData.uid,
+                name: userData.name,
+                username: userData.username,
+                email: userData.email,
+                phone: userData.phone || '',
+                plan: userData.plan || 'free',
+                password: userData.password || ''
+            };
         }
         
-        // محاولة تسجيل الدخول إلى Firebase Authentication
+        // ✅ محاولة تسجيل الدخول إلى Firebase Authentication
         try {
-            await auth.signInWithEmailAndPassword(userData.email, userData.password || 'temppass123');
+            // استخدام البريد الإلكتروني من البيانات
+            const email = userData.email || userData.username.split('@')[0] + '@tecno.com';
+            const password = userData.password || 'temppass123';
+            
+            await auth.signInWithEmailAndPassword(email, password);
+            console.log('✅ تم تسجيل الدخول إلى Firebase Authentication');
         } catch (authError) {
+            console.log('خطأ في تسجيل الدخول:', authError.code);
+            
             if (authError.code === 'auth/user-not-found') {
-                await auth.createUserWithEmailAndPassword(userData.email, userData.password || 'temppass123');
+                // إنشاء حساب جديد في Authentication
+                try {
+                    const email = userData.email || userData.username.split('@')[0] + '@tecno.com';
+                    const password = userData.password || 'temppass123';
+                    await auth.createUserWithEmailAndPassword(email, password);
+                    console.log('✅ تم إنشاء حساب في Firebase Authentication');
+                } catch (createError) {
+                    console.log('لا يمكن إنشاء حساب:', createError.code);
+                }
+            } else if (authError.code === 'auth/wrong-password') {
+                // محاولة إعادة تعيين كلمة المرور
+                console.log('⚠️ كلمة المرور غير صحيحة، محاولة إعادة تعيين...');
             }
         }
         
-        // جلب البيانات المحدثة
-        currentUser = await getUserProfile(userData.uid);
+        // ✅ تعيين المستخدم الحالي
+        currentUser = userProfile;
+        
+        // ✅ حفظ في localStorage عشان الجلسة
+        localStorage.setItem('user_uid', userData.uid);
+        localStorage.setItem('user_name', userData.name);
+        localStorage.setItem('user_username', userData.username);
+        localStorage.setItem('user_email', userData.email);
+        localStorage.setItem('user_plan', userData.plan || 'free');
+        
+        // تحديث واجهة المستخدم
         updateUserUI();
-        showToast(`✅ مرحباً ${currentUser?.name || userData.name}`);
+        showToast(`✅ مرحباً ${currentUser.name || currentUser.username}`);
+        
+        // تحميل البيانات
         await loadAllData();
         
-        // تنظيف الرابط
+        // تنظيف الرابط من التوكين
         window.history.replaceState({}, document.title, window.location.pathname);
+        
+        // الانتقال إلى الصفحة الرئيسية
         navigateTo('home');
         
     } catch (error) {
         console.error('خطأ في معالجة تسجيل الدخول:', error);
         showToast('حدث خطأ في تسجيل الدخول التلقائي');
     }
-})();  
+})();
     // ==================== دوال الإدارة ====================
     
     function showAdminLogin() {

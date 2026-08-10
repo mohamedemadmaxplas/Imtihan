@@ -1508,9 +1508,7 @@ async function getUserProfile(uid) {
         }
     }
     
-    // ==================== دوال العرض والتحديث ====================
-    
-    function refreshHome() {
+   function refreshHome() {
     if (!currentUser) {
         document.getElementById('totalExams').innerText = '0';
         document.getElementById('activeExams').innerText = '0';
@@ -1563,6 +1561,9 @@ async function getUserProfile(uid) {
             </div>
         `).join('');
     }
+    
+    // ✅ تحديث العداد عند عرض الصفحة الرئيسية
+    setTimeout(() => refreshExamLimit(), 300);
 }
     
 function refreshExamsList() {
@@ -2074,19 +2075,11 @@ async function refreshExamLimit() {
         
         const maxExams = userPlan.examsCount || 8;
         
-        // ✅ استخدام العداد المنفصل
+        // ✅ قراءة العداد من قاعدة البيانات
         const examCountSnapshot = await db.ref(`users/${currentUser.uid}/examCount`).once('value');
         const usedExams = examCountSnapshot.val() || 0;
         
-        // ✅ حساب النتائج هذا الشهر
-        const now = new Date();
-        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
-        const userResultsThisMonth = results.filter(r => 
-            r.userId === currentUser.uid && new Date(r.date).getTime() >= startOfMonth
-        );
-        
-        const totalUsed = usedExams + userResultsThisMonth.length;
-        const remaining = Math.max(0, maxExams - totalUsed);
+        const remaining = Math.max(0, maxExams - usedExams);
         
         // ✅ تحديث عداد الامتحانات في صفحة الحساب
         const accountRemaining = document.getElementById('accountRemaining');
@@ -2186,7 +2179,7 @@ async function refreshExamLimit() {
             }
         }
         
-        console.log(`📊 الخطة: ${userPlan.name}, الحد: ${maxExams}, المستخدم: ${totalUsed}, المتبقي: ${remaining}`);
+        console.log(`📊 الخطة: ${userPlan.name}, الحد: ${maxExams}, المستخدم: ${usedExams}, المتبقي: ${remaining}`);
         
     } catch (error) {
         console.error('❌ خطأ في تحديث حد الامتحانات:', error);
@@ -2355,7 +2348,7 @@ async function refreshExamLimit() {
         return false;
     }
     
-    // جلب البيانات من النموذج...
+    // جلب البيانات من النموذج
     const title = document.getElementById('examTitle')?.value.trim();
     const className = document.getElementById('examClass')?.value.trim();
     const teacherName = document.getElementById('examTeacher')?.value.trim() || currentUser.name || 'مدرس';
@@ -2406,7 +2399,7 @@ async function refreshExamLimit() {
         await db.ref(`exams/${examId}`).set(examData);
         exams.push(examData);
         
-        // ✅ زيادة عداد الامتحانات المستخدمة
+        // ✅ ✅ ✅ فقط هنا يقل العداد (عند إنشاء الامتحان)
         const currentCount = (await db.ref(`users/${currentUser.uid}/examCount`).once('value')).val() || 0;
         await db.ref(`users/${currentUser.uid}/examCount`).set(currentCount + 1);
         
@@ -2450,15 +2443,7 @@ async function getRemainingExams() {
     const examCountSnapshot = await db.ref(`users/${currentUser.uid}/examCount`).once('value');
     const usedExams = examCountSnapshot.val() || 0;
     
-    // ✅ قراءة عدد النتائج هذا الشهر (للاستخدامات الأخرى)
-    const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
-    const userResultsThisMonth = results.filter(r => 
-        r.userId === currentUser.uid && new Date(r.date).getTime() >= startOfMonth
-    );
-    
-    const totalUsed = usedExams + userResultsThisMonth.length;
-    const remaining = Math.max(0, maxExams - totalUsed);
+    const remaining = Math.max(0, maxExams - usedExams);
     
     return remaining;
 }
@@ -3091,13 +3076,16 @@ function resetToNormalMode() {
         document.getElementById('deleteConfirmPopup').classList.add('show');
     }
     
-    async function confirmDelete() {
+   async function confirmDelete() {
     if (deleteTarget) {
         await db.ref(`exams/${deleteTarget}`).remove();
         exams = exams.filter(e => e.id !== deleteTarget);
         refreshExamsList();
         refreshHome();
-        // ✅ لا نقوم بتحديث العداد هنا (يبقى كما هو)
+        
+        // ✅ ✅ ✅ لا نغير العداد هنا (يبقى كما هو)
+        // لا نستدعي refreshExamLimit() هنا حتى لا يتغير العداد
+        
         showToast('✅ تم حذف الامتحان');
     }
     closeDeletePopup();

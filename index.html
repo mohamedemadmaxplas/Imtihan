@@ -2411,7 +2411,7 @@ async function refreshExamLimit() {
         await db.ref(`exams/${examId}`).set(examData);
         exams.push(examData);
         
-        // ✅ ✅ ✅ فقط هنا يقل العداد (عند إنشاء الامتحان)
+        // ✅ زيادة العداد عند إنشاء الامتحان
         const currentCount = (await db.ref(`users/${currentUser.uid}/examCount`).once('value')).val() || 0;
         await db.ref(`users/${currentUser.uid}/examCount`).set(currentCount + 1);
         
@@ -2428,7 +2428,11 @@ async function refreshExamLimit() {
         
         refreshExamsList();
         refreshHome();
-        setTimeout(() => refreshExamLimit(), 300);
+        
+        // ✅ ✅ ✅ تحديث العداد في كل مكان (بدون رفرش)
+        setTimeout(() => {
+            refreshExamLimit();  // يحدث العداد في صفحة الحساب وفي صفحة إنشاء الامتحان
+        }, 300);
         
         showToast('✅ تم إنشاء الامتحان بنجاح!');
         return true;

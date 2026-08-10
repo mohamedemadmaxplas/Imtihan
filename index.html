@@ -788,6 +788,95 @@ body.exam-mode {
 #studentExamContent .fas {
     display: inline-block !important;
 }
+/* ✅ تنسيق RTL للأسئلة والخيارات */
+#studentExamContent .text-right {
+    text-align: right !important;
+}
+
+#studentExamContent .justify-end {
+    justify-content: flex-end !important;
+}
+
+/* ✅ تنسيق الراديو بوتونات */
+#studentExamContent input[type="radio"] {
+    accent-color: #6366f1;
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+/* ✅ تنسيق الخيارات */
+#studentExamContent .flex.items-center.gap-3 {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.75rem !important;
+}
+
+/* ✅ ترتيب الخيارات بشكل صحيح */
+#studentExamContent .flex.items-center.gap-3 .flex-1 {
+    flex: 1 !important;
+}
+
+/* ✅ تنسيق مجموعة الخيارات */
+#studentExamContent .space-y-2 > * + * {
+    margin-top: 0.5rem !important;
+}
+
+/* ✅ تنسيق الراديو بوتونات صح/خطأ */
+#studentExamContent .flex.gap-4 {
+    display: flex !important;
+    gap: 1rem !important;
+}
+
+/* ✅ تنسيق النص داخل البطاقات */
+#studentExamContent .text-white\/80 {
+    color: rgba(255, 255, 255, 0.8) !important;
+}
+
+/* ✅ تنسيق hover */
+#studentExamContent .hover\:bg-white\/10:hover {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* ✅ تنسيق الخيارات عند hover */
+#studentExamContent .group:hover .group-hover\:text-white {
+    color: white !important;
+}
+
+/* ✅ تنسيق شريط التمرير المخصص */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(99, 102, 241, 0.5);
+    border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(99, 102, 241, 0.8);
+}
+
+/* ✅ تنسيق الحقول */
+#studentExamContent textarea {
+    direction: rtl;
+}
+
+/* ✅ تنسيق زر الإرسال */
+#studentExamContent button[type="submit"] {
+    cursor: pointer !important;
+}
+
+/* ✅ تنسيق البطاقات */
+#studentExamContent .bg-white\/10 {
+    backdrop-filter: blur(10px);
+}
     </style>
 </head>
 <body>
@@ -2708,7 +2797,7 @@ function renderExam(examId) {
     sessionStorage.setItem('studentName', studentName);
     sessionStorage.setItem('studentNumber', studentNumber);
     
-    // ✅ بناء الأسئلة بتنسيق جميل
+    // ✅ بناء الأسئلة بتنسيق RTL صحيح
     let qHtml = '';
     exam.questions.forEach((q, idx) => {
         const questionNumber = idx + 1;
@@ -2717,19 +2806,19 @@ function renderExam(examId) {
             qHtml += `
                 <div class="bg-white/10 backdrop-blur-sm rounded-xl p-5 mb-4 border border-white/10">
                     <div class="flex justify-between items-start mb-3">
-                        <p class="text-white font-bold text-base">
-                            ${questionNumber}. ${q.text}
-                        </p>
                         <span class="bg-indigo-500/30 text-indigo-200 text-xs px-3 py-1 rounded-full border border-indigo-400/30">
                             ${q.score} درجة
                         </span>
+                        <p class="text-white font-bold text-base flex-1 text-right">
+                            ${questionNumber}. ${q.text}
+                        </p>
                     </div>
                     <div class="space-y-2 pr-4">
                         ${q.options.map((opt, oi) => `
-                            <label class="flex items-center gap-3 py-2 px-3 rounded-lg bg-white/5 hover:bg-white/10 cursor-pointer transition group">
+                            <label class="flex items-center gap-3 py-2 px-3 rounded-lg bg-white/5 hover:bg-white/10 cursor-pointer transition group justify-end">
+                                <span class="text-white/80 group-hover:text-white transition text-sm flex-1 text-right">${opt}</span>
                                 <input type="radio" name="q${idx}" value="${opt}" 
-                                    class="w-4 h-4 accent-indigo-500 cursor-pointer">
-                                <span class="text-white/80 group-hover:text-white transition text-sm">${opt}</span>
+                                    class="w-5 h-5 accent-indigo-500 cursor-pointer shrink-0">
                             </label>
                         `).join('')}
                     </div>
@@ -2739,21 +2828,21 @@ function renderExam(examId) {
             qHtml += `
                 <div class="bg-white/10 backdrop-blur-sm rounded-xl p-5 mb-4 border border-white/10">
                     <div class="flex justify-between items-start mb-3">
-                        <p class="text-white font-bold text-base">
-                            ${questionNumber}. ${q.text}
-                        </p>
                         <span class="bg-indigo-500/30 text-indigo-200 text-xs px-3 py-1 rounded-full border border-indigo-400/30">
                             ${q.score} درجة
                         </span>
+                        <p class="text-white font-bold text-base flex-1 text-right">
+                            ${questionNumber}. ${q.text}
+                        </p>
                     </div>
-                    <div class="flex gap-4 pr-4">
+                    <div class="flex gap-4 pr-4 justify-end">
                         <label class="flex items-center gap-3 py-2 px-4 rounded-lg bg-white/5 hover:bg-white/10 cursor-pointer transition group">
-                            <input type="radio" name="q${idx}" value="صح" class="w-4 h-4 accent-green-500 cursor-pointer">
-                            <span class="text-white/80 group-hover:text-white transition">✅ صح</span>
+                            <span class="text-white/80 group-hover:text-white transition">صح</span>
+                            <input type="radio" name="q${idx}" value="صح" class="w-5 h-5 accent-green-500 cursor-pointer">
                         </label>
                         <label class="flex items-center gap-3 py-2 px-4 rounded-lg bg-white/5 hover:bg-white/10 cursor-pointer transition group">
-                            <input type="radio" name="q${idx}" value="خطأ" class="w-4 h-4 accent-red-500 cursor-pointer">
-                            <span class="text-white/80 group-hover:text-white transition">❌ خطأ</span>
+                            <span class="text-white/80 group-hover:text-white transition">خطأ</span>
+                            <input type="radio" name="q${idx}" value="خطأ" class="w-5 h-5 accent-red-500 cursor-pointer">
                         </label>
                     </div>
                 </div>
@@ -2762,20 +2851,20 @@ function renderExam(examId) {
             qHtml += `
                 <div class="bg-white/10 backdrop-blur-sm rounded-xl p-5 mb-4 border border-white/10">
                     <div class="flex justify-between items-start mb-3">
-                        <p class="text-white font-bold text-base">
-                            ${questionNumber}. ${q.text}
-                        </p>
                         <span class="bg-indigo-500/30 text-indigo-200 text-xs px-3 py-1 rounded-full border border-indigo-400/30">
                             ${q.score} درجة
                         </span>
+                        <p class="text-white font-bold text-base flex-1 text-right">
+                            ${questionNumber}. ${q.text}
+                        </p>
                     </div>
                     <div class="pr-4">
                         <textarea name="q${idx}" rows="4" 
-                            class="w-full p-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition resize-y"
+                            class="w-full p-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition resize-y text-right"
                             placeholder="اكتب إجابتك هنا..."></textarea>
-                        <p class="text-gray-400 text-xs mt-2 flex items-center gap-2">
+                        <p class="text-gray-400 text-xs mt-2 flex items-center gap-2 justify-end">
                             <i class="fas fa-info-circle text-indigo-400"></i>
-                            سيتم تصحيح إجابتك تلقائياً بناءً على الإجابة النموذجية
+                            سيتم تصحيح إجابتك تلقائياً
                         </p>
                     </div>
                 </div>
@@ -2783,7 +2872,7 @@ function renderExam(examId) {
         }
     });
     
-    // ✅ عرض الامتحان بتنسيق جميل
+    // ✅ عرض الامتحان بتنسيق جميل مع RTL
     const container = document.getElementById('studentExamContent');
     container.innerHTML = `
         <div class="relative overflow-hidden rounded-2xl">
@@ -2798,9 +2887,9 @@ function renderExam(examId) {
             <div class="relative z-10 p-6 md:p-8">
                 <!-- رأس الامتحان -->
                 <div class="flex flex-wrap justify-between items-center mb-6 gap-4">
-                    <div>
+                    <div class="text-right">
                         <h2 class="text-2xl font-bold text-white">${exam.title}</h2>
-                        <p class="text-gray-300 text-sm flex items-center gap-3 mt-1">
+                        <p class="text-gray-300 text-sm flex items-center gap-3 mt-1 justify-end">
                             <span class="flex items-center gap-1"><i class="fas fa-user text-indigo-400"></i> ${exam.teacherName || exam.creatorName || 'مدرس'}</span>
                             <span class="w-1 h-1 rounded-full bg-gray-600"></span>
                             <span class="flex items-center gap-1"><i class="fas fa-book text-indigo-400"></i> ${exam.className || 'بدون صف'}</span>
@@ -2813,7 +2902,7 @@ function renderExam(examId) {
                 </div>
                 
                 <!-- معلومات الطالب -->
-                <div class="bg-white/5 backdrop-blur-sm rounded-xl p-3 mb-5 border border-white/10 flex flex-wrap gap-4 text-sm">
+                <div class="bg-white/5 backdrop-blur-sm rounded-xl p-3 mb-5 border border-white/10 flex flex-wrap gap-4 text-sm justify-end">
                     <span class="text-gray-300"><span class="text-gray-400">👤 الطالب:</span> <span class="text-white font-medium">${studentName}</span></span>
                     <span class="text-gray-300"><span class="text-gray-400">🆔 الكود:</span> <span class="text-white font-medium">${studentNumber}</span></span>
                     <span class="text-gray-300"><span class="text-gray-400">📝 عدد الأسئلة:</span> <span class="text-white font-medium">${exam.questions.length}</span></span>
@@ -2821,7 +2910,7 @@ function renderExam(examId) {
                 
                 <!-- الأسئلة -->
                 <form id="examForm2" onsubmit="submitStudentExam(event, '${exam.id}')">
-                    <div class="max-h-[60vh] overflow-y-auto pr-2 space-y-3 custom-scrollbar">
+                    <div class="max-h-[55vh] overflow-y-auto pr-2 space-y-3 custom-scrollbar">
                         ${qHtml}
                     </div>
                     
@@ -2856,7 +2945,6 @@ function renderExam(examId) {
             const timerDisplay = document.getElementById('timerDisplay');
             if (timerDisplay) timerDisplay.innerHTML = `${mins}:${secs.toString().padStart(2, '0')}`;
             
-            // تغيير لون المؤقت عند اقتراب الوقت
             if (timerDisplay && timeLeft < 60) {
                 timerDisplay.classList.add('text-red-400');
                 timerDisplay.classList.remove('text-indigo-400');

@@ -681,6 +681,60 @@ body.exam-mode {
     font-size: 16px;
     width: 20px;
 }
+
+/* تنسيق صفحة بدء الامتحان */
+#studentExamContent {
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+#studentExamContent .relative {
+    min-height: 500px;
+}
+
+/* تنسيق الحقول */
+#studentExamContent input::placeholder {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+#studentExamContent input:focus {
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.3);
+}
+
+/* تأثير الخلفية المتدرجة المتحركة */
+@keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+#studentExamContent .absolute.inset-0 {
+    background-size: 200% 200%;
+    animation: gradientShift 8s ease-in-out infinite;
+}
+
+/* تنسيق زر بدء الامتحان */
+#studentExamContent button {
+    transition: all 0.3s ease;
+}
+
+#studentExamContent button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 15px 30px -10px rgba(0, 0, 0, 0.3);
+}
+
+/* تأثير نبض للأيقونة */
+@keyframes pulseIcon {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+#studentExamContent .w-20.h-20 {
+    animation: pulseIcon 3s ease-in-out infinite;
+}
     </style>
 </head>
 <body>
@@ -2579,35 +2633,7 @@ async function autoRenewSubscriptions() {
     sessionStorage.setItem('currentExam', JSON.stringify(exam));
     showStudentExam(exam);
 }
-  function showStudentExam(exam) {
-    // إضافة تأثير الضبابية على الصفحة الرئيسية
-    const mainContent = document.querySelector('.container');
-    const sidebar = document.getElementById('sidebar');
-    const header = document.querySelector('nav');
-    const footer = document.querySelector('.footer');
-    
-    if (mainContent) mainContent.classList.add('blur-background');
-    if (sidebar) sidebar.classList.add('blur-background');
-    if (header) header.classList.add('blur-background');
-    if (footer) footer.classList.add('blur-background');
-    
-    document.getElementById('studentExamContainer').classList.remove('hidden-page');
-    const container = document.getElementById('studentExamContent');
-    container.innerHTML = `
-        <div class="text-center p-8">
-            <i class="fas fa-user-graduate text-6xl text-indigo-600 mb-4"></i>
-            <h2 class="text-2xl font-bold mb-2">${exam.title}</h2>
-            <p class="text-indigo-600 mb-1">📚 ${exam.className || 'بدون صف'}</p>
-            <p class="text-gray-500 text-sm mb-4">👨‍🏫 المدرس: <span class="font-bold text-indigo-600">${exam.teacherName || exam.creatorName || 'غير محدد'}</span></p>
-            <p class="text-gray-600 mb-6">الرجاء إدخال بياناتك لبدء الامتحان</p>
-            <input type="text" id="studentName" placeholder="الاسم الكامل" class="w-full max-w-md p-3 border rounded-lg mb-3 mx-auto">
-            <input type="text" id="studentNumber" placeholder="كود الطالب" class="w-full max-w-md p-3 border rounded-lg mb-6 mx-auto">
-            <button onclick="renderExam('${exam.id}')" class="bg-indigo-600 text-white px-6 py-2 rounded hover:bg-indigo-700 transition">
-                بدء الامتحان
-            </button>
-        </div>
-    `;
-}
+ 
     
 function renderExam(examId) {
     const exam = exams.find(e => e.id === examId);
@@ -4858,11 +4884,25 @@ auth.onAuthStateChanged(async (user) => {
         dropdown.classList.add('hidden');
     }
 }
-// تفعيل وضع الامتحان (إخفاء كل شيء)
 function enableExamMode() {
     document.body.classList.add('exam-mode');
     
-    // إخفاء شريط التمرير
+    // إخفاء العناصر غير الضرورية
+    const elementsToHide = [
+        document.querySelector('.container'),
+        document.getElementById('sidebar'),
+        document.querySelector('nav'),
+        document.querySelector('.footer'),
+        document.querySelector('.search-overlay'),
+        document.getElementById('searchBtn'),
+        document.getElementById('userArea')
+    ];
+    
+    elementsToHide.forEach(el => {
+        if (el) el.style.display = 'none';
+    });
+    
+    // منع التمرير
     document.body.style.overflow = 'hidden';
     
     // إخفاء أي عناصر منبثقة
@@ -4870,30 +4910,134 @@ function enableExamMode() {
     overlays.forEach(overlay => overlay.classList.remove('show'));
 }
 
-// إلغاء وضع الامتحان (إظهار كل شيء)
 function disableExamMode() {
     document.body.classList.remove('exam-mode');
+    
+    // إظهار العناصر المخفية
+    const elementsToShow = [
+        document.querySelector('.container'),
+        document.getElementById('sidebar'),
+        document.querySelector('nav'),
+        document.querySelector('.footer'),
+        document.querySelector('.search-overlay'),
+        document.getElementById('searchBtn'),
+        document.getElementById('userArea')
+    ];
+    
+    elementsToShow.forEach(el => {
+        if (el) el.style.display = '';
+    });
+    
     document.body.style.overflow = '';
 }
 
-// فتح الامتحان في وضع منفصل
 function showStudentExam(exam) {
-    // تفعيل وضع الامتحان أولاً
+    // إضافة تأثير الضبابية على الصفحة الرئيسية
+    const mainContent = document.querySelector('.container');
+    const sidebar = document.getElementById('sidebar');
+    const header = document.querySelector('nav');
+    const footer = document.querySelector('.footer');
+    
+    if (mainContent) mainContent.classList.add('blur-background');
+    if (sidebar) sidebar.classList.add('blur-background');
+    if (header) header.classList.add('blur-background');
+    if (footer) footer.classList.add('blur-background');
+    
+    // تفعيل وضع الامتحان
     enableExamMode();
     
     document.getElementById('studentExamContainer').classList.remove('hidden-page');
     const container = document.getElementById('studentExamContent');
+    
+    // ✅ التصميم الجديد مع اسم المدرس
     container.innerHTML = `
-        <div class="text-center p-8">
-            <i class="fas fa-user-graduate text-6xl text-indigo-600 mb-4"></i>
-            <h2 class="text-2xl font-bold mb-2">${exam.title}</h2>
-            <p class="text-indigo-600 mb-4">📚 ${exam.className || 'بدون صف'}</p>
-            <p class="text-gray-600 mb-6">الرجاء إدخال بياناتك لبدء الامتحان</p>
-            <input type="text" id="studentName" placeholder="الاسم الكامل" class="w-full max-w-md p-3 border rounded-lg mb-3 mx-auto">
-            <input type="text" id="studentNumber" placeholder="كود الطالب" class="w-full max-w-md p-3 border rounded-lg mb-6 mx-auto">
-            <button onclick="renderExam('${exam.id}')" class="bg-indigo-600 text-white px-6 py-2 rounded hover:bg-indigo-700 transition">
-                بدء الامتحان
-            </button>
+        <div class="relative overflow-hidden">
+            <!-- الخلفية المتدرجة -->
+            <div class="absolute inset-0 bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 opacity-90"></div>
+            
+            <!-- المحتوى -->
+            <div class="relative z-10 p-8 md:p-12">
+                <div class="max-w-2xl mx-auto">
+                    <!-- الأيقونة -->
+                    <div class="text-center mb-6">
+                        <div class="w-20 h-20 mx-auto bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center shadow-xl">
+                            <i class="fas fa-user-graduate text-white text-4xl"></i>
+                        </div>
+                    </div>
+                    
+                    <!-- العنوان -->
+                    <h2 class="text-3xl md:text-4xl font-bold text-white text-center mb-2">
+                        ${exam.title}
+                    </h2>
+                    
+                    <!-- تفاصيل الامتحان -->
+                    <div class="flex flex-wrap justify-center gap-4 mb-6">
+                        <span class="bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm flex items-center gap-2">
+                            <i class="fas fa-book"></i>
+                            ${exam.className || 'بدون صف'}
+                        </span>
+                        <span class="bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm flex items-center gap-2">
+                            <i class="fas fa-clock"></i>
+                            ${exam.duration || 30} دقيقة
+                        </span>
+                        <span class="bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm flex items-center gap-2">
+                            <i class="fas fa-question-circle"></i>
+                            ${exam.questions?.length || 0} سؤال
+                        </span>
+                    </div>
+                    
+                    <!-- ✅ اسم المدرس -->
+                    <div class="text-center mb-6">
+                        <div class="inline-flex items-center gap-3 bg-white/20 backdrop-blur-sm px-6 py-2 rounded-full">
+                            <i class="fas fa-chalkboard-teacher text-white text-lg"></i>
+                            <span class="text-white text-sm font-medium">المدرس: ${exam.teacherName || exam.creatorName || 'غير محدد'}</span>
+                        </div>
+                    </div>
+                    
+                    <!-- بطاقة إدخال البيانات -->
+                    <div class="bg-white/10 backdrop-blur-xl rounded-2xl p-6 md:p-8 shadow-2xl border border-white/20">
+                        <p class="text-white/80 text-center mb-6 text-sm">
+                            <i class="fas fa-edit ml-1"></i>
+                            الرجاء إدخال بياناتك لبدء الامتحان
+                        </p>
+                        
+                        <div class="space-y-4">
+                            <!-- حقل الاسم الكامل -->
+                            <div class="relative">
+                                <div class="absolute inset-y-0 right-3 flex items-center pointer-events-none">
+                                    <i class="fas fa-user text-white/50"></i>
+                                </div>
+                                <input type="text" id="studentName" 
+                                    placeholder="الاسم الكامل" 
+                                    class="w-full p-3 pr-10 bg-white/20 backdrop-blur-sm border border-white/30 rounded-xl text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-transparent transition">
+                            </div>
+                            
+                            <!-- حقل كود الطالب -->
+                            <div class="relative">
+                                <div class="absolute inset-y-0 right-3 flex items-center pointer-events-none">
+                                    <i class="fas fa-id-card text-white/50"></i>
+                                </div>
+                                <input type="text" id="studentNumber" 
+                                    placeholder="كود الطالب (اختياري)" 
+                                    class="w-full p-3 pr-10 bg-white/20 backdrop-blur-sm border border-white/30 rounded-xl text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-transparent transition">
+                            </div>
+                            
+                            <!-- زر بدء الامتحان -->
+                            <button onclick="renderExam('${exam.id}')" 
+                                class="w-full bg-gradient-to-r from-emerald-400 to-emerald-600 text-white py-3 rounded-xl font-bold text-lg hover:from-emerald-500 hover:to-emerald-700 transition transform hover:scale-[1.02] shadow-lg flex items-center justify-center gap-3">
+                                <i class="fas fa-play-circle"></i>
+                                بدء الامتحان
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- حقوق النشر -->
+                    <div class="text-center mt-6 text-white/40 text-xs">
+                        <i class="fas fa-shield-alt ml-1"></i>
+                        بياناتك آمنة ومشفرة
+                    </div>
+                </div>
+            </div>
         </div>
     `;
 }

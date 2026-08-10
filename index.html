@@ -682,113 +682,9 @@ body.exam-mode {
     width: 20px;
 }
 
-/* ✅ تأكد من ظهور جميع العناصر في صفحة الامتحان */
-#studentExamContent input {
-    display: block !important;
-    width: 100% !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-}
+/* ==================== تنسيق صفحة الامتحان للطلاب ==================== */
 
-#studentExamContent button {
-    display: flex !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-}
-
-/* ✅ تنسيق الحقول بشكل صحيح */
-#studentExamContent .relative {
-    position: relative !important;
-}
-
-#studentExamContent .absolute.inset-y-0 {
-    position: absolute !important;
-    top: 0 !important;
-    bottom: 0 !important;
-}
-
-/* ✅ التأكد من ظهور زر بدء الامتحان */
-#studentExamContent .w-full.bg-gradient-to-r {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    cursor: pointer !important;
-}
-
-/* ✅ تحسين ظهور النص داخل الحقول */
-#studentExamContent input::placeholder {
-    color: rgba(255, 255, 255, 0.6) !important;
-}
-
-#studentExamContent input {
-    color: white !important;
-}
-
-/* ✅ منع أي عناصر من الاختفاء */
-#studentExamContainer .hidden-page {
-    display: block !important;
-}
-
-#studentExamContainer .hidden {
-    display: block !important;
-}
-
-/* ✅ التأكد من ظهور الأيقونات */
-#studentExamContent .fas {
-    display: inline-block !important;
-}
-/* ✅ تنسيق شريط التمرير المخصص */
-.custom-scrollbar::-webkit-scrollbar {
-    width: 4px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 10px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb {
-    background: rgba(99, 102, 241, 0.5);
-    border-radius: 10px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: rgba(99, 102, 241, 0.8);
-}
-
-/* ✅ تنسيق راديو بوتونات */
-#studentExamContent input[type="radio"] {
-    accent-color: #6366f1;
-    width: 18px;
-    height: 18px;
-    cursor: pointer;
-}
-
-/* ✅ تنسيق الحقول في وضع التركيز */
-#studentExamContent textarea:focus {
-    background: rgba(255, 255, 255, 0.15);
-}
-
-/* ✅ تنسيق زر الإرسال */
-#studentExamContent button[type="submit"] {
-    cursor: pointer;
-}
-
-/* ✅ تنسيق بطاقات الأسئلة */
-#studentExamContent .bg-white\/10 {
-    backdrop-filter: blur(10px);
-}
-
-/* ✅ تنسيق النص داخل البطاقات */
-#studentExamContent .text-white\/80 {
-    color: rgba(255, 255, 255, 0.8);
-}
-
-/* ✅ تنسيق الأيقونات */
-#studentExamContent .fas {
-    display: inline-block !important;
-}
-/* ✅ تنسيق RTL للأسئلة والخيارات */
+/* تنسيق RTL للأسئلة والخيارات */
 #studentExamContent .text-right {
     text-align: right !important;
 }
@@ -797,54 +693,59 @@ body.exam-mode {
     justify-content: flex-end !important;
 }
 
-/* ✅ تنسيق الراديو بوتونات */
+/* تنسيق الراديو بوتونات */
 #studentExamContent input[type="radio"] {
     accent-color: #6366f1;
     width: 20px;
     height: 20px;
     cursor: pointer;
     flex-shrink: 0;
+    margin-left: 10px;
 }
 
-/* ✅ تنسيق الخيارات */
+/* تنسيق الخيارات */
 #studentExamContent .flex.items-center.gap-3 {
     display: flex !important;
     align-items: center !important;
     gap: 0.75rem !important;
+    flex-direction: row-reverse !important;
 }
 
-/* ✅ ترتيب الخيارات بشكل صحيح */
+/* ترتيب الخيارات بشكل صحيح RTL */
 #studentExamContent .flex.items-center.gap-3 .flex-1 {
     flex: 1 !important;
+    text-align: right !important;
 }
 
-/* ✅ تنسيق مجموعة الخيارات */
+/* تنسيق مجموعة الخيارات */
 #studentExamContent .space-y-2 > * + * {
     margin-top: 0.5rem !important;
 }
 
-/* ✅ تنسيق الراديو بوتونات صح/خطأ */
+/* تنسيق الراديو بوتونات صح/خطأ */
 #studentExamContent .flex.gap-4 {
     display: flex !important;
     gap: 1rem !important;
+    flex-direction: row-reverse !important;
+    justify-content: flex-start !important;
 }
 
-/* ✅ تنسيق النص داخل البطاقات */
+/* تنسيق النص داخل البطاقات */
 #studentExamContent .text-white\/80 {
     color: rgba(255, 255, 255, 0.8) !important;
 }
 
-/* ✅ تنسيق hover */
+/* تنسيق hover */
 #studentExamContent .hover\:bg-white\/10:hover {
     background-color: rgba(255, 255, 255, 0.1) !important;
 }
 
-/* ✅ تنسيق الخيارات عند hover */
+/* تنسيق الخيارات عند hover */
 #studentExamContent .group:hover .group-hover\:text-white {
     color: white !important;
 }
 
-/* ✅ تنسيق شريط التمرير المخصص */
+/* شريط التمرير المخصص */
 .custom-scrollbar::-webkit-scrollbar {
     width: 4px;
 }
@@ -863,19 +764,184 @@ body.exam-mode {
     background: rgba(99, 102, 241, 0.8);
 }
 
-/* ✅ تنسيق الحقول */
+/* تنسيق الحقول */
 #studentExamContent textarea {
     direction: rtl;
 }
 
-/* ✅ تنسيق زر الإرسال */
+/* تنسيق زر الإرسال */
 #studentExamContent button[type="submit"] {
     cursor: pointer !important;
 }
 
-/* ✅ تنسيق البطاقات */
+/* تنسيق البطاقات */
 #studentExamContent .bg-white\/10 {
     backdrop-filter: blur(10px);
+}
+
+/* ✅ إصلاح عرض الخيارات في الامتحان - RTL */
+#studentExamContent .question-option {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    flex-direction: row-reverse !important;
+    justify-content: flex-end !important;
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+#studentExamContent .question-option:hover {
+    background: rgba(99, 102, 241, 0.1);
+}
+
+#studentExamContent .question-option input[type="radio"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    margin: 0;
+}
+
+#studentExamContent .question-option .option-text {
+    flex: 1;
+    text-align: right;
+    font-size: 16px;
+}
+
+/* ✅ تنسيق بطاقات الأسئلة */
+#studentExamContent .question-card {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    border: 1px solid #e5e7eb;
+}
+
+#studentExamContent .question-title {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 16px;
+    color: #1e293b;
+}
+
+#studentExamContent .question-score {
+    color: #6366f1;
+    font-size: 14px;
+    font-weight: normal;
+}
+
+/* ✅ تنسيق زر بدء الامتحان */
+#studentExamContent .start-exam-btn {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: white;
+    padding: 14px 40px;
+    border-radius: 12px;
+    font-size: 18px;
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+#studentExamContent .start-exam-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.4);
+}
+
+/* ✅ تنسيق حقول الإدخال */
+#studentExamContent .exam-input {
+    width: 100%;
+    max-width: 400px;
+    padding: 12px 16px;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    font-size: 16px;
+    text-align: right;
+    transition: border-color 0.3s;
+}
+
+#studentExamContent .exam-input:focus {
+    border-color: #6366f1;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+}
+
+/* ✅ تنسيق العداد */
+#studentExamContent .timer-box {
+    background: #f1f5f9;
+    padding: 10px 20px;
+    border-radius: 12px;
+    text-align: center;
+    min-width: 100px;
+}
+
+#studentExamContent .timer-box .timer-label {
+    font-size: 12px;
+    color: #64748b;
+}
+
+#studentExamContent .timer-box .timer-value {
+    font-size: 28px;
+    font-weight: bold;
+    color: #6366f1;
+}
+
+/* ✅ تنسيق زر إرسال الإجابات */
+#studentExamContent .submit-btn {
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    color: white;
+    padding: 16px;
+    border-radius: 12px;
+    font-size: 18px;
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    width: 100%;
+}
+
+#studentExamContent .submit-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px -5px rgba(34, 197, 94, 0.4);
+}
+
+/* ✅ تنسيق صفحة بدء الامتحان */
+#studentExamContent .exam-start-screen {
+    text-align: center;
+    padding: 40px 20px;
+}
+
+#studentExamContent .exam-start-screen .exam-icon {
+    font-size: 64px;
+    color: #6366f1;
+    margin-bottom: 20px;
+}
+
+#studentExamContent .exam-start-screen .exam-title {
+    font-size: 28px;
+    font-weight: bold;
+    color: #1e293b;
+    margin-bottom: 8px;
+}
+
+#studentExamContent .exam-start-screen .exam-class {
+    color: #6366f1;
+    font-size: 18px;
+    margin-bottom: 4px;
+}
+
+#studentExamContent .exam-start-screen .exam-teacher {
+    color: #64748b;
+    font-size: 16px;
+    margin-bottom: 24px;
+}
+
+#studentExamContent .exam-start-screen .exam-instruction {
+    color: #64748b;
+    font-size: 16px;
+    margin-bottom: 24px;
 }
     </style>
 </head>
@@ -2801,38 +2867,50 @@ function renderExam(examId) {
     exam.questions.forEach((q, idx) => {
         if (q.type === 'mcq') {
             qHtml += `
-                <div class="border rounded-lg p-4 mb-4 bg-gray-50">
-                    <p class="font-bold mb-2">${idx + 1}. ${q.text} <span class="text-indigo-600">(${q.score} درجة)</span></p>
-                    ${q.options.map(opt => `
-                        <label class="flex items-center gap-2 py-1 cursor-pointer hover:bg-gray-100 p-1 rounded">
-                            <input type="radio" name="q${idx}" value="${opt}">
-                            <span>${opt}</span>
-                        </label>
-                    `).join('')}
+                <div class="question-card">
+                    <div class="question-title">
+                        ${idx + 1}. ${q.text}
+                        <span class="question-score">(${q.score} درجة)</span>
+                    </div>
+                    <div class="space-y-2">
+                        ${q.options.map(opt => `
+                            <label class="question-option">
+                                <input type="radio" name="q${idx}" value="${opt}">
+                                <span class="option-text">${opt}</span>
+                            </label>
+                        `).join('')}
+                    </div>
                 </div>
             `;
         } else if (q.type === 'truefalse') {
             qHtml += `
-                <div class="border rounded-lg p-4 mb-4 bg-gray-50">
-                    <p class="font-bold mb-2">${idx + 1}. ${q.text} <span class="text-indigo-600">(${q.score} درجة)</span></p>
-                    <label class="flex items-center gap-2 py-1 cursor-pointer hover:bg-gray-100 p-1 rounded">
-                        <input type="radio" name="q${idx}" value="صح"> صح
-                    </label>
-                    <label class="flex items-center gap-2 py-1 cursor-pointer hover:bg-gray-100 p-1 rounded">
-                        <input type="radio" name="q${idx}" value="خطأ"> خطأ
-                    </label>
+                <div class="question-card">
+                    <div class="question-title">
+                        ${idx + 1}. ${q.text}
+                        <span class="question-score">(${q.score} درجة)</span>
+                    </div>
+                    <div class="flex gap-4">
+                        <label class="question-option">
+                            <input type="radio" name="q${idx}" value="صح">
+                            <span class="option-text">صح</span>
+                        </label>
+                        <label class="question-option">
+                            <input type="radio" name="q${idx}" value="خطأ">
+                            <span class="option-text">خطأ</span>
+                        </label>
+                    </div>
                 </div>
             `;
         } else if (q.type === 'essay') {
-            // السؤال المقالي: عرض السؤال وحقل إجابة للطالب
             qHtml += `
-                <div class="border rounded-lg p-4 mb-4 bg-gray-50">
-                    <div class="mb-3">
-                        <p class="font-bold mb-2">${idx + 1}. ${q.text} <span class="text-indigo-600">(${q.score} درجة)</span></p>
+                <div class="question-card">
+                    <div class="question-title">
+                        ${idx + 1}. ${q.text}
+                        <span class="question-score">(${q.score} درجة)</span>
                     </div>
-                    <div class="mb-2">
+                    <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">✍️ إجابتك:</label>
-                        <textarea name="q${idx}" rows="5" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500" placeholder="اكتب إجابتك هنا..."></textarea>
+                        <textarea name="q${idx}" rows="5" class="exam-input" style="max-width:100%;" placeholder="اكتب إجابتك هنا..."></textarea>
                     </div>
                     <p class="text-xs text-amber-600 mt-2 flex items-center gap-1">
                         <i class="fas fa-info-circle"></i>
@@ -2845,16 +2923,16 @@ function renderExam(examId) {
     
     const container = document.getElementById('studentExamContent');
     container.innerHTML = `
-        <div class="flex justify-between items-center mb-4 flex-wrap gap-3">
-            <h2 class="text-xl font-bold">${exam.title}</h2>
-            <div class="bg-gray-100 p-3 rounded text-center">
-                <div class="text-sm text-gray-500">الوقت المتبقي</div>
-                <div id="timerDisplay" class="text-2xl font-bold text-indigo-600">${exam.duration}:00</div>
+        <div class="flex justify-between items-center mb-6 flex-wrap gap-3">
+            <h2 class="text-2xl font-bold text-gray-800">${exam.title}</h2>
+            <div class="timer-box">
+                <div class="timer-label">الوقت المتبقي</div>
+                <div id="timerDisplay" class="timer-value">${exam.duration}:00</div>
             </div>
         </div>
         <form id="examForm2" onsubmit="submitStudentExam(event, '${exam.id}')">
             ${qHtml}
-            <button type="submit" class="w-full bg-green-600 text-white py-3 rounded-lg mt-4 hover:bg-green-700 transition">
+            <button type="submit" class="submit-btn">
                 <i class="fas fa-paper-plane ml-2"></i> إرسال الإجابات
             </button>
         </form>
@@ -5047,24 +5125,28 @@ function disableExamMode() {
 }
 
 
-// فتح الامتحان في وضع منفصل
 function showStudentExam(exam) {
-    // تفعيل وضع الامتحان أولاً
     enableExamMode();
     
     document.getElementById('studentExamContainer').classList.remove('hidden-page');
     const container = document.getElementById('studentExamContent');
     container.innerHTML = `
-        <div class="text-center p-8">
-            <i class="fas fa-user-graduate text-6xl text-indigo-600 mb-4"></i>
-            <h2 class="text-2xl font-bold mb-2">${exam.title}</h2>
-            <p class="text-indigo-600 mb-4">📚 ${exam.className || 'بدون صف'}</p>
-            <p class="text-gray-600 mb-6">الرجاء إدخال بياناتك لبدء الامتحان</p>
-            <input type="text" id="studentName" placeholder="الاسم الكامل" class="w-full max-w-md p-3 border rounded-lg mb-3 mx-auto">
-            <input type="text" id="studentNumber" placeholder="كود الطالب" class="w-full max-w-md p-3 border rounded-lg mb-6 mx-auto">
-            <button onclick="renderExam('${exam.id}')" class="bg-indigo-600 text-white px-6 py-2 rounded hover:bg-indigo-700 transition">
-                بدء الامتحان
-            </button>
+        <div class="exam-start-screen">
+            <div class="exam-icon">
+                <i class="fas fa-user-graduate"></i>
+            </div>
+            <h2 class="exam-title">${exam.title}</h2>
+            <p class="exam-class">📚 ${exam.className || 'بدون صف'}</p>
+            <p class="exam-teacher">👨‍🏫 المدرس: <strong>${exam.teacherName || exam.creatorName || 'غير محدد'}</strong></p>
+            <p class="exam-instruction">الرجاء إدخال بياناتك لبدء الامتحان</p>
+            
+            <div style="max-width:400px; margin:0 auto;">
+                <input type="text" id="studentName" placeholder="الاسم الكامل" class="exam-input mb-3">
+                <input type="text" id="studentNumber" placeholder="كود الطالب" class="exam-input mb-6">
+                <button onclick="renderExam('${exam.id}')" class="start-exam-btn">
+                    <i class="fas fa-play ml-2"></i> بدء الامتحان
+                </button>
+            </div>
         </div>
     `;
 }

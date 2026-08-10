@@ -1702,7 +1702,6 @@ function refreshAccountPage() {
                     <p id="accountExpiry">📅 تاريخ التجديد: <span id="expiryDateText">جاري التحميل...</span></p>
                 </div>
                 
-                <!-- زر تسجيل الدخول بـ تكنو شرك -->
                 <a href="https://mohamedemadmaxplas.github.io/NABD_/" target="_blank" 
                    class="w-full bg-emerald-600 text-white py-2 rounded-lg mb-2 hover:bg-emerald-700 transition text-center block">
                     <i class="fas fa-coins ml-2"></i> تسجيل الدخول بـ تكنو شرك
@@ -1717,13 +1716,14 @@ function refreshAccountPage() {
             </div>
         `;
         
-        // ✅ تحديث العداد وتاريخ التجديد بعد إنشاء الـ HTML
+        // ✅ تحديث العداد وتاريخ التجديد
         setTimeout(() => {
             refreshExamLimit();
             loadUserSubscription();
         }, 200);
         
     } else {
+        // ... كود تسجيل الدخول
         container.innerHTML = `
             <div class="text-center">
                 <i class="fas fa-user-circle text-6xl text-indigo-600 mb-4"></i>
@@ -1734,11 +1734,12 @@ function refreshAccountPage() {
                     <span class="absolute top-[-12px] left-1/2 transform -translate-x-1/2 bg-white px-2 text-gray-500">أو</span>
                 </div>
                 
-                <!-- زر تسجيل الدخول بـ تكنو شرك للمستخدم غير المسجل -->
                 <a href="https://mohamedemadmaxplas.github.io/NABD_/" target="_blank" 
                    class="w-full bg-emerald-600 text-white py-2 rounded-lg mb-3 hover:bg-emerald-700 transition text-center block">
                     <i class="fas fa-coins ml-2"></i> تسجيل الدخول بـ تكنو شرك
                 </a>
+                
+                <p>ليس لديك حساب؟ <a onclick="showRegisterPopup()" class="text-indigo-600 cursor-pointer hover:underline">إنشاء حساب</a></p>
             </div>
         `;
         
@@ -2075,11 +2076,11 @@ async function refreshExamLimit() {
         
         const maxExams = userPlan.examsCount || 8;
         
-        // ✅ ✅ ✅ نقرأ فقط من examCount (عدد الامتحانات المنشأة)
+        // ✅✅✅ نقرأ فقط من examCount (عدد الامتحانات المنشأة)
         const examCountSnapshot = await db.ref(`users/${currentUser.uid}/examCount`).once('value');
         const usedExams = examCountSnapshot.val() || 0;
         
-        // ✅ ✅ ✅ نهمل نتائج الطلاب تماماً
+        // ✅✅✅ نحسب المتبقي بدون استخدام results
         const remaining = Math.max(0, maxExams - usedExams);
         
         // ✅ تحديث عداد الامتحانات في صفحة الحساب
@@ -2088,7 +2089,13 @@ async function refreshExamLimit() {
             accountRemaining.innerText = `الامتحانات المتبقية: ${remaining} من ${maxExams}`;
         }
         
-        // ✅ تحديث العداد في صفحة إنشاء الامتحان
+        // ✅ تحديث عداد الامتحانات في صفحة إنشاء الامتحان
+        const remainingCountElement = document.getElementById('remainingCount');
+        if (remainingCountElement) {
+            remainingCountElement.innerText = remaining;
+        }
+        
+        // ✅ تحديث العداد في صفحة إنشاء الامتحان (التحذير)
         const limitMsg = document.getElementById('limitMsg');
         const warning = document.getElementById('examLimitWarning');
         
@@ -2187,6 +2194,10 @@ async function refreshExamLimit() {
         const accountRemaining = document.getElementById('accountRemaining');
         if (accountRemaining) {
             accountRemaining.innerText = `الامتحانات المتبقية: --`;
+        }
+        const remainingCountElement = document.getElementById('remainingCount');
+        if (remainingCountElement) {
+            remainingCountElement.innerText = '--';
         }
     }
 }
@@ -2439,7 +2450,7 @@ async function getRemainingExams() {
     
     const maxExams = userPlan.examsCount || 8;
     
-    // ✅ ✅ ✅ نقرأ فقط من examCount (عدد الامتحانات المنشأة)
+    // ✅✅✅ نقرأ فقط من examCount
     const examCountSnapshot = await db.ref(`users/${currentUser.uid}/examCount`).once('value');
     const usedExams = examCountSnapshot.val() || 0;
     

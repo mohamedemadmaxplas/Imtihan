@@ -682,99 +682,60 @@ body.exam-mode {
     width: 20px;
 }
 
-/* تنسيق صفحة بدء الامتحان - تصميم داكن */
-#studentExamContent {
-    border-radius: 24px;
-    overflow: hidden;
-    box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.8);
-    max-width: 520px;
-    margin: 0 auto;
+/* ✅ تأكد من ظهور جميع العناصر في صفحة الامتحان */
+#studentExamContent input {
+    display: block !important;
+    width: 100% !important;
+    visibility: visible !important;
+    opacity: 1 !important;
 }
 
-#studentExamContent .relative {
-    min-height: 480px;
-}
-
-/* تنسيق الحقول */
-#studentExamContent input::placeholder {
-    color: rgba(255, 255, 255, 0.5);
-}
-
-#studentExamContent input:focus {
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3);
-}
-
-/* تأثير الخلفية المتدرجة */
-@keyframes gradientMove {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-}
-
-#studentExamContent .absolute.inset-0.bg-gradient-to-br {
-    background-size: 200% 200%;
-    animation: gradientMove 10s ease-in-out infinite;
-}
-
-/* تنسيق زر بدء الامتحان */
 #studentExamContent button {
-    transition: all 0.3s ease;
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
 }
 
-#studentExamContent button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 20px 40px -10px rgba(99, 102, 241, 0.4);
+/* ✅ تنسيق الحقول بشكل صحيح */
+#studentExamContent .relative {
+    position: relative !important;
 }
 
-/* تأثير نبض للأيقونة */
-@keyframes softPulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.03); }
+#studentExamContent .absolute.inset-y-0 {
+    position: absolute !important;
+    top: 0 !important;
+    bottom: 0 !important;
 }
 
-#studentExamContent .w-20.h-20 {
-    animation: softPulse 4s ease-in-out infinite;
+/* ✅ التأكد من ظهور زر بدء الامتحان */
+#studentExamContent .w-full.bg-gradient-to-r {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
 }
 
-/* تنسيق البطاقات الصغيرة */
-#studentExamContent .grid .bg-white\/10 {
-    transition: all 0.3s ease;
+/* ✅ تحسين ظهور النص داخل الحقول */
+#studentExamContent input::placeholder {
+    color: rgba(255, 255, 255, 0.6) !important;
 }
 
-#studentExamContent .grid .bg-white\/10:hover {
-    background: rgba(255, 255, 255, 0.15);
-    transform: translateY(-2px);
+#studentExamContent input {
+    color: white !important;
 }
 
-/* تنسيق اسم المدرس */
-#studentExamContent .bg-gradient-to-r.from-amber-500\/20 {
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(251, 191, 36, 0.2);
+/* ✅ منع أي عناصر من الاختفاء */
+#studentExamContainer .hidden-page {
+    display: block !important;
 }
 
-/* تنسيق البطاقة الرئيسية */
-#studentExamContent .bg-white\/5 {
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+#studentExamContainer .hidden {
+    display: block !important;
 }
 
-/* تنسيق الحقول في وضع التركيز */
-#studentExamContent input:focus {
-    background: rgba(255, 255, 255, 0.15);
-}
-
-/* شريط التمرير */
-#studentExamContainer::-webkit-scrollbar {
-    width: 4px;
-}
-
-#studentExamContainer::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-#studentExamContainer::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 10px;
+/* ✅ التأكد من ظهور الأيقونات */
+#studentExamContent .fas {
+    display: inline-block !important;
 }
     </style>
 </head>
@@ -4944,6 +4905,19 @@ function enableExamMode() {
         if (el) el.style.display = 'none';
     });
     
+    // ✅ التأكد من ظهور حاوية الامتحان
+    const examContainer = document.getElementById('studentExamContainer');
+    if (examContainer) {
+        examContainer.style.display = 'flex !important';
+        examContainer.style.position = 'fixed';
+        examContainer.style.inset = '0';
+        examContainer.style.zIndex = '9999';
+        examContainer.style.backgroundColor = 'rgba(0, 0, 0, 0.95)';
+        examContainer.style.overflowY = 'auto';
+        examContainer.style.justifyContent = 'center';
+        examContainer.style.alignItems = 'center';
+    }
+    
     // منع التمرير
     document.body.style.overflow = 'hidden';
     
@@ -4991,7 +4965,7 @@ function showStudentExam(exam) {
     document.getElementById('studentExamContainer').classList.remove('hidden-page');
     const container = document.getElementById('studentExamContent');
     
-    // ✅ التصميم الجديد بألوان داكنة وجذابة
+    // ✅ التصميم الجديد بألوان داكنة وجذابة - مع ترتيب صحيح للحقول
     container.innerHTML = `
         <div class="relative overflow-hidden rounded-2xl">
             <!-- خلفية متدرجة داكنة -->
@@ -5017,7 +4991,7 @@ function showStudentExam(exam) {
                         ${exam.title}
                     </h2>
                     
-                    <!-- تفاصيل الامتحان - بطاقات -->
+                    <!-- تفاصيل الامتحان - بطاقات مرتبة -->
                     <div class="grid grid-cols-3 gap-2 my-5">
                         <div class="bg-white/10 backdrop-blur-sm rounded-xl p-3 text-center border border-white/10">
                             <i class="fas fa-book text-indigo-300 text-sm"></i>
@@ -5049,7 +5023,7 @@ function showStudentExam(exam) {
                         </p>
                         
                         <div class="space-y-4">
-                            <!-- حقل الاسم الكامل -->
+                            <!-- ✅ حقل الاسم الكامل -->
                             <div class="relative">
                                 <div class="absolute inset-y-0 right-3 flex items-center pointer-events-none">
                                     <i class="fas fa-user text-gray-400"></i>
@@ -5059,7 +5033,7 @@ function showStudentExam(exam) {
                                     class="w-full p-3 pr-10 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition">
                             </div>
                             
-                            <!-- حقل كود الطالب -->
+                            <!-- ✅ حقل كود الطالب -->
                             <div class="relative">
                                 <div class="absolute inset-y-0 right-3 flex items-center pointer-events-none">
                                     <i class="fas fa-id-card text-gray-400"></i>
@@ -5069,7 +5043,7 @@ function showStudentExam(exam) {
                                     class="w-full p-3 pr-10 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition">
                             </div>
                             
-                            <!-- زر بدء الامتحان -->
+                            <!-- ✅ زر بدء الامتحان -->
                             <button onclick="renderExam('${exam.id}')" 
                                 class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white py-3.5 rounded-xl font-bold text-lg transition transform hover:scale-[1.02] shadow-lg shadow-indigo-500/30 flex items-center justify-center gap-3">
                                 <i class="fas fa-play-circle"></i>
@@ -5082,7 +5056,6 @@ function showStudentExam(exam) {
                     <div class="text-center mt-5 text-gray-500 text-xs flex items-center justify-center gap-2">
                         <i class="fas fa-shield-alt text-indigo-400/50"></i>
                         <span>بياناتك آمنة ومشفرة</span>
-                        <span>Tecno-Shark-Company</span>
                         <span class="w-1 h-1 rounded-full bg-gray-600"></span>
                         <i class="fas fa-lock text-indigo-400/50"></i>
                     </div>

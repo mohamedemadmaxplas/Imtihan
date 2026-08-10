@@ -1188,6 +1188,140 @@ body.exam-mode {
         font-size: 18px;
     }
 }
+/* ==================== تنسيق الفوتر السفلي الثابت للامتحان ==================== */
+
+/* الفوتر الثابت في أسفل صفحة الامتحان */
+.exam-fixed-footer {
+    position: sticky;
+    bottom: 0;
+    z-index: 100;
+    background: linear-gradient(135deg, #1e293b, #0f172a);
+    padding: 12px 20px;
+    border-radius: 0 0 16px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 10px;
+    border-top: 2px solid #6366f1;
+}
+
+/* اسم الشركة */
+.exam-footer-company {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #94a3b8;
+    font-size: 14px;
+}
+
+.exam-footer-company .company-name {
+    color: #a5b4fc;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.exam-footer-company .company-icon {
+    color: #6366f1;
+    font-size: 20px;
+}
+
+/* زر الانتقال للشركة */
+.exam-footer-btn {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: white;
+    padding: 8px 20px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.exam-footer-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 8px 25px -5px rgba(99, 102, 241, 0.5);
+}
+
+/* أرقام التواصل */
+.exam-footer-phones {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    color: #94a3b8;
+    font-size: 13px;
+}
+
+.exam-footer-phones .phone-number {
+    color: #e2e8f0;
+    font-weight: 600;
+    direction: ltr;
+    display: inline-block;
+}
+
+.exam-footer-phones .phone-icon {
+    color: #22c55e;
+}
+
+/* ✅ Responsive للفوتر */
+@media (max-width: 640px) {
+    .exam-fixed-footer {
+        flex-direction: column;
+        align-items: stretch;
+        text-align: center;
+        padding: 12px 14px;
+    }
+    
+    .exam-footer-company {
+        justify-content: center;
+    }
+    
+    .exam-footer-phones {
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    
+    .exam-footer-btn {
+        justify-content: center;
+    }
+}
+
+/* ✅ التأكد من ظهور الفوتر داخل حاوية الامتحان */
+#studentExamContainer .bg-white {
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+    max-height: 95vh;
+    display: flex;
+    flex-direction: column;
+}
+
+#studentExamContainer .exam-questions-area {
+    overflow-y: auto;
+    flex: 1;
+    padding: 0 20px 10px 20px;
+}
+
+/* تنسيق شريط التمرير المخصص */
+.exam-questions-area::-webkit-scrollbar {
+    width: 5px;
+}
+
+.exam-questions-area::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 10px;
+}
+
+.exam-questions-area::-webkit-scrollbar-thumb {
+    background: #6366f1;
+    border-radius: 10px;
+}
     </style>
 </head>
 <body>
@@ -3193,6 +3327,30 @@ function renderExam(examId) {
                     <i class="fas fa-paper-plane ml-2"></i> إرسال الإجابات
                 </button>
             </form>
+        </div>
+        
+        <!-- الفوتر الثابت -->
+        <div class="exam-fixed-footer">
+            <div class="exam-footer-company">
+                <span class="company-icon"><i class="fas fa-building"></i></span>
+                <span class="company-name">Tecno Shark Company</span>
+            </div>
+            
+            <div class="exam-footer-phones">
+                <span>
+                    <i class="fas fa-phone phone-icon"></i>
+                    <span class="phone-number">01144100018</span>
+                </span>
+                <span>
+                    <i class="fas fa-phone phone-icon"></i>
+                    <span class="phone-number">01126125881</span>
+                </span>
+            </div>
+            
+            <a href="https://tecno-shark.vercel.app" target="_blank" class="exam-footer-btn">
+                <i class="fas fa-external-link-alt"></i>
+                زيارة الموقع
+            </a>
         </div>
     `;
     
@@ -5389,7 +5547,7 @@ function showStudentExam(exam) {
     document.getElementById('studentExamContainer').classList.remove('hidden-page');
     const container = document.getElementById('studentExamContent');
     container.innerHTML = `
-        <div class="exam-start-screen">
+        <div class="exam-start-screen" style="flex:1;">
             <div class="exam-icon">
                 <i class="fas fa-user-graduate"></i>
             </div>
@@ -5405,6 +5563,30 @@ function showStudentExam(exam) {
                     <i class="fas fa-play ml-2"></i> بدء الامتحان
                 </button>
             </div>
+        </div>
+        
+        <!-- الفوتر الثابت -->
+        <div class="exam-fixed-footer">
+            <div class="exam-footer-company">
+                <span class="company-icon"><i class="fas fa-building"></i></span>
+                <span class="company-name">Tecno Shark Company</span>
+            </div>
+            
+            <div class="exam-footer-phones">
+                <span>
+                    <i class="fas fa-phone phone-icon"></i>
+                    <span class="phone-number">01144100018</span>
+                </span>
+                <span>
+                    <i class="fas fa-phone phone-icon"></i>
+                    <span class="phone-number">01126125881</span>
+                </span>
+            </div>
+            
+            <a href="https://tecno-shark.vercel.app" target="_blank" class="exam-footer-btn">
+                <i class="fas fa-external-link-alt"></i>
+                زيارة الموقع
+            </a>
         </div>
     `;
 }

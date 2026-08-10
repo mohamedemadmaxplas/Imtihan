@@ -5047,17 +5047,10 @@ function disableExamMode() {
 }
 
 
+// فتح الامتحان في وضع منفصل
 function showStudentExam(exam) {
-    // إضافة تأثير الضبابية على الصفحة الرئيسية
-    const mainContent = document.querySelector('.container');
-    const sidebar = document.getElementById('sidebar');
-    const header = document.querySelector('nav');
-    const footer = document.querySelector('.footer');
-    
-    if (mainContent) mainContent.classList.add('blur-background');
-    if (sidebar) sidebar.classList.add('blur-background');
-    if (header) header.classList.add('blur-background');
-    if (footer) footer.classList.add('blur-background');
+    // تفعيل وضع الامتحان أولاً
+    enableExamMode();
     
     document.getElementById('studentExamContainer').classList.remove('hidden-page');
     const container = document.getElementById('studentExamContent');
@@ -5065,8 +5058,7 @@ function showStudentExam(exam) {
         <div class="text-center p-8">
             <i class="fas fa-user-graduate text-6xl text-indigo-600 mb-4"></i>
             <h2 class="text-2xl font-bold mb-2">${exam.title}</h2>
-            <p class="text-indigo-600 mb-1">📚 ${exam.className || 'بدون صف'}</p>
-            <p class="text-gray-500 text-sm mb-4">👨‍🏫 المدرس: <span class="font-bold text-indigo-600">${exam.teacherName || exam.creatorName || 'غير محدد'}</span></p>
+            <p class="text-indigo-600 mb-4">📚 ${exam.className || 'بدون صف'}</p>
             <p class="text-gray-600 mb-6">الرجاء إدخال بياناتك لبدء الامتحان</p>
             <input type="text" id="studentName" placeholder="الاسم الكامل" class="w-full max-w-md p-3 border rounded-lg mb-3 mx-auto">
             <input type="text" id="studentNumber" placeholder="كود الطالب" class="w-full max-w-md p-3 border rounded-lg mb-6 mx-auto">

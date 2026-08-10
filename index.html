@@ -2075,10 +2075,11 @@ async function refreshExamLimit() {
         
         const maxExams = userPlan.examsCount || 8;
         
-        // ✅ قراءة العداد من قاعدة البيانات
+        // ✅ ✅ ✅ نقرأ فقط من examCount (عدد الامتحانات المنشأة)
         const examCountSnapshot = await db.ref(`users/${currentUser.uid}/examCount`).once('value');
         const usedExams = examCountSnapshot.val() || 0;
         
+        // ✅ ✅ ✅ نهمل نتائج الطلاب تماماً
         const remaining = Math.max(0, maxExams - usedExams);
         
         // ✅ تحديث عداد الامتحانات في صفحة الحساب
@@ -2179,7 +2180,7 @@ async function refreshExamLimit() {
             }
         }
         
-        console.log(`📊 الخطة: ${userPlan.name}, الحد: ${maxExams}, المستخدم: ${usedExams}, المتبقي: ${remaining}`);
+        console.log(`📊 الخطة: ${userPlan.name}, الحد: ${maxExams}, الامتحانات المنشأة: ${usedExams}, المتبقي: ${remaining}`);
         
     } catch (error) {
         console.error('❌ خطأ في تحديث حد الامتحانات:', error);
@@ -2431,7 +2432,6 @@ async function refreshExamLimit() {
 async function getRemainingExams() {
     if (!currentUser) return 0;
     
-    // الحصول على خطة المستخدم
     let userPlan = plans.find(p => p.id === currentUser.plan);
     if (!userPlan) {
         userPlan = plans.find(p => p.id === 'free') || defaultPlans[0];
@@ -2439,7 +2439,7 @@ async function getRemainingExams() {
     
     const maxExams = userPlan.examsCount || 8;
     
-    // ✅ قراءة عدد الامتحانات المستخدمة من العداد المنفصل
+    // ✅ ✅ ✅ نقرأ فقط من examCount (عدد الامتحانات المنشأة)
     const examCountSnapshot = await db.ref(`users/${currentUser.uid}/examCount`).once('value');
     const usedExams = examCountSnapshot.val() || 0;
     

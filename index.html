@@ -1322,6 +1322,437 @@ body.exam-mode {
     background: #6366f1;
     border-radius: 10px;
 }
+/* ==================== تنسيق الفوتر الجديد ==================== */
+
+.footer {
+    background: linear-gradient(135deg, #0f172a, #1e293b);
+    color: #94a3b8;
+    padding: 15px 20px;
+    margin-top: 40px;
+    border-radius: 20px 20px 0 0;
+    border-top: 3px solid #6366f1;
+}
+
+.footer a {
+    transition: all 0.3s ease;
+}
+
+.footer a:hover {
+    transform: scale(1.05);
+}
+
+/* تنسيق زر Tecno Shark عند hover */
+.footer a[href*="tecno-shark"]:hover {
+    border-color: #8b5cf6;
+    box-shadow: 0 0 20px rgba(99, 102, 241, 0.2);
+}
+
+/* ✅ Responsive للفوتر */
+@media (max-width: 768px) {
+    .footer > div > div:first-child {
+        flex-direction: column !important;
+        align-items: center !important;
+        text-align: center !important;
+    }
+    
+    .footer > div > div:first-child > div {
+        text-align: center !important;
+        justify-content: center !important;
+    }
+    
+    .footer > div > div:last-child {
+        flex-direction: column !important;
+        align-items: center !important;
+        text-align: center !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .footer a[href*="tecno-shark"] {
+        padding: 4px 12px !important;
+        font-size: 12px !important;
+    }
+    
+    .footer p {
+        font-size: 12px !important;
+    }
+}
+/* ==================== تنسيق الصفحة بالكامل ==================== */
+
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* المحتوى الرئيسي يتمدد لملء المساحة */
+.container {
+    flex: 1;
+}
+
+/* ==================== تنسيق الفوتر الجديد ==================== */
+
+.footer {
+    background: linear-gradient(135deg, #0f172a, #1e293b);
+    color: #94a3b8;
+    padding: 15px 20px;
+    border-radius: 20px 20px 0 0;
+    border-top: 3px solid #6366f1;
+    margin-top: auto; /* هذا يضمن التصاق الفوتر بأسفل الصفحة */
+    width: 100%;
+}
+
+.footer a {
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.footer a:hover {
+    transform: scale(1.05);
+}
+
+/* تنسيق زر Tecno Shark */
+.footer .company-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, #1e293b, #0f172a);
+    border: 2px solid #6366f1;
+    color: #a5b4fc;
+    padding: 6px 16px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: bold;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.footer .company-btn:hover {
+    border-color: #8b5cf6;
+    box-shadow: 0 0 25px rgba(99, 102, 241, 0.3);
+    transform: scale(1.05);
+}
+
+.footer .company-btn .visit-badge {
+    background: #6366f1;
+    color: white;
+    padding: 2px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+}
+
+.footer .company-icon {
+    color: #6366f1;
+}
+
+.footer .phone-icon {
+    color: #22c55e;
+}
+
+.footer .email-icon {
+    color: #6366f1;
+}
+
+.footer .grad-icon {
+    color: #6366f1;
+}
+
+/* ✅ Responsive للفوتر */
+@media (max-width: 768px) {
+    .footer .footer-top {
+        flex-direction: column !important;
+        align-items: center !important;
+        text-align: center !important;
+    }
+    
+    .footer .footer-top > div {
+        text-align: center !important;
+        justify-content: center !important;
+        align-items: center !important;
+    }
+    
+    .footer .footer-bottom {
+        flex-direction: column !important;
+        align-items: center !important;
+        text-align: center !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .footer .company-btn {
+        padding: 4px 12px !important;
+        font-size: 12px !important;
+    }
+    
+    .footer p {
+        font-size: 12px !important;
+    }
+}
+/* ==================== تنسيق البطاقات الجديد ==================== */
+
+.stat-card-modern {
+    position: relative;
+    border-radius: 20px;
+    padding: 20px 24px;
+    color: white;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    overflow: hidden;
+    min-height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* تأثير الخلفية المتحركة */
+.stat-card-modern::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 50%;
+    transition: all 0.6s ease;
+    pointer-events: none;
+}
+
+.stat-card-modern:hover::before {
+    top: -10%;
+    right: -10%;
+    width: 120%;
+    height: 120%;
+}
+
+/* تأثير الضوء عند hover */
+.stat-card-modern::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
+    border-radius: 20px;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    pointer-events: none;
+}
+
+.stat-card-modern:hover::after {
+    opacity: 1;
+}
+
+.stat-card-modern:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+}
+
+/* الأيقونة */
+.stat-card-modern .stat-icon {
+    width: 50px;
+    height: 50px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    flex-shrink: 0;
+    transition: all 0.4s ease;
+}
+
+.stat-card-modern:hover .stat-icon {
+    transform: rotate(-10deg) scale(1.1);
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* معلومات البطاقة */
+.stat-card-modern .stat-info {
+    flex: 1;
+    margin: 0 15px;
+}
+
+.stat-card-modern .stat-label {
+    font-size: 13px;
+    opacity: 0.85;
+    font-weight: 500;
+    margin: 0;
+    letter-spacing: 0.5px;
+}
+
+.stat-card-modern .stat-number {
+    font-size: 32px;
+    font-weight: 800;
+    margin: 2px 0 0 0;
+    line-height: 1.2;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* الشارة الجانبية */
+.stat-card-modern .stat-badge {
+    width: 36px;
+    height: 36px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    transition: all 0.4s ease;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    flex-shrink: 0;
+}
+
+.stat-card-modern:hover .stat-badge {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateX(-5px);
+}
+
+/* ==================== تنسيق بطاقات الامتحانات ==================== */
+
+.exam-card-modern {
+    background: white;
+    border-radius: 16px;
+    padding: 1.2rem 1.5rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.07);
+    transition: all 0.3s ease;
+    border-right: 4px solid #6366f1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.exam-card-modern:hover {
+    transform: translateX(-5px);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+    border-right-color: #8b5cf6;
+}
+
+.exam-card-modern .exam-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.exam-card-modern .exam-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.exam-card-modern .exam-meta {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    font-size: 13px;
+    color: #64748b;
+}
+
+.exam-card-modern .exam-meta span {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.exam-card-modern .exam-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.exam-card-modern .exam-btn {
+    padding: 6px 16px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.exam-card-modern .exam-btn-start {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: white;
+}
+
+.exam-card-modern .exam-btn-start:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+}
+
+.exam-card-modern .exam-btn-copy {
+    background: #f1f5f9;
+    color: #1e293b;
+}
+
+.exam-card-modern .exam-btn-copy:hover {
+    background: #e2e8f0;
+}
+
+.exam-card-modern .exam-btn-delete {
+    background: #fef2f2;
+    color: #ef4444;
+}
+
+.exam-card-modern .exam-btn-delete:hover {
+    background: #fecaca;
+}
+
+/* ✅ Responsive */
+@media (max-width: 768px) {
+    .stat-card-modern {
+        padding: 16px 18px;
+        min-height: 100px;
+    }
+    
+    .stat-card-modern .stat-number {
+        font-size: 24px;
+    }
+    
+    .stat-card-modern .stat-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 18px;
+    }
+    
+    .exam-card-modern {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .exam-card-modern .exam-actions {
+        justify-content: flex-start;
+        flex-wrap: wrap;
+    }
+}
+
+@media (max-width: 480px) {
+    .stat-card-modern .stat-number {
+        font-size: 20px;
+    }
+    
+    .stat-card-modern .stat-label {
+        font-size: 11px;
+    }
+    
+    .exam-card-modern .exam-title {
+        font-size: 15px;
+    }
+}
     </style>
 </head>
 <body>
@@ -1449,45 +1880,80 @@ body.exam-mode {
 
     <!-- ==================== الصفحة الرئيسية ==================== -->
     
-    <div id="homePage" class="page">
+   <!-- ==================== الصفحة الرئيسية ==================== -->
+
+<div id="homePage" class="page">
+    
+    <div class="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl shadow-xl p-6 mb-8 text-center text-white">
+        <h1 class="text-3xl font-bold">📚 Imtihan</h1>
+        <p class="mt-2">منصة الامتحانات الإلكترونية - أنشئ امتحانك وشاركه مع طلابك</p>
+    </div>
+    
+    <!-- البطاقات الإحصائية بتصميم جديد -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         
-        <div class="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl shadow-xl p-6 mb-8 text-center text-white">
-            <h1 class="text-3xl font-bold">📚 Imtihan</h1>
-            <p class="mt-2">منصة الامتحانات الإلكترونية - أنشئ امتحانك وشاركه مع طلابك</p>
+        <!-- بطاقة إجمالي الامتحانات -->
+        <div class="stat-card-modern" style="background: linear-gradient(135deg, #6366f1, #8b5cf6);" onclick="showStatDetails('exams')">
+            <div class="stat-icon">
+                <i class="fas fa-file-alt"></i>
+            </div>
+            <div class="stat-info">
+                <h3 class="stat-label">إجمالي الامتحانات</h3>
+                <p id="totalExams" class="stat-number">0</p>
+            </div>
+            <div class="stat-badge">
+                <i class="fas fa-arrow-left"></i>
+            </div>
         </div>
         
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            
-            <div class="stat-card stat-card-blue" onclick="showStatDetails('exams')">
-                <i class="fas fa-file-alt text-3xl mb-2"></i>
-                <h3 class="text-sm opacity-90">إجمالي الامتحانات</h3>
-                <p id="totalExams" class="text-2xl font-bold">0</p>
+        <!-- بطاقة الامتحانات النشطة -->
+        <div class="stat-card-modern" style="background: linear-gradient(135deg, #10b981, #059669);" onclick="showStatDetails('active')">
+            <div class="stat-icon">
+                <i class="fas fa-check-circle"></i>
             </div>
-            
-            <div class="stat-card stat-card-green" onclick="showStatDetails('active')">
-                <i class="fas fa-check-circle text-3xl mb-2"></i>
-                <h3 class="text-sm opacity-90">الامتحانات النشطة</h3>
-                <p id="activeExams" class="text-2xl font-bold">0</p>
+            <div class="stat-info">
+                <h3 class="stat-label">الامتحانات النشطة</h3>
+                <p id="activeExams" class="stat-number">0</p>
             </div>
-            
-            <div class="stat-card stat-card-purple" onclick="showStatDetails('students')">
-                <i class="fas fa-users text-3xl mb-2"></i>
-                <h3 class="text-sm opacity-90">عدد الطلاب</h3>
-                <p id="totalStudents" class="text-2xl font-bold">0</p>
+            <div class="stat-badge">
+                <i class="fas fa-arrow-left"></i>
             </div>
-            
-            <div class="stat-card stat-card-orange" onclick="showStatDetails('completed')">
-                <i class="fas fa-chart-line text-3xl mb-2"></i>
-                <h3 class="text-sm opacity-90">الامتحانات المكتملة</h3>
-                <p id="completedExams" class="text-2xl font-bold">0</p>
-            </div>
-            
         </div>
         
-        <h2 class="text-xl font-bold mb-4">📖 أحدث الامتحانات</h2>
-        <div id="recentExamsList" class="space-y-3"></div>
+        <!-- بطاقة عدد الطلاب -->
+        <div class="stat-card-modern" style="background: linear-gradient(135deg, #f59e0b, #d97706);" onclick="showStatDetails('students')">
+            <div class="stat-icon">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="stat-info">
+                <h3 class="stat-label">عدد الطلاب</h3>
+                <p id="totalStudents" class="stat-number">0</p>
+            </div>
+            <div class="stat-badge">
+                <i class="fas fa-arrow-left"></i>
+            </div>
+        </div>
+        
+        <!-- بطاقة الامتحانات المكتملة -->
+        <div class="stat-card-modern" style="background: linear-gradient(135deg, #ef4444, #dc2626);" onclick="showStatDetails('completed')">
+            <div class="stat-icon">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <div class="stat-info">
+                <h3 class="stat-label">الامتحانات المكتملة</h3>
+                <p id="completedExams" class="stat-number">0</p>
+            </div>
+            <div class="stat-badge">
+                <i class="fas fa-arrow-left"></i>
+            </div>
+        </div>
         
     </div>
+    
+    <h2 class="text-xl font-bold mb-4">📖 أحدث الامتحانات</h2>
+    <div id="recentExamsList" class="space-y-3"></div>
+    
+</div>
 
     <!-- ==================== صفحة إنشاء امتحان ==================== -->
     
@@ -1890,59 +2356,68 @@ body.exam-mode {
 <!-- ==================== الفوتر (Footer) ==================== -->
 
 <footer class="footer">
-    <div style="direction: rtl; text-align: center; padding: 20px;">
+    <div style="direction: rtl; max-width: 1100px; margin: 0 auto; padding: 8px 15px;">
         
-        <!-- CEO و CTO -->
-        <div style="display: flex; justify-content: center; gap: 30px; flex-wrap: wrap; margin-bottom: 12px;">
-            <p style="color: #94a3b8; font-size: 16px;">
-                <i class="fas fa-crown" style="color: #f59e0b;"></i>
-                <strong style="color: #e2e8f0;">CEO :</strong>
-                <span style="color: #a5b4fc;">Mohamed Emad Abdalty</span>
-            </p>
-            <p style="color: #94a3b8; font-size: 16px;">
-                <i class="fas fa-microchip" style="color: #22c55e;"></i>
-                <strong style="color: #e2e8f0;">CTO :</strong>
-                <span style="color: #a5b4fc;">Abdelrahman Mohamed Sobhy</span>
-            </p>
+        <!-- الصف الأول: الأرقام + زر الشركة -->
+        <div class="footer-top" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+            
+            <!-- جهة اليمين: Tecno Shark + الأرقام -->
+            <div style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
+                
+                <!-- اسم الشركة مع زر -->
+                <a href="https://tecno-shark.vercel.app" target="_blank" class="company-btn">
+                    <i class="fas fa-building company-icon"></i>
+                    <span style="color: #e2e8f0;">Tecno Shark</span>
+                    <span class="visit-badge">زياره موقع الشركه</span>
+                </a>
+                
+                <!-- الأرقام -->
+                <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                    <p style="color: #94a3b8; font-size: 14px; margin: 0; direction: ltr;">
+                        <i class="fas fa-phone phone-icon"></i>
+                        <span style="color: #e2e8f0; font-weight: 600;">01126125881</span>
+                    </p>
+                    <p style="color: #94a3b8; font-size: 14px; margin: 0; direction: ltr;">
+                        <i class="fas fa-phone phone-icon"></i>
+                        <span style="color: #e2e8f0; font-weight: 600;">01144100018</span>
+                    </p>
+                </div>
+                
+            </div>
+            
+            <!-- جهة اليسار: CTO و CEO -->
+            <div style="text-align: left;">
+                <p style="color: #94a3b8; font-size: 14px; margin: 2px 0;">
+                    <strong style="color: #e2e8f0;">CEO :</strong>
+                    <span style="color: #a5b4fc;">Mohamed Emad Abdalty </span>
+                </p>
+                <p style="color: #94a3b8; font-size: 14px; margin: 2px 0;">
+                    <strong style="color: #e2e8f0;">CTO :</strong>
+                    <span style="color: #a5b4fc;">Abdelrahman Mohamed Sobhy</span>
+                </p>
+            </div>
+            
         </div>
         
-        <!-- أرقام التواصل -->
-        <div style="display: flex; justify-content: center; gap: 25px; flex-wrap: wrap; margin-bottom: 12px;">
-            <p style="color: #94a3b8; font-size: 15px; direction: ltr;">
-                <i class="fas fa-phone" style="color: #22c55e;"></i>
-                <span style="color: #e2e8f0; font-weight: 600;">01144100018</span>
-            </p>
-            <p style="color: #94a3b8; font-size: 15px; direction: ltr;">
-                <i class="fas fa-phone" style="color: #22c55e;"></i>
-                <span style="color: #e2e8f0; font-weight: 600;">01126125881</span>
-            </p>
-        </div>
+        <!-- الخط الفاصل -->
+        <hr style="border: none; border-top: 1px solid #334155; margin: 8px 0;">
         
-        <!-- زر الانتقال لموقع الشركة -->
-        <div style="margin-bottom: 12px;">
-            <a href="https://tecno-shark.vercel.app" target="_blank" 
-               style="display: inline-flex; align-items: center; gap: 10px; 
-                      background: linear-gradient(135deg, #6366f1, #8b5cf6); 
-                      color: white; padding: 10px 30px; border-radius: 12px; 
-                      font-size: 16px; font-weight: bold; text-decoration: none; 
-                      transition: all 0.3s ease; border: none; cursor: pointer;">
-                <i class="fas fa-building"></i>
-                زيارة موقع Tecno Shark
-                <i class="fas fa-external-link-alt"></i>
+        <!-- الصف الثاني: البريد الإلكتروني + حقوق النشر -->
+        <div class="footer-bottom" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+            
+            <!-- البريد الإلكتروني -->
+            <a href="mailto:tecnoshark1st@gmail.com" 
+               style="color: #a5b4fc; text-decoration: none; font-size: 13px; transition: color 0.3s;">
+                <i class="fas fa-envelope email-icon"></i>
+                tecnoshark1st@gmail.com
             </a>
-        </div>
-        
-        <!-- حقوق النشر -->
-        <p style="color: #64748b; font-size: 13px; margin-top: 12px; border-top: 1px solid #334155; padding-top: 12px;">
-            <i class="fas fa-graduation-cap" style="color: #6366f1;"></i>
-            منصة الامتحانات الإلكترونية - Imtihan 2026 &copy;
-        </p>
-        
-        <!-- رابط سريع للبريد -->
-        <div style="margin-top: 6px;">
-            <a href="mailto:info@imtihan.com" style="color: #a5b4fc; text-decoration: none; font-size: 13px; transition: color 0.3s;">
-                <i class="fas fa-envelope"></i> tecnoshark1st@gmail.com
-            </a>
+            
+            <!-- حقوق النشر -->
+            <p style="color: #64748b; font-size: 13px; margin: 0;">
+                <i class="fas fa-graduation-cap grad-icon"></i>
+                منصة الامتحانات الإلكترونية - Imtihan 2026 &copy;
+            </p>
+            
         </div>
         
     </div>
@@ -2202,7 +2677,7 @@ async function getUserProfile(uid) {
         }
     }
     
-   function refreshHome() {
+  function refreshHome() {
     if (!currentUser) {
         document.getElementById('totalExams').innerText = '0';
         document.getElementById('activeExams').innerText = '0';
@@ -2242,21 +2717,31 @@ async function getUserProfile(uid) {
         `;
     } else {
         container.innerHTML = recent.map(exam => `
-            <div class="exam-card">
-                <div class="flex justify-between items-center">
-                    <div>
-                        <h3 class="font-bold">${exam.title}</h3>
-                        <p class="text-sm text-gray-500">${exam.className || 'بدون صف'} | ${exam.questions?.length || 0} سؤال</p>
+            <div class="exam-card-modern">
+                <div class="exam-info">
+                    <div class="exam-title">${exam.title}</div>
+                    <div class="exam-meta">
+                        <span><i class="fas fa-book" style="color:#6366f1;"></i> ${exam.className || 'بدون صف'}</span>
+                        <span><i class="fas fa-question-circle" style="color:#f59e0b;"></i> ${exam.questions?.length || 0} سؤال</span>
+                        <span><i class="fas fa-clock" style="color:#10b981;"></i> ${exam.duration || 30} دقيقة</span>
                     </div>
-                    <button onclick="startExam('${exam.id}')" class="bg-indigo-600 text-white px-3 py-1 rounded text-sm hover:bg-indigo-700 transition">
-                        بدء الامتحان
+                </div>
+                <div class="exam-actions">
+                    <button onclick="startExam('${exam.id}')" class="exam-btn exam-btn-start">
+                        <i class="fas fa-play ml-1"></i> بدء
+                    </button>
+                    <button onclick="copyToClipboard('${window.location.origin}${window.location.pathname}?exam=${exam.id}')" 
+                        class="exam-btn exam-btn-copy">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                    <button onclick="deleteExam('${exam.id}')" class="exam-btn exam-btn-delete">
+                        <i class="fas fa-trash"></i>
                     </button>
                 </div>
             </div>
         `).join('');
     }
     
-    // ✅ تحديث العداد عند عرض الصفحة الرئيسية
     setTimeout(() => refreshExamLimit(), 300);
 }
     

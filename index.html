@@ -1756,23 +1756,31 @@ body {
 /* ===== تنسيق حاوية الامتحان ===== */
 #studentExamContainer {
     position: fixed !important;
-    inset: 0 !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
     z-index: 9999 !important;
-    background: rgba(0, 0, 0, 0.85) !important;
-    display: flex !important;
+    background: rgba(0, 0, 0, 0.92) !important;
+    display: none !important;
     align-items: center !important;
     justify-content: center !important;
     padding: 10px !important;
+    overflow: hidden !important;
+}
+
+#studentExamContainer:not(.hidden-page) {
+    display: flex !important;
 }
 
 #studentExamContainer .bg-white {
     border-radius: 16px;
     overflow: hidden;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    box-shadow: 0 25px 80px rgba(0,0,0,0.5);
     width: 100%;
-    max-width: 800px;
-    height: 95vh;
-    max-height: 95vh;
+    max-width: 820px;
+    height: 92vh;
+    max-height: 92vh;
     display: flex;
     flex-direction: column;
     background: white !important;
@@ -1780,8 +1788,9 @@ body {
 
 /* ===== منطقة الأسئلة قابلة للتمرير ===== */
 #studentExamContainer .exam-questions-area {
-    overflow-y: auto;
-    flex: 1;
+    overflow-y: auto !important;
+    flex: 1 !important;
+    padding: 10px 20px !important;
 }
 
 /* ===== شريط التمرير المخصص ===== */
@@ -1799,32 +1808,23 @@ body {
     border-radius: 10px;
 }
 
-/* ===== تنسيق بطاقات الأسئلة ===== */
-.question-card {
-    background: #f8fafc;
-    border-radius: 12px;
-    padding: 16px 18px;
-    margin-bottom: 12px;
-    border: 1px solid #e5e7eb;
-    transition: all 0.3s ease;
+/* ===== إصلاح الخلفية البيضاء الزائدة ===== */
+body.exam-mode {
+    overflow: hidden !important;
+    background: rgba(0, 0, 0, 0.92) !important;
 }
 
-.question-card:hover {
-    border-color: #6366f1;
-    box-shadow: 0 4px 15px rgba(99,102,241,0.08);
+body.exam-mode .container,
+body.exam-mode .page:not(.hidden-page),
+body.exam-mode #homePage,
+body.exam-mode .bg-gradient-to-r,
+body.exam-mode .footer,
+body.exam-mode nav {
+    display: none !important;
 }
 
-.question-title {
-    font-size: 16px;
-    font-weight: 700;
-    margin-bottom: 12px;
-    color: #1e293b;
-}
-
-.question-score {
-    color: #6366f1;
-    font-size: 13px;
-    font-weight: 600;
+body.exam-mode #studentExamContainer {
+    display: flex !important;
 }
 
 /* ===== تنسيق الخيارات ===== */
@@ -6498,6 +6498,13 @@ function enableExamMode() {
             p.style.display = 'none';
         }
     });
+    
+    // إظهار حاوية الامتحان
+    const container = document.getElementById('studentExamContainer');
+    if (container) {
+        container.classList.remove('hidden-page');
+        container.style.display = 'flex !important';
+    }
 }
 
 function disableExamMode() {
@@ -6521,24 +6528,37 @@ function disableExamMode() {
     document.querySelectorAll('.page').forEach(p => {
         p.style.display = '';
     });
+    
+    // إخفاء حاوية الامتحان
+    const container = document.getElementById('studentExamContainer');
+    if (container) {
+        container.classList.add('hidden-page');
+        container.style.display = 'none';
+    }
 }
 
 
 function showStudentExam(exam) {
+    // تفعيل وضع الامتحان أولاً
     enableExamMode();
     
-    document.getElementById('studentExamContainer').classList.remove('hidden-page');
-    const container = document.getElementById('studentExamContent');
-    container.innerHTML = `
+    const container = document.getElementById('studentExamContainer');
+    const content = document.getElementById('studentExamContent');
+    
+    // التأكد من ظهور الحاوية
+    if (container) {
+        container.classList.remove('hidden-page');
+        container.style.display = 'flex';
+    }
+    
+    content.innerHTML = `
         <!-- الهيدر العلوي -->
         <div style="background: linear-gradient(135deg, #6366f1, #8b5cf6); 
-                    border-radius: 0; 
+                    border-radius: 16px 16px 0 0; 
                     padding: 20px 30px; 
                     text-align: center; 
                     color: white;
-                    position: sticky;
-                    top: 0;
-                    z-index: 100;">
+                    flex-shrink: 0;">
             
             <div style="font-size: 40px; margin-bottom: 6px;">
                 <i class="fas fa-graduation-cap"></i>
@@ -6562,7 +6582,7 @@ function showStudentExam(exam) {
         </div>
         
         <!-- محتوى بدء الامتحان -->
-        <div style="padding: 30px 25px; text-align: center; background: white; border-radius: 0 0 0 0; flex: 1; min-height: calc(100vh - 200px); display: flex; flex-direction: column; justify-content: center;">
+        <div style="padding: 30px 25px; text-align: center; background: white; border-radius: 0 0 16px 16px; flex: 1; overflow-y: auto;">
             
             <div style="font-size: 48px; color: #6366f1; margin-bottom: 10px;">
                 <i class="fas fa-user-graduate"></i>
@@ -6617,6 +6637,35 @@ function showStudentExam(exam) {
         </div>
     `;
 }
+
+
+// التحقق من وجود رابط امتحان في URL عند تحميل الصفحة
+function checkExamLink() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const examId = urlParams.get('exam');
+    
+    if (examId) {
+        // البحث عن الامتحان
+        const exam = exams.find(e => e.id === examId);
+        if (exam) {
+            // تأخير بسيط للتأكد من تحميل كل شيء
+            setTimeout(() => {
+                startExam(examId);
+            }, 500);
+        } else {
+            showToast('❌ الامتحان غير موجود');
+        }
+    }
+}
+
+// استدعاء عند تحميل الصفحة
+window.addEventListener('load', function() {
+    // ... الكود الموجود ...
+    
+    // التحقق من رابط الامتحان
+    setTimeout(checkExamLink, 1000);
+});
+
 // إغلاق الامتحان (لا يعود للموقع الرئيسي)
 function closeStudentExam() {
     // إخفاء الامتحان

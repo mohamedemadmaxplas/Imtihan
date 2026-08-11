@@ -3931,7 +3931,7 @@ function renderExam(examId) {
     
     const container = document.getElementById('studentExamContent');
     container.innerHTML = `
-        <!-- ===== الهيدر الثابت في الأعلى ===== -->
+        <!-- ===== الهيدر العلوي (ثابت) ===== -->
         <div style="background: linear-gradient(135deg, #6366f1, #8b5cf6); 
                     padding: 18px 24px; 
                     border-radius: 16px 16px 0 0;
@@ -3965,65 +3965,66 @@ function renderExam(examId) {
             
         </div>
         
-        <!-- ===== منطقة الأسئلة ===== -->
-        <div style="padding: 20px 24px 10px 24px; background: white; min-height: 300px;">
+        <!-- ===== منطقة الأسئلة مع إمكانية السكرول ===== -->
+        <div style="padding: 20px 24px 10px 24px; background: white; max-height: calc(100vh - 250px); overflow-y: auto;">
             <form id="examForm2" onsubmit="submitStudentExam(event, '${exam.id}')">
+                
+                <!-- الأسئلة -->
                 ${qHtml}
                 
-                <!-- زر إرسال الإجابات -->
+                <!-- ===== زر إرسال الإجابات ===== -->
                 <button type="submit" style="width: 100%; padding: 16px; 
                            background: linear-gradient(135deg, #22c55e, #16a34a); 
                            color: white; border: none; border-radius: 12px; 
                            font-size: 18px; font-weight: 700; 
                            cursor: pointer; transition: all 0.3s ease;
                            display: flex; align-items: center; justify-content: center; gap: 10px;
-                           margin-top: 10px;"
+                           margin-top: 16px;"
                         onmouseover="this.style.transform='scale(1.02)'; this.style.boxShadow='0 10px 30px rgba(34,197,94,0.4)'"
                         onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none'">
                     <i class="fas fa-paper-plane"></i>
                     إرسال الإجابات
                 </button>
+                
+                <!-- ===== الفوتر (تحت زر الإرسال) ===== -->
+                <div style="margin-top: 20px; padding-top: 15px; 
+                            border-top: 2px solid #e5e7eb;
+                            background: linear-gradient(135deg, #1e293b, #0f172a); 
+                            padding: 14px 20px; 
+                            border-radius: 12px;
+                            display: flex; 
+                            justify-content: space-between; 
+                            align-items: center; 
+                            flex-wrap: wrap; 
+                            gap: 10px;">
+                    
+                    <!-- اسم الشركة -->
+                    <div style="display: flex; align-items: center; gap: 8px; color: #94a3b8; font-size: 13px;">
+                        <i class="fas fa-building" style="color: #6366f1;"></i>
+                        <span style="color: #a5b4fc; font-weight: bold;">Tecno Shark Company</span>
+                    </div>
+                    
+                    <!-- الأرقام -->
+                    <div style="display: flex; gap: 15px; flex-wrap: wrap; font-size: 13px; color: #94a3b8; direction: ltr;">
+                        <span><i class="fas fa-phone" style="color: #22c55e;"></i> <span style="color: #e2e8f0;">01126125881</span></span>
+                        <span><i class="fas fa-phone" style="color: #22c55e;"></i> <span style="color: #e2e8f0;">01144100018</span></span>
+                    </div>
+                    
+                    <!-- زر زيارة الموقع -->
+                    <a href="https://tecno-shark.vercel.app" target="_blank" 
+                       style="display: inline-flex; align-items: center; gap: 6px; 
+                              background: rgba(99,102,241,0.15); 
+                              border: 1px solid #6366f1;
+                              color: #a5b4fc; padding: 4px 14px; border-radius: 8px; 
+                              font-size: 12px; font-weight: 600; text-decoration: none; 
+                              transition: all 0.3s ease; cursor: pointer;">
+                        <i class="fas fa-external-link-alt" style="font-size: 11px;"></i>
+                        زيارة الموقع
+                    </a>
+                    
+                </div>
+                
             </form>
-        </div>
-        
-        <!-- ===== الفوتر السفلي الثابت ===== -->
-        <div style="background: linear-gradient(135deg, #1e293b, #0f172a); 
-                    padding: 10px 20px; 
-                    border-radius: 0 0 16px 16px;
-                    display: flex; 
-                    justify-content: space-between; 
-                    align-items: center; 
-                    flex-wrap: wrap; 
-                    gap: 8px;
-                    border-top: 2px solid #6366f1;
-                    position: sticky;
-                    bottom: 0;
-                    z-index: 100;">
-            
-            <!-- اسم الشركة -->
-            <div style="display: flex; align-items: center; gap: 8px; color: #94a3b8; font-size: 13px;">
-                <i class="fas fa-building" style="color: #6366f1;"></i>
-                <span style="color: #a5b4fc; font-weight: bold;">Tecno Shark Company</span>
-            </div>
-            
-            <!-- الأرقام -->
-            <div style="display: flex; gap: 15px; flex-wrap: wrap; font-size: 13px; color: #94a3b8; direction: ltr;">
-                <span><i class="fas fa-phone" style="color: #22c55e;"></i> <span style="color: #e2e8f0;">01126125881</span></span>
-                <span><i class="fas fa-phone" style="color: #22c55e;"></i> <span style="color: #e2e8f0;">01144100018</span></span>
-            </div>
-            
-            <!-- زر زيارة الموقع -->
-            <a href="https://tecno-shark.vercel.app" target="_blank" 
-               style="display: inline-flex; align-items: center; gap: 6px; 
-                      background: rgba(99,102,241,0.15); 
-                      border: 1px solid #6366f1;
-                      color: #a5b4fc; padding: 4px 14px; border-radius: 8px; 
-                      font-size: 12px; font-weight: 600; text-decoration: none; 
-                      transition: all 0.3s ease; cursor: pointer;">
-                <i class="fas fa-external-link-alt" style="font-size: 11px;"></i>
-                زيارة الموقع
-            </a>
-            
         </div>
     `;
     
@@ -6221,46 +6222,94 @@ function showStudentExam(exam) {
     document.getElementById('studentExamContainer').classList.remove('hidden-page');
     const container = document.getElementById('studentExamContent');
     container.innerHTML = `
-        <div class="exam-start-screen" style="flex:1;">
-            <div class="exam-icon">
-                <i class="fas fa-user-graduate"></i>
-            </div>
-            <h2 class="exam-title">${exam.title}</h2>
-            <p class="exam-class">📚 ${exam.className || 'بدون صف'}</p>
-            <p class="exam-teacher">👨‍🏫 المدرس: <strong>${exam.teacherName || exam.creatorName || 'غير محدد'}</strong></p>
-            <p class="exam-instruction">الرجاء إدخال بياناتك لبدء الامتحان</p>
+        <!-- الهيدر العلوي -->
+        <div style="background: linear-gradient(135deg, #6366f1, #8b5cf6); 
+                    border-radius: 16px 16px 0 0; 
+                    padding: 25px 30px; 
+                    text-align: center; 
+                    color: white;
+                    position: sticky;
+                    top: 0;
+                    z-index: 100;">
             
-            <div style="max-width:400px; margin:0 auto;">
-                <input type="text" id="studentName" placeholder="الاسم الكامل" class="exam-input mb-3">
-                <input type="text" id="studentNumber" placeholder="كود الطالب" class="exam-input mb-6">
-                <button onclick="renderExam('${exam.id}')" class="start-exam-btn">
-                    <i class="fas fa-play ml-2"></i> بدء الامتحان
-                </button>
+            <div style="font-size: 48px; margin-bottom: 8px;">
+                <i class="fas fa-graduation-cap"></i>
             </div>
+            
+            <h2 style="font-size: 28px; font-weight: 800; margin: 0; text-shadow: 0 2px 10px rgba(0,0,0,0.2);">
+                ${exam.title}
+            </h2>
+            
+            <div style="display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; margin-top: 8px; opacity: 0.9;">
+                <span style="font-size: 16px;">
+                    <i class="fas fa-book"></i> ${exam.className || 'بدون صف'}
+                </span>
+                <span style="font-size: 16px;">
+                    <i class="fas fa-chalkboard-teacher"></i> ${exam.teacherName || exam.creatorName || 'مدرس'}
+                </span>
+            </div>
+            
+            <div style="display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; margin-top: 6px; font-size: 14px; opacity: 0.8;">
+                <span><i class="fas fa-question-circle"></i> ${exam.questions?.length || 0} سؤال</span>
+                <span><i class="fas fa-clock"></i> ${exam.duration || 30} دقيقة</span>
+                <span><i class="fas fa-star"></i> ${exam.totalScore || 0} درجة</span>
+            </div>
+            
         </div>
         
-        <!-- الفوتر الثابت -->
-        <div class="exam-fixed-footer">
-            <div class="exam-footer-company">
-                <span class="company-icon"><i class="fas fa-building"></i></span>
-                <span class="company-name">Tecno Shark Company</span>
+        <!-- محتوى بدء الامتحان -->
+        <div style="padding: 30px 25px; text-align: center; background: white; border-radius: 0 0 16px 16px;">
+            
+            <div style="font-size: 56px; color: #6366f1; margin-bottom: 12px;">
+                <i class="fas fa-user-graduate"></i>
             </div>
             
-            <div class="exam-footer-phones">
-                <span>
-                    <i class="fas fa-phone phone-icon"></i>
-                    <span class="phone-number">01144100018</span>
-                </span>
-                <span>
-                    <i class="fas fa-phone phone-icon"></i>
-                    <span class="phone-number">01126125881</span>
-                </span>
+            <h3 style="font-size: 22px; font-weight: 700; color: #1e293b; margin: 0 0 6px 0;">
+                أدخل بياناتك لبدء الامتحان
+            </h3>
+            <p style="color: #64748b; font-size: 14px; margin-bottom: 24px;">
+                يرجى إدخال اسمك وكود الطالب للمتابعة
+            </p>
+            
+            <div style="max-width: 400px; margin: 0 auto;">
+                <div style="position: relative; margin-bottom: 14px;">
+                    <i class="fas fa-user" style="position: absolute; right: 14px; top: 50%; transform: translateY(-50%); color: #94a3b8;"></i>
+                    <input type="text" id="studentName" placeholder="الاسم الكامل" 
+                           style="width: 100%; padding: 14px 45px 14px 16px; 
+                                  border: 2px solid #e5e7eb; border-radius: 12px; 
+                                  font-size: 16px; text-align: right; transition: border-color 0.3s;"
+                           onfocus="this.style.borderColor='#6366f1'"
+                           onblur="this.style.borderColor='#e5e7eb'">
+                </div>
+                
+                <div style="position: relative; margin-bottom: 24px;">
+                    <i class="fas fa-id-card" style="position: absolute; right: 14px; top: 50%; transform: translateY(-50%); color: #94a3b8;"></i>
+                    <input type="text" id="studentNumber" placeholder="كود الطالب (اختياري)" 
+                           style="width: 100%; padding: 14px 45px 14px 16px; 
+                                  border: 2px solid #e5e7eb; border-radius: 12px; 
+                                  font-size: 16px; text-align: right; transition: border-color 0.3s;"
+                           onfocus="this.style.borderColor='#6366f1'"
+                           onblur="this.style.borderColor='#e5e7eb'">
+                </div>
+                
+                <button onclick="renderExam('${exam.id}')" 
+                        style="width: 100%; padding: 16px; 
+                               background: linear-gradient(135deg, #6366f1, #8b5cf6); 
+                               color: white; border: none; border-radius: 12px; 
+                               font-size: 18px; font-weight: 700; 
+                               cursor: pointer; transition: all 0.3s ease;
+                               display: flex; align-items: center; justify-content: center; gap: 10px;"
+                        onmouseover="this.style.transform='scale(1.02)'; this.style.boxShadow='0 10px 30px rgba(99,102,241,0.4)'"
+                        onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none'">
+                    <i class="fas fa-play"></i>
+                    بدء الامتحان
+                </button>
             </div>
             
-            <a href="https://tecno-shark.vercel.app" target="_blank" class="exam-footer-btn">
-                <i class="fas fa-external-link-alt"></i>
-                زيارة الموقع
-            </a>
+            <p style="color: #94a3b8; font-size: 12px; margin-top: 16px;">
+                <i class="fas fa-info-circle" style="color: #6366f1;"></i>
+                بعد البدء، ستبدأ المدة الزمنية ولا يمكن إيقافها
+            </p>
         </div>
     `;
 }

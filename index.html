@@ -6474,16 +6474,12 @@ auth.onAuthStateChanged(async (user) => {
 }
 
 function enableExamMode() {
-    // إخفاء كل المحتوى
+    // ✅ إزالة الخلفية السوداء وإظهار خلفية فاتحة بدلاً منها
     document.body.classList.add('exam-mode');
     document.body.style.overflow = 'hidden';
-    document.body.style.background = 'rgba(0, 0, 0, 0.92)';
+    document.body.style.background = '#f0f9ff'; // ✅ خلفية فاتحة بدلاً من السوداء
     
-    // إخفاء أي عناصر منبثقة
-    const overlays = document.querySelectorAll('.popup.show');
-    overlays.forEach(overlay => overlay.classList.remove('show'));
-    
-    // إخفاء الفوتر والهيدر
+    // إخفاء المحتوى
     const footer = document.querySelector('.footer');
     const nav = document.querySelector('nav');
     const sidebar = document.getElementById('sidebar');
@@ -6496,7 +6492,7 @@ function enableExamMode() {
     if (searchBtn) searchBtn.style.display = 'none';
     if (userArea) userArea.style.display = 'none';
     
-    // ✅ إخفاء الصفحات الأخرى ولكن لا نخفي حاوية الامتحان
+    // إخفاء الصفحات
     document.querySelectorAll('.page').forEach(p => {
         if (p.id !== 'studentExamContainer') {
             p.style.display = 'none';
@@ -6513,7 +6509,7 @@ function enableExamMode() {
         container.style.right = '0';
         container.style.bottom = '0';
         container.style.zIndex = '9999';
-        container.style.background = 'rgba(0, 0, 0, 0.92)';
+        container.style.background = '#f0f9ff'; // ✅ خلفية فاتحة
         container.style.alignItems = 'center';
         container.style.justifyContent = 'center';
         container.style.padding = '10px';
@@ -6663,22 +6659,62 @@ function showStudentExam(exam) {
 }
 
 
-// التحقق من وجود رابط امتحان في URL عند تحميل الصفحة
 function checkExamLink() {
     const urlParams = new URLSearchParams(window.location.search);
     const examId = urlParams.get('exam');
     
-    if (examId) {
-        // البحث عن الامتحان
+    if (!examId) return;
+    
+    // ✅ انتظر حتى يتم تحميل الامتحانات
+    let attempts = 0;
+    const maxAttempts = 20; // 20 محاولة كل 0.5 ثانية = 10 ثواني
+    
+    const waitForExam = setInterval(() => {
+        attempts++;
         const exam = exams.find(e => e.id === examId);
+        
         if (exam) {
-            // تأخير بسيط للتأكد من تحميل كل شيء
-            setTimeout(() => {
-                startExam(examId);
-            }, 500);
-        } else {
-            showToast('❌ الامتحان غير موجود');
+            clearInterval(waitForExam);
+            console.log('✅ تم العثور على الامتحان:', exam.title);
+            setTimeout(() => startExam(examId), 300);
+        } else if (attempts >= maxAttempts) {
+            clearInterval(waitForExam);
+            console.error('❌ لم يتم العثور على الامتحان بعد ' + maxAttempts + ' محاولة');
+            showToast('❌ الامتحان غير موجود أو لم يتم تحميل البيانات');
+            
+            // ✅ عرض رسالة خطأ للمستخدم بدلاً من الشاشة السوداء
+            showExamNotFoundScreen();
         }
+    }, 500);
+}
+
+function showExamNotFoundScreen() {
+    // إلغاء وضع الامتحان
+    document.body.classList.remove('exam-mode');
+    document.body.style.overflow = '';
+    document.body.style.background = '';
+    
+    // إخفاء حاوية الامتحان
+    const container = document.getElementById('studentExamContainer');
+    if (container) {
+        container.classList.add('hidden-page');
+        container.style.display = 'none';
+    }
+    
+    // عرض رسالة في الصفحة الرئيسية
+    const homePage = document.getElementById('homePage');
+    if (homePage) {
+        homePage.classList.remove('hidden-page');
+        homePage.innerHTML = `
+            <div class="bg-white rounded-2xl shadow-xl p-8 text-center max-w-md mx-auto mt-10">
+                <div style="font-size: 64px; margin-bottom: 16px;">🔍</div>
+                <h2 class="text-2xl font-bold text-red-600 mb-3">⚠️ الامتحان غير موجود</h2>
+                <p class="text-gray-600 mb-4">لم نتمكن من العثور على هذا الامتحان. قد يكون قد تم حذفه أو انتهت صلاحيته.</p>
+                <button onclick="location.href='/' " class="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition">
+                    <i class="fas fa-home ml-2"></i> العودة للرئيسية
+                </button>
+            </div>
+        `;
     }
 }
 

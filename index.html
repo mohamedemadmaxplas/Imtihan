@@ -4100,11 +4100,10 @@ async function autoRenewSubscriptions() {
         if (modal) modal.remove();
     }
     
-    // ==================== دوال الامتحانات للطلاب ====================
-    
-   function startExam(examId) {
+    function startExam(examId) {
     // البحث في الامتحانات المخزنة
     const exam = exams.find(e => e.id === examId);
+    
     if (!exam) {
         showToast('❌ الامتحان غير موجود');
         return;
@@ -4121,8 +4120,13 @@ async function autoRenewSubscriptions() {
         return;
     }
     
+    // ✅ تأكد من أن الامتحان موجود وجاهز قبل العرض
     sessionStorage.setItem('currentExam', JSON.stringify(exam));
-    showStudentExam(exam);
+    
+    // ✅ تأخير بسيط لضمان تحميل DOM
+    setTimeout(() => {
+        showStudentExam(exam);
+    }, 100);
 }
  
     
@@ -6492,18 +6496,28 @@ function enableExamMode() {
     if (searchBtn) searchBtn.style.display = 'none';
     if (userArea) userArea.style.display = 'none';
     
-    // إخفاء كل الصفحات
+    // ✅ إخفاء الصفحات الأخرى ولكن لا نخفي حاوية الامتحان
     document.querySelectorAll('.page').forEach(p => {
         if (p.id !== 'studentExamContainer') {
             p.style.display = 'none';
         }
     });
     
-    // إظهار حاوية الامتحان
+    // ✅ إظهار حاوية الامتحان
     const container = document.getElementById('studentExamContainer');
     if (container) {
-        container.classList.remove('hidden-page');
         container.style.display = 'flex !important';
+        container.style.position = 'fixed';
+        container.style.top = '0';
+        container.style.left = '0';
+        container.style.right = '0';
+        container.style.bottom = '0';
+        container.style.zIndex = '9999';
+        container.style.background = 'rgba(0, 0, 0, 0.92)';
+        container.style.alignItems = 'center';
+        container.style.justifyContent = 'center';
+        container.style.padding = '10px';
+        container.classList.remove('hidden-page');
     }
 }
 
@@ -6539,18 +6553,25 @@ function disableExamMode() {
 
 
 function showStudentExam(exam) {
-    // تفعيل وضع الامتحان أولاً
-    enableExamMode();
-    
+    // ✅ التأكد من وجود عناصر DOM
     const container = document.getElementById('studentExamContainer');
     const content = document.getElementById('studentExamContent');
     
-    // التأكد من ظهور الحاوية
-    if (container) {
-        container.classList.remove('hidden-page');
-        container.style.display = 'flex';
+    if (!container || !content) {
+        console.error('❌ عناصر الامتحان غير موجودة');
+        return;
     }
     
+    // ✅ تفعيل وضع الامتحان
+    enableExamMode();
+    
+    // ✅ التأكد من ظهور الحاوية
+    container.classList.remove('hidden-page');
+    container.style.display = 'flex !important';
+    container.style.opacity = '1';
+    container.style.visibility = 'visible';
+    
+    // ✅ بناء محتوى الامتحان
     content.innerHTML = `
         <!-- الهيدر العلوي -->
         <div style="background: linear-gradient(135deg, #6366f1, #8b5cf6); 
@@ -6565,7 +6586,7 @@ function showStudentExam(exam) {
             </div>
             
             <h2 style="font-size: 24px; font-weight: 800; margin: 0; text-shadow: 0 2px 10px rgba(0,0,0,0.2);">
-                ${exam.title}
+                ${exam.title || 'امتحان'}
             </h2>
             
             <div style="display: flex; justify-content: center; gap: 16px; flex-wrap: wrap; margin-top: 6px; opacity: 0.9; font-size: 14px;">
@@ -6636,6 +6657,9 @@ function showStudentExam(exam) {
             </p>
         </div>
     `;
+    
+    // ✅ التأكد من ظهور المحتوى
+    content.style.display = 'block';
 }
 
 

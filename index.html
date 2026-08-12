@@ -3324,25 +3324,42 @@ function refreshPlansPage() {
         btnColor = colors[colorIndex].btn;
         icon = colors[colorIndex].icon;
         
-        // حساب الخصم
+        // ========== حساب الخصم بشكل صحيح ==========
         let discountPercent = 0;
         let originalPrice = plan.price;
+        let hasDiscount = false;
         
-        if (plan.id === 'basic') {
-            originalPrice = 50;
-            discountPercent = 20;
-        } else if (plan.id === 'pro') {
-            originalPrice = 100;
-            discountPercent = 30;
-        } else if (plan.id === 'ultimate') {
-            originalPrice = 250;
-            discountPercent = 40;
-        } else if (plan.id === 'school') {
-            originalPrice = 500;
-            discountPercent = 50;
+        // 1. استخدام النسبة المخزنة في الباقة
+        if (plan.discountPercent && plan.discountPercent > 0) {
+            discountPercent = plan.discountPercent;
+            originalPrice = plan.originalPrice || plan.price;
+            hasDiscount = true;
+        } 
+        // 2. حساب النسبة من السعر الأصلي المخزن
+        else if (plan.originalPrice && plan.originalPrice > plan.price) {
+            originalPrice = plan.originalPrice;
+            discountPercent = Math.round(((plan.originalPrice - plan.price) / plan.originalPrice) * 100);
+            hasDiscount = discountPercent > 0;
+        }
+        // 3. استخدام القيم الافتراضية حسب نوع الباقة
+        else {
+            const defaultPrices = {
+                'basic': { original: 50, discount: 20 },
+                'pro': { original: 100, discount: 30 },
+                'ultimate': { original: 250, discount: 40 },
+                'school': { original: 500, discount: 50 }
+            };
+            
+            if (defaultPrices[plan.id]) {
+                originalPrice = defaultPrices[plan.id].original;
+                discountPercent = defaultPrices[plan.id].discount;
+                hasDiscount = discountPercent > 0;
+            }
         }
         
-        const hasDiscount = discountPercent > 0;
+        // ✅ عرض السعر الأصلي مع الخصم فقط إذا كانت النسبة أكبر من 0
+        const displayOriginalPrice = hasDiscount && discountPercent > 0 ? originalPrice : null;
+        const displayPrice = plan.price;
         
         // ✅ زر مخصص حسب حالة المستخدم
         let actionButton = '';
@@ -3361,17 +3378,27 @@ function refreshPlansPage() {
             `;
         }
         
+        // ✅ عرض شارة الخصم
+        let discountBadge = '';
+        if (hasDiscount && discountPercent > 0) {
+            discountBadge = `
+                <div class="absolute top-2 right-2 bg-red-500 text-white text-xs px-3 py-1 rounded-full font-bold z-10 animate-pulse">
+                    -${discountPercent}%
+                </div>
+            `;
+        }
+        
         return `
             <div class="bg-white rounded-2xl shadow-lg overflow-hidden border-2 hover:shadow-2xl transition-all duration-300 relative ${isCurrentPlan ? 'border-green-500 ring-2 ring-green-200' : 'border-gray-200'} w-full">
                 ${isCurrentPlan ? `<div class="absolute top-2 left-2 bg-green-500 text-white text-xs px-3 py-1 rounded-full font-bold z-10">✓ نشط</div>` : ''}
-                ${hasDiscount ? `<div class="absolute top-2 right-2 bg-red-500 text-white text-xs px-3 py-1 rounded-full font-bold z-10">-${discountPercent}%</div>` : ''}
+                ${discountBadge}
                 
                 <div class="bg-gradient-to-r ${bgColor} p-5 text-center text-white">
                     <div class="text-4xl mb-2">${icon}</div>
                     <h3 class="text-xl font-bold">${plan.name}</h3>
                     <div class="mt-2">
-                        ${hasDiscount ? `<span class="text-sm line-through opacity-70">${originalPrice} ج</span>` : ''}
-                        <div class="text-3xl font-bold mt-1">${plan.price} ج</div>
+                        ${displayOriginalPrice ? `<span class="text-sm line-through opacity-70">${displayOriginalPrice} ج</span>` : ''}
+                        <div class="text-3xl font-bold mt-1">${displayPrice} ج</div>
                         <span class="text-xs">/ شهرياً</span>
                     </div>
                     <div class="text-xs mt-1 opacity-90">📊 ${plan.examsCount.toLocaleString()} امتحان شهرياً</div>
@@ -3410,6 +3437,11 @@ function refreshPlansPage() {
                         <p class="text-sm text-gray-600 mt-1">
                             <i class="fas fa-calendar-alt ml-1"></i>
                             تاريخ التجديد: <span id="userExpiryDate" class="font-bold text-indigo-600">${userExpiryDate}</span>
+                        </p>
+                        <p class="text-sm text-gray-600 mt-1">
+                            <i class="fas fa-coins ml-1"></i>
+                            سعر الباقة: <span class="font-bold text-indigo-600">${userPlan.price} ج</span>
+                            ${userPlan.discountPercent > 0 ? `<span class="text-green-600 text-xs"> (خصم ${userPlan.discountPercent}%)</span>` : ''}
                         </p>
                     </div>
                     <button onclick="navigateTo('account')" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition text-sm">
@@ -5358,7 +5390,8 @@ if (!currentUser) {
         </div>
     `).join('');
 }
-// نافذة تعديل الباقة
+
+
 function editPlan(planId) {
     const plan = plans.find(p => p.id === planId);
     if (!plan) {
@@ -5366,73 +5399,50 @@ function editPlan(planId) {
         return;
     }
     
-    // تعبئة البيانات في الحقول
+    // تعبئة البيانات
     document.getElementById('editPlanId').value = plan.id;
     document.getElementById('editPlanName').value = plan.name || '';
     document.getElementById('editPlanExams').value = plan.examsCount || 0;
-    document.getElementById('editPlanPrice').value = plan.price || 0;
     document.getElementById('editPlanFeatures').value = plan.features ? plan.features.join('\n') : '';
     
-    // عرض النافذة
-    document.getElementById('editPlanPopup').classList.add('show');
-}
-
-async function savePlanEdit() {
-    const planId = document.getElementById('editPlanId').value;
-    const name = document.getElementById('editPlanName').value.trim();
-    const examsCount = parseInt(document.getElementById('editPlanExams').value);
-    const finalPrice = parseInt(document.getElementById('editFinalPrice').innerText);
-    const featuresText = document.getElementById('editPlanFeatures').value;
-    const originalPrice = parseFloat(document.getElementById('editOriginalPrice').value) || finalPrice;
-    const discountPercent = parseFloat(document.getElementById('editDiscountPercent').value) || 0;
+    // ========== حساب السعر الأصلي ونسبة الخصم ==========
+    let originalPrice = plan.originalPrice || plan.price;
+    let discountPercent = plan.discountPercent || 0;
     
-    if (!name) {
-        showToast('❌ الرجاء إدخال اسم الباقة');
-        return;
+    // إذا لم تكن النسبة محفوظة، نحسبها من السعر الأصلي والسعر الحالي
+    if (!plan.discountPercent && plan.originalPrice && plan.originalPrice > plan.price) {
+        discountPercent = Math.round(((plan.originalPrice - plan.price) / plan.originalPrice) * 100);
     }
     
-    if (isNaN(examsCount) || examsCount <= 0) {
-        showToast('❌ الرجاء إدخال عدد صحيح للامتحانات');
-        return;
-    }
-    
-    const features = featuresText ? featuresText.split('\n').filter(f => f.trim().length > 0) : [`${examsCount} امتحان شهرياً`];
-    
-    const updatedPlan = {
-        id: planId,
-        name: name,
-        examsCount: examsCount,
-        period: 'month',
-        price: finalPrice,
-        originalPrice: originalPrice,
-        discountPercent: discountPercent,
-        features: features,
-        updatedAt: new Date().toISOString()
-    };
-    
-    try {
-        await db.ref(`plans/${planId}`).set(updatedPlan);
+    // إذا لم يكن هناك سعر أصلي محفوظ، نستخدم القيم الافتراضية
+    if (!originalPrice || originalPrice === plan.price) {
+        // تحديد الخصم بناءً على نوع الباقة
+        const defaultPrices = {
+            'basic': { original: 50, discount: 20 },
+            'pro': { original: 100, discount: 30 },
+            'ultimate': { original: 250, discount: 40 },
+            'school': { original: 500, discount: 50 }
+        };
         
-        // تحديث المصفوفة المحلية
-        const index = plans.findIndex(p => p.id === planId);
-        if (index !== -1) {
-            plans[index] = updatedPlan;
+        if (defaultPrices[plan.id]) {
+            originalPrice = defaultPrices[plan.id].original;
+            discountPercent = defaultPrices[plan.id].discount;
         } else {
-            // إذا لم توجد في المصفوفة نضيفها
-            plans.push(updatedPlan);
+            // إذا كانت الباقة مخصصة، نضع خصم افتراضي
+            originalPrice = plan.price * 1.3;
+            discountPercent = Math.round(((originalPrice - plan.price) / originalPrice) * 100);
         }
-        
-        // تحديث الواجهات
-        renderAdminPlans();
-        refreshPlansPage();
-        
-        closeEditPlanPopup();
-        showToast('✅ تم تحديث الباقة بنجاح!');
-        
-    } catch (error) {
-        console.error('خطأ في تحديث الباقة:', error);
-        showToast('❌ حدث خطأ في تحديث الباقة: ' + error.message);
     }
+    
+    // ========== تعبئة الحقول ==========
+    document.getElementById('editOriginalPrice').value = Math.round(originalPrice);
+    document.getElementById('editDiscountPercent').value = discountPercent;
+    
+    // ========== حساب السعر بعد الخصم ==========
+    calculateDiscountedPrice('edit');
+    
+    // ========== عرض النافذة ==========
+    document.getElementById('editPlanPopup').classList.add('show');
 }
 
 function closeEditPlanPopup() {
@@ -5582,58 +5592,77 @@ function closeEditPlanPopup() {
         document.getElementById('addPlanPopup').classList.remove('show');
     }
     
-    async function addPlan() {
-        try {
-            const name = document.getElementById('planName')?.value.trim();
-            const examsCount = parseInt(document.getElementById('planExams')?.value);
-            const price = parseInt(document.getElementById('planPrice')?.value);
-            const featuresText = document.getElementById('planFeatures')?.value;
-            
-            if (!name) {
-                showToast('❌ الرجاء إدخال اسم الباقة');
-                return;
-            }
-            
-            if (isNaN(examsCount) || examsCount <= 0) {
-                showToast('❌ الرجاء إدخال عدد صحيح للامتحانات');
-                return;
-            }
-            
-            if (isNaN(price) || price < 0) {
-                showToast('❌ الرجاء إدخال سعر صحيح');
-                return;
-            }
-            
-            let features = [];
-            if (featuresText && featuresText.trim()) {
-                features = featuresText.split('\n').filter(f => f.trim().length > 0);
-            } else {
-                features = [`${examsCount} امتحان شهرياً`];
-            }
-            
-            const newPlanId = 'plan_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
-            const newPlan = {
-                id: newPlanId,
-                name: name,
-                examsCount: examsCount,
-                period: 'month',
-                price: price,
-                features: features,
-                createdAt: new Date().toISOString()
-            };
-            
-            await db.ref(`plans/${newPlanId}`).set(newPlan);
-            plans.push(newPlan);
-            renderAdminPlans();
-            refreshPlansPage();
-            closeAddPlanPopup();
-            showToast('✅ تم إضافة الباقة بنجاح!');
-            
-        } catch (error) {
-            console.error('خطأ في إضافة الباقة:', error);
-            showToast('❌ حدث خطأ في إضافة الباقة');
+   async function addPlan() {
+    try {
+        const name = document.getElementById('planName')?.value.trim();
+        const examsCount = parseInt(document.getElementById('planExams')?.value);
+        const originalPrice = parseFloat(document.getElementById('addOriginalPrice')?.value) || 0;
+        const discountPercent = parseFloat(document.getElementById('addDiscountPercent')?.value) || 0;
+        const finalPrice = originalPrice * (1 - discountPercent / 100);
+        const featuresText = document.getElementById('planFeatures')?.value;
+        
+        if (!name) {
+            showToast('❌ الرجاء إدخال اسم الباقة');
+            return;
         }
+        
+        if (isNaN(examsCount) || examsCount <= 0) {
+            showToast('❌ الرجاء إدخال عدد صحيح للامتحانات');
+            return;
+        }
+        
+        if (isNaN(originalPrice) || originalPrice <= 0) {
+            showToast('❌ الرجاء إدخال سعر أصلي صحيح');
+            return;
+        }
+        
+        if (discountPercent < 0 || discountPercent > 100) {
+            showToast('❌ نسبة الخصم يجب أن تكون بين 0 و 100');
+            return;
+        }
+        
+        const roundedFinalPrice = Math.round(finalPrice);
+        
+        let features = [];
+        if (featuresText && featuresText.trim()) {
+            features = featuresText.split('\n').filter(f => f.trim().length > 0);
+        } else {
+            features = [`${examsCount} امتحان شهرياً`];
+        }
+        
+        const newPlanId = 'plan_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
+        const newPlan = {
+            id: newPlanId,
+            name: name,
+            examsCount: examsCount,
+            period: 'month',
+            price: roundedFinalPrice,
+            originalPrice: Math.round(originalPrice),
+            discountPercent: discountPercent,
+            features: features,
+            createdAt: new Date().toISOString()
+        };
+        
+        await db.ref(`plans/${newPlanId}`).set(newPlan);
+        plans.push(newPlan);
+        renderAdminPlans();
+        refreshPlansPage();
+        closeAddPlanPopup();
+        showToast('✅ تم إضافة الباقة بنجاح!');
+        
+        // تنظيف الحقول
+        document.getElementById('planName').value = '';
+        document.getElementById('planExams').value = '';
+        document.getElementById('addOriginalPrice').value = '';
+        document.getElementById('addDiscountPercent').value = '0';
+        document.getElementById('planFeatures').value = '';
+        document.getElementById('addFinalPrice').innerText = '0 ج';
+        
+    } catch (error) {
+        console.error('خطأ في إضافة الباقة:', error);
+        showToast('❌ حدث خطأ في إضافة الباقة');
     }
+}
     
     function showAdminTab(tab) {
         const usersTab = document.getElementById('adminUsersTab');
@@ -6572,59 +6601,16 @@ function calculateDiscountedPrice(type) {
     return Math.round(finalPrice);
 }
 
-// تحديث دالة editPlan لتشمل الأسعار
-function editPlan(planId) {
-    const plan = plans.find(p => p.id === planId);
-    if (!plan) {
-        showToast('❌ الباقة غير موجودة');
-        return;
-    }
-    
-    // تعبئة البيانات
-    document.getElementById('editPlanId').value = plan.id;
-    document.getElementById('editPlanName').value = plan.name || '';
-    document.getElementById('editPlanExams').value = plan.examsCount || 0;
-    document.getElementById('editPlanFeatures').value = plan.features ? plan.features.join('\n') : '';
-    
-    // حساب السعر الأصلي والخصم
-    let originalPrice = plan.price;
-    let discountPercent = 0;
-    
-    // تحديد الخصم بناءً على نوع الباقة
-    if (plan.id === 'basic') {
-        originalPrice = 50;
-        discountPercent = 20;
-    } else if (plan.id === 'pro') {
-        originalPrice = 100;
-        discountPercent = 30;
-    } else if (plan.id === 'ultimate') {
-        originalPrice = 250;
-        discountPercent = 40;
-    } else if (plan.id === 'school') {
-        originalPrice = 500;
-        discountPercent = 50;
-    } else {
-        originalPrice = plan.price;
-        discountPercent = 0;
-    }
-    
-    document.getElementById('editOriginalPrice').value = originalPrice;
-    document.getElementById('editDiscountPercent').value = discountPercent;
-    calculateDiscountedPrice('edit');
-    
-    // عرض النافذة
-    document.getElementById('editPlanPopup').classList.add('show');
-}
 
-// تحديث دالة savePlanEdit
+
 async function savePlanEdit() {
     const planId = document.getElementById('editPlanId').value;
     const name = document.getElementById('editPlanName').value.trim();
     const examsCount = parseInt(document.getElementById('editPlanExams').value);
-    const finalPrice = parseInt(document.getElementById('editFinalPrice').innerText);
-    const featuresText = document.getElementById('editPlanFeatures').value;
-    const originalPrice = parseFloat(document.getElementById('editOriginalPrice').value) || finalPrice;
+    const originalPrice = parseFloat(document.getElementById('editOriginalPrice').value) || 0;
     const discountPercent = parseFloat(document.getElementById('editDiscountPercent').value) || 0;
+    const finalPrice = Math.round(originalPrice * (1 - discountPercent / 100));
+    const featuresText = document.getElementById('editPlanFeatures').value;
     
     if (!name) {
         showToast('❌ الرجاء إدخال اسم الباقة');
@@ -6636,6 +6622,16 @@ async function savePlanEdit() {
         return;
     }
     
+    if (isNaN(originalPrice) || originalPrice <= 0) {
+        showToast('❌ الرجاء إدخال سعر أصلي صحيح');
+        return;
+    }
+    
+    if (discountPercent < 0 || discountPercent > 100) {
+        showToast('❌ نسبة الخصم يجب أن تكون بين 0 و 100');
+        return;
+    }
+    
     const features = featuresText ? featuresText.split('\n').filter(f => f.trim().length > 0) : [`${examsCount} امتحان شهرياً`];
     
     const updatedPlan = {
@@ -6644,7 +6640,7 @@ async function savePlanEdit() {
         examsCount: examsCount,
         period: 'month',
         price: finalPrice,
-        originalPrice: originalPrice,
+        originalPrice: Math.round(originalPrice),
         discountPercent: discountPercent,
         features: features,
         updatedAt: new Date().toISOString()
@@ -6666,75 +6662,15 @@ async function savePlanEdit() {
         
     } catch (error) {
         console.error('خطأ في تحديث الباقة:', error);
-        showToast('❌ حدث خطأ في تحديث الباقة');
+        if (error.code === 'PERMISSION_DENIED') {
+            showToast('❌ ليس لديك صلاحية لتعديل الباقات. يرجى الاتصال بالمدير');
+        } else {
+            showToast('❌ حدث خطأ في تحديث الباقة: ' + error.message);
+        }
     }
 }
 
-// تحديث دالة addPlan
-async function addPlan() {
-    try {
-        const name = document.getElementById('planName')?.value.trim();
-        const examsCount = parseInt(document.getElementById('planExams')?.value);
-        const finalPrice = parseInt(document.getElementById('addFinalPrice')?.innerText);
-        const featuresText = document.getElementById('planFeatures')?.value;
-        const originalPrice = parseFloat(document.getElementById('addOriginalPrice')?.value) || finalPrice;
-        const discountPercent = parseFloat(document.getElementById('addDiscountPercent')?.value) || 0;
-        
-        if (!name) {
-            showToast('❌ الرجاء إدخال اسم الباقة');
-            return;
-        }
-        
-        if (isNaN(examsCount) || examsCount <= 0) {
-            showToast('❌ الرجاء إدخال عدد صحيح للامتحانات');
-            return;
-        }
-        
-        if (isNaN(finalPrice) || finalPrice < 0) {
-            showToast('❌ الرجاء إدخال سعر صحيح');
-            return;
-        }
-        
-        let features = [];
-        if (featuresText && featuresText.trim()) {
-            features = featuresText.split('\n').filter(f => f.trim().length > 0);
-        } else {
-            features = [`${examsCount} امتحان شهرياً`];
-        }
-        
-        const newPlanId = 'plan_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
-        const newPlan = {
-            id: newPlanId,
-            name: name,
-            examsCount: examsCount,
-            period: 'month',
-            price: finalPrice,
-            originalPrice: originalPrice,
-            discountPercent: discountPercent,
-            features: features,
-            createdAt: new Date().toISOString()
-        };
-        
-        await db.ref(`plans/${newPlanId}`).set(newPlan);
-        plans.push(newPlan);
-        renderAdminPlans();
-        refreshPlansPage();
-        closeAddPlanPopup();
-        showToast('✅ تم إضافة الباقة بنجاح!');
-        
-        // تنظيف الحقول
-        document.getElementById('planName').value = '';
-        document.getElementById('planExams').value = '';
-        document.getElementById('addOriginalPrice').value = '';
-        document.getElementById('addDiscountPercent').value = '0';
-        document.getElementById('planFeatures').value = '';
-        document.getElementById('addFinalPrice').innerText = '0 ج';
-        
-    } catch (error) {
-        console.error('خطأ في إضافة الباقة:', error);
-        showToast('❌ حدث خطأ في إضافة الباقة');
-    }
-}
+
 // ==================== استقبال بيانات تسجيل الدخول من تكنو شرك ====================
 (async function checkAutoLogin() {
     const urlParams = new URLSearchParams(window.location.search);

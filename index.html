@@ -6335,8 +6335,7 @@ function showAlreadyTakenScreen(examTitle) {
         });
     }
     
-  // ==================== مراقبة حالة تسجيل الدخول ====================
-auth.onAuthStateChanged(async (user) => {
+ auth.onAuthStateChanged(async (user) => {
     if (user) {
         // جلب بيانات المستخدم من قاعدة البيانات بشكل موحد
         const userProfile = await getUserProfile(user.uid);
@@ -6389,18 +6388,100 @@ auth.onAuthStateChanged(async (user) => {
         // ✅ التحقق من التجديد التلقائي للاشتراكات المجانية
         setTimeout(() => autoRenewSubscriptions(), 1000);
         
-        // التحقق من وجود رابط امتحان في URL
-        const urlParams = new URLSearchParams(window.location.search);
-        const examId = urlParams.get('exam');
-        if (examId) {
-            const exam = exams.find(e => e.id === examId);
-            if (exam) setTimeout(() => startExam(examId), 500);
-        }
+        // ❌❌❌ تم إزالة فحص رابط الامتحان من هنا ❌❌❌
+        // أصبح يتم فحص الرابط في دالة منفصلة (checkExamLink)
         
     } else {
         currentUser = null;
         updateUserUI();
         await loadAllData();
+    }
+});
+// ==================== تحميل الامتحانات وفحص الرابط (بدون تسجيل دخول) ====================
+
+let examLinkChecked = false;
+
+async function loadExamsAndCheckLink() {
+    try {
+        // تحميل الامتحانات من قاعدة البيانات
+        const s = await db.ref('exams').once('value');
+        const allExams = s.val() ? Object.values(s.val()) : [];
+        exams = allExams;
+        
+        console.log('✅ تم تحميل ' + exams.length + ' امتحان');
+        
+        // بعد تحميل الامتحانات، تحقق من وجود رابط
+        if (!examLinkChecked) {
+            examLinkChecked = true;
+            checkExamLink();
+        }
+        
+    } catch (error) {
+        console.error('❌ خطأ في تحميل الامتحانات:', error);
+        exams = [];
+    }
+}
+
+// ==================== فتح الامتحان مباشرة من الرابط (بدون تسجيل دخول) ====================
+
+function checkExamLink() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const examId = urlParams.get('exam');
+    
+    if (!examId) {
+        console.log('📭 لا يوجد رابط امتحان في URL');
+        return;
+    }
+    
+    console.log('🔍 جاري البحث عن الامتحان: ' + examId);
+    
+    // البحث عن الامتحان في المصفوفة
+    const exam = exams.find(e => e.id === examId);
+    
+    if (exam) {
+        console.log('✅ تم العثور على الامتحان: ' + exam.title);
+        
+        // ✅ إخفاء كل محتوى الموقع عدا الامتحان
+        const container = document.querySelector('.container');
+        const nav = document.querySelector('nav');
+        const sidebar = document.getElementById('sidebar');
+        const footer = document.querySelector('.footer');
+        
+        if (container) container.style.display = 'none';
+        if (nav) nav.style.display = 'none';
+        if (sidebar) sidebar.style.display = 'none';
+        if (footer) footer.style.display = 'none';
+        
+        // ✅ عرض الامتحان مباشرة
+        setTimeout(() => {
+            showStudentExam(exam);
+        }, 300);
+        
+        // ✅ إزالة الـ exam من الرابط لتجنب إعادة التحميل
+        window.history.replaceState({}, document.title, window.location.pathname);
+        
+    } else {
+        console.log('❌ الامتحان غير موجود أو تم حذفه');
+        // عرض رسالة للمستخدم
+        setTimeout(() => {
+            showToast('❌ الامتحان غير موجود أو تم حذفه');
+        }, 1000);
+    }
+}
+
+// ==================== استدعاء الدالة عند تحميل الصفحة ====================
+
+// تنفيذ فوراً عند تحميل الصفحة
+(async function init() {
+    // تحميل الامتحانات أولاً
+    await loadExamsAndCheckLink();
+})();
+
+// أيضاً عند تحميل DOM بالكامل
+document.addEventListener('DOMContentLoaded', function() {
+    // إذا لم يتم تحميل الامتحانات بعد، قم بتحميلها
+    if (!examLinkChecked) {
+        loadExamsAndCheckLink();
     }
 });
     

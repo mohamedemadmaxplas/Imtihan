@@ -367,14 +367,7 @@
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
         
-        .footer {
-            background: #1e293b;
-            color: #94a3b8;
-            padding: 20px;
-            text-align: center;
-            margin-top: 40px;
-            border-radius: 20px 20px 0 0;
-        }
+        
         
         .footer a {
             color: #a5b4fc;
@@ -1396,16 +1389,16 @@ body {
     flex: 1;
 }
 
-/* ==================== تنسيق الفوتر الجديد ==================== */
+/* ==================== تنسيق الفوتر الذكي ==================== */
 
 .footer {
     background: linear-gradient(135deg, #0f172a, #1e293b);
     color: #94a3b8;
     padding: 15px 20px;
+    margin-top: 40px;
     border-radius: 20px 20px 0 0;
     border-top: 3px solid #6366f1;
-    margin-top: auto; /* هذا يضمن التصاق الفوتر بأسفل الصفحة */
-    width: 100%;
+    direction: rtl;
 }
 
 .footer a {
@@ -1415,6 +1408,61 @@ body {
 
 .footer a:hover {
     transform: scale(1.05);
+}
+
+.footer .company-btn:hover {
+    border-color: #8b5cf6;
+    box-shadow: 0 0 25px rgba(99, 102, 241, 0.3);
+    transform: scale(1.05);
+}
+
+/* ====== عرض الجوال (شاشات أقل من 768px) ====== */
+@media (max-width: 768px) {
+    .footer {
+        padding: 10px 12px !important;
+        margin-top: 25px !important;
+        border-radius: 14px 14px 0 0 !important;
+        border-top-width: 2px !important;
+    }
+    
+    /* إخفاء عرض الكمبيوتر */
+    .footer .footer-desktop {
+        display: none !important;
+    }
+    
+    /* إظهار عرض الجوال */
+    .footer .footer-mobile {
+        display: block !important;
+    }
+}
+
+/* ====== عرض الكمبيوتر (شاشات أكبر من 768px) ====== */
+@media (min-width: 769px) {
+    .footer .footer-desktop {
+        display: flex !important;
+    }
+    
+    .footer .footer-mobile {
+        display: none !important;
+    }
+}
+
+/* ====== تحسينات إضافية للشاشات الصغيرة جداً ====== */
+@media (max-width: 400px) {
+    .footer {
+        padding: 8px 8px !important;
+        margin-top: 20px !important;
+        border-radius: 12px 12px 0 0 !important;
+    }
+    
+    .footer .footer-mobile > div {
+        margin-bottom: 4px !important;
+    }
+    
+    .footer .footer-mobile span,
+    .footer .footer-mobile a {
+        font-size: 10px !important;
+    }
 }
 
 /* تنسيق زر Tecno Shark */
@@ -1753,6 +1801,255 @@ body {
         font-size: 15px;
     }
 }
+/* تزيين الفوتر على الجوال */
+.footer-mobile > div {
+    transition: all 0.3s ease;
+}
+
+/* تأثير عند اللمس */
+.footer-mobile a:active,
+.footer-mobile span:active {
+    opacity: 0.7;
+    transform: scale(0.95);
+}
+
+/* خط فاصل زخرفي */
+.footer-mobile .divider {
+    width: 40px;
+    height: 2px;
+    background: linear-gradient(90deg, #6366f1, #8b5cf6);
+    border-radius: 2px;
+    margin: 4px auto;
+}
+
+/* ==================== تنسيق الفوتر ==================== */
+.footer {
+    background: linear-gradient(135deg, #0f172a, #1e293b);
+    color: #94a3b8;
+    padding: 15px 20px;
+    margin-top: 40px;
+    border-radius: 20px 20px 0 0;
+    border-top: 3px solid #6366f1;
+    direction: rtl;
+}
+
+.footer a {
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.footer a:hover {
+    transform: scale(1.05);
+}
+
+.footer .company-btn:hover {
+    border-color: #8b5cf6;
+    box-shadow: 0 0 25px rgba(99, 102, 241, 0.3);
+    transform: scale(1.05);
+}
+
+/* ====== عرض الجوال ====== */
+@media (max-width: 768px) {
+    .footer {
+        padding: 10px 12px !important;
+        margin-top: 25px !important;
+        border-radius: 14px 14px 0 0 !important;
+        border-top-width: 2px !important;
+    }
+    
+    .footer .footer-desktop {
+        display: none !important;
+    }
+    
+    .footer .footer-desktop-bottom {
+        display: none !important;
+    }
+    
+    .footer .footer-mobile {
+        display: block !important;
+    }
+}
+
+/* ====== عرض الكمبيوتر ====== */
+@media (min-width: 769px) {
+    .footer .footer-desktop {
+        display: flex !important;
+    }
+    
+    .footer .footer-desktop-bottom {
+        display: flex !important;
+    }
+    
+    .footer .footer-mobile {
+        display: none !important;
+    }
+}
+
+/* ====== تحسينات للشاشات الصغيرة ====== */
+@media (max-width: 400px) {
+    .footer {
+        padding: 8px 8px !important;
+        margin-top: 20px !important;
+        border-radius: 12px 12px 0 0 !important;
+    }
+    
+    .footer .footer-mobile > div {
+        margin-bottom: 4px !important;
+    }
+    
+    .footer .footer-mobile span,
+    .footer .footer-mobile a {
+        font-size: 10px !important;
+    }
+}
+
+/* ==================== تنسيق بطاقات الباقات ==================== */
+
+/* حاوية الباقات - عرض كامل بدون مسافات */
+#plansList {
+    direction: rtl;
+    width: 100%;
+    max-width: 100%;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+#plansList .grid {
+    direction: rtl;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    gap: 1rem !important;
+    padding: 0 !important;
+}
+
+/* ✅ كل بطاقة تأخذ نصف العرض بالضبط */
+#plansList .grid > div {
+    transition: all 0.3s ease;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    min-height: 380px;
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+#plansList .grid > div:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 30px -10px rgba(0,0,0,0.25);
+}
+
+#plansList .grid > div .p-4 {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+#plansList .grid > div ul {
+    flex: 1;
+}
+
+#plansList .grid > div ul li {
+    padding: 4px 0;
+    font-size: 13px;
+    color: #374151;
+}
+
+#plansList .grid > div ul li i {
+    font-size: 14px;
+    width: 18px;
+}
+
+/* تنسيق شارة الخصم */
+#plansList .absolute {
+    animation: pulse-discount 2s ease-in-out infinite;
+}
+
+@keyframes pulse-discount {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+/* ✅ عرض الكمبيوتر - 2×2 (نصف عرض لكل بطاقة) */
+@media (min-width: 641px) {
+    #plansList .grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 1rem !important;
+    }
+    
+    /* إزالة المسافات البيضاء */
+    #plansList {
+        padding: 0 !important;
+        margin: 0 !important;
+        width: 100% !important;
+    }
+    
+    /* الحاوية الرئيسية تأخذ عرض كامل */
+    #upgradePage .bg-white {
+        padding: 1.5rem 1rem !important;
+        border-radius: 20px !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+    
+    .container {
+        padding-left: 0.5rem !important;
+        padding-right: 0.5rem !important;
+        max-width: 100% !important;
+    }
+    
+    /* توسيع البطاقات لاستغلال المساحة */
+    #plansList .grid > div {
+        min-height: 400px;
+    }
+}
+
+/* ✅ على الجوال - بطاقة واحدة */
+@media (max-width: 640px) {
+    #plansList .grid {
+        grid-template-columns: 1fr !important;
+        gap: 0.8rem !important;
+    }
+    
+    #plansList .grid > div {
+        min-height: 320px;
+    }
+}
+
+/* ✅ على الشاشات الكبيرة جداً - 3 بطاقات */
+@media (min-width: 1400px) {
+    #plansList .grid {
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 1.2rem !important;
+    }
+}
+
+/* تنسيق العمود الكامل */
+#plansList .col-span-1.sm\:col-span-2 {
+    grid-column: 1 / -1 !important;
+}
+
+/* إزالة الهوامش الزائدة من الصفحة */
+#upgradePage {
+    padding: 0 !important;
+}
+
+#upgradePage .container {
+    padding: 0 !important;
+    max-width: 100% !important;
+}
+
+/* تحسين مظهر البطاقات */
+#plansList .grid > div .bg-gradient-to-r {
+    border-radius: 0;
+}
+
+#plansList .grid > div {
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+
     </style>
 </head>
 <body>
@@ -2353,75 +2650,7 @@ body {
     </div>
 </div>
 
-<!-- ==================== الفوتر (Footer) ==================== -->
 
-<footer class="footer">
-    <div style="direction: rtl; max-width: 1100px; margin: 0 auto; padding: 8px 15px;">
-        
-        <!-- الصف الأول: الأرقام + زر الشركة -->
-        <div class="footer-top" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-            
-            <!-- جهة اليمين: Tecno Shark + الأرقام -->
-            <div style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
-                
-                <!-- اسم الشركة مع زر -->
-                <a href="https://tecno-shark.vercel.app" target="_blank" class="company-btn">
-                    <i class="fas fa-building company-icon"></i>
-                    <span style="color: #e2e8f0;">Tecno Shark</span>
-                    <span class="visit-badge">زياره موقع الشركه</span>
-                </a>
-                
-                <!-- الأرقام -->
-                <div style="display: flex; gap: 15px; flex-wrap: wrap;">
-                    <p style="color: #94a3b8; font-size: 14px; margin: 0; direction: ltr;">
-                        <i class="fas fa-phone phone-icon"></i>
-                        <span style="color: #e2e8f0; font-weight: 600;">01126125881</span>
-                    </p>
-                    <p style="color: #94a3b8; font-size: 14px; margin: 0; direction: ltr;">
-                        <i class="fas fa-phone phone-icon"></i>
-                        <span style="color: #e2e8f0; font-weight: 600;">01144100018</span>
-                    </p>
-                </div>
-                
-            </div>
-            
-            <!-- جهة اليسار: CTO و CEO -->
-            <div style="text-align: left;">
-                <p style="color: #94a3b8; font-size: 14px; margin: 2px 0;">
-                    <strong style="color: #e2e8f0;">CEO :</strong>
-                    <span style="color: #a5b4fc;">Mohamed Emad Abdalty </span>
-                </p>
-                <p style="color: #94a3b8; font-size: 14px; margin: 2px 0;">
-                    <strong style="color: #e2e8f0;">CTO :</strong>
-                    <span style="color: #a5b4fc;">Abdelrahman Mohamed Sobhy</span>
-                </p>
-            </div>
-            
-        </div>
-        
-        <!-- الخط الفاصل -->
-        <hr style="border: none; border-top: 1px solid #334155; margin: 8px 0;">
-        
-        <!-- الصف الثاني: البريد الإلكتروني + حقوق النشر -->
-        <div class="footer-bottom" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
-            
-            <!-- البريد الإلكتروني -->
-            <a href="mailto:tecnoshark1st@gmail.com" 
-               style="color: #a5b4fc; text-decoration: none; font-size: 13px; transition: color 0.3s;">
-                <i class="fas fa-envelope email-icon"></i>
-                tecnoshark1st@gmail.com
-            </a>
-            
-            <!-- حقوق النشر -->
-            <p style="color: #64748b; font-size: 13px; margin: 0;">
-                <i class="fas fa-graduation-cap grad-icon"></i>
-                منصة الامتحانات الإلكترونية - Imtihan 2026 &copy;
-            </p>
-            
-        </div>
-        
-    </div>
-</footer>
 <!-- نافذة تعديل الباقة -->
 <div id="editPlanPopup" class="popup">
     <div class="popup-content" style="max-width: 550px;">
@@ -3023,14 +3252,14 @@ function getMonthlyExamUsage() {
     
     return userExams.length + userResults.length;
 }
+
+
 function refreshPlansPage() {
     const container = document.getElementById('plansList');
     if (!container) return;
     
     // تصفية الباقات - استبعاد المجاني فقط
     const paidPlans = plans.filter(p => p.id !== 'free');
-    
-    console.log('الباقات المتاحة:', paidPlans);
     
     if (paidPlans.length === 0) {
         container.innerHTML = `
@@ -3049,13 +3278,8 @@ function refreshPlansPage() {
     
     // ✅ جلب تاريخ التجديد الخاص بالمستخدم
     let userExpiryDate = 'غير محدد';
-    let userPlanId = 'free';
-    let isFree = true;
     
     if (currentUser) {
-        userPlanId = currentUser.plan || 'free';
-        isFree = userPlanId === 'free';
-        
         try {
             const subSnapshot = db.ref(`subscriptions/${currentUser.uid}`).once('value');
             subSnapshot.then(snap => {
@@ -3080,39 +3304,25 @@ function refreshPlansPage() {
         }
     }
     
-    // ✅ بناء HTML الباقات (بطاقات عريضة)
-    let plansHtml = sortedPlans.map(plan => {
+    // ✅ بناء HTML الباقات (توزيع 2×2 بنصف عرض)
+    let plansHtml = sortedPlans.map((plan, index) => {
         let bgColor = "";
         let btnColor = "";
         let icon = "";
         let isCurrentPlan = currentUser && currentUser.plan === plan.id;
         
-        switch(plan.id) {
-            case 'basic':
-                bgColor = "from-blue-500 to-blue-600";
-                btnColor = "bg-blue-600 hover:bg-blue-700";
-                icon = "🥉";
-                break;
-            case 'pro':
-                bgColor = "from-purple-500 to-purple-600";
-                btnColor = "bg-purple-600 hover:bg-purple-700";
-                icon = "🥈";
-                break;
-            case 'ultimate':
-                bgColor = "from-amber-500 to-amber-600";
-                btnColor = "bg-amber-600 hover:bg-amber-700";
-                icon = "🥇";
-                break;
-            case 'school':
-                bgColor = "from-emerald-500 to-emerald-600";
-                btnColor = "bg-emerald-600 hover:bg-emerald-700";
-                icon = "🏫";
-                break;
-            default:
-                bgColor = "from-indigo-500 to-indigo-600";
-                btnColor = "bg-indigo-600 hover:bg-indigo-700";
-                icon = "📦";
-        }
+        // تنسيق البطاقات
+        const colors = [
+            { bg: "from-blue-500 to-blue-600", btn: "bg-blue-600 hover:bg-blue-700", icon: "🥉" },
+            { bg: "from-purple-500 to-purple-600", btn: "bg-purple-600 hover:bg-purple-700", icon: "🥈" },
+            { bg: "from-amber-500 to-amber-600", btn: "bg-amber-600 hover:bg-amber-700", icon: "🥇" },
+            { bg: "from-emerald-500 to-emerald-600", btn: "bg-emerald-600 hover:bg-emerald-700", icon: "🏫" }
+        ];
+        
+        const colorIndex = index % colors.length;
+        bgColor = colors[colorIndex].bg;
+        btnColor = colors[colorIndex].btn;
+        icon = colors[colorIndex].icon;
         
         // حساب الخصم
         let discountPercent = 0;
@@ -3138,51 +3348,46 @@ function refreshPlansPage() {
         let actionButton = '';
         if (isCurrentPlan) {
             actionButton = `
-                <div class="mt-5 w-full bg-green-500 text-white py-3 rounded-lg font-bold text-base cursor-default">
+                <div class="mt-3 w-full bg-green-500 text-white py-2.5 rounded-lg font-bold text-sm cursor-default">
                     <i class="fas fa-check-circle ml-2"></i> باقتك الحالية
                 </div>
             `;
-        } else if (isFree) {
-            actionButton = `
-                <button onclick="requestUpgrade('${plan.id}')" class="mt-5 w-full ${btnColor} text-white py-3 rounded-lg transition font-bold text-base">
-                    <i class="fas fa-rocket ml-2"></i> اشترك الآن
-                </button>
-            `;
         } else {
             actionButton = `
-                <button onclick="requestUpgrade('${plan.id}')" class="mt-5 w-full ${btnColor} text-white py-3 rounded-lg transition font-bold text-base">
-                    <i class="fas fa-sync-alt ml-2"></i> جدد باقتك
+                <button onclick="requestUpgrade('${plan.id}')" 
+                        class="mt-3 w-full ${btnColor} text-white py-2.5 rounded-lg transition font-bold text-sm hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]">
+                    <i class="fas fa-rocket ml-2"></i> اشترك الآن
                 </button>
             `;
         }
         
         return `
-            <div class="bg-white rounded-2xl shadow-lg overflow-hidden border-2 hover:shadow-2xl transition-all duration-300 relative ${isCurrentPlan ? 'border-green-500 ring-2 ring-green-200' : 'border-gray-200'}">
-                ${isCurrentPlan ? `<div class="absolute top-3 left-3 bg-green-500 text-white text-xs px-3 py-1 rounded-full font-bold z-10">✓ نشط</div>` : ''}
-                ${hasDiscount ? `<div class="absolute top-3 right-3 bg-red-500 text-white text-sm px-3 py-1 rounded-full font-bold z-10">-${discountPercent}%</div>` : ''}
+            <div class="bg-white rounded-2xl shadow-lg overflow-hidden border-2 hover:shadow-2xl transition-all duration-300 relative ${isCurrentPlan ? 'border-green-500 ring-2 ring-green-200' : 'border-gray-200'} w-full">
+                ${isCurrentPlan ? `<div class="absolute top-2 left-2 bg-green-500 text-white text-xs px-3 py-1 rounded-full font-bold z-10">✓ نشط</div>` : ''}
+                ${hasDiscount ? `<div class="absolute top-2 right-2 bg-red-500 text-white text-xs px-3 py-1 rounded-full font-bold z-10">-${discountPercent}%</div>` : ''}
                 
-                <div class="bg-gradient-to-r ${bgColor} p-6 text-center text-white">
-                    <div class="text-5xl mb-3">${icon}</div>
-                    <h3 class="text-2xl font-bold">${plan.name}</h3>
-                    <div class="mt-3">
-                        ${hasDiscount ? `<span class="text-md line-through opacity-70">${originalPrice} ج</span>` : ''}
-                        <div class="text-4xl font-bold mt-1">${plan.price} ج</div>
-                        <span class="text-sm">/ شهرياً</span>
+                <div class="bg-gradient-to-r ${bgColor} p-5 text-center text-white">
+                    <div class="text-4xl mb-2">${icon}</div>
+                    <h3 class="text-xl font-bold">${plan.name}</h3>
+                    <div class="mt-2">
+                        ${hasDiscount ? `<span class="text-sm line-through opacity-70">${originalPrice} ج</span>` : ''}
+                        <div class="text-3xl font-bold mt-1">${plan.price} ج</div>
+                        <span class="text-xs">/ شهرياً</span>
                     </div>
-                    <div class="text-sm mt-2 opacity-90">📊 ${plan.examsCount.toLocaleString()} امتحان شهرياً</div>
+                    <div class="text-xs mt-1 opacity-90">📊 ${plan.examsCount.toLocaleString()} امتحان شهرياً</div>
                 </div>
                 
-                <div class="p-5">
-                    <ul class="space-y-2 text-sm">
+                <div class="p-4">
+                    <ul class="space-y-1.5 text-sm">
                         ${plan.features.map(f => `
                             <li class="flex items-center gap-2 py-1 border-b border-gray-50 last:border-0">
-                                <i class="fas fa-check-circle text-green-500 text-sm"></i>
-                                <span>${f}</span>
+                                <i class="fas fa-check-circle text-green-500 text-xs flex-shrink-0"></i>
+                                <span class="text-gray-700">${f}</span>
                             </li>
                         `).join('')}
                     </ul>
                     ${actionButton}
-                    <p class="text-center text-xs text-gray-400 mt-3">
+                    <p class="text-center text-xs text-gray-400 mt-2">
                         <i class="fas fa-shield-alt ml-1"></i> دفع آمن
                     </p>
                 </div>
@@ -3190,15 +3395,15 @@ function refreshPlansPage() {
         `;
     }).join('');
     
-    // ✅ إضافة معلومات الاشتراك الحالي وتاريخ التجديد
+    // ✅ إضافة معلومات الاشتراك الحالي
     let subscriptionInfo = '';
     if (currentUser) {
         const userPlan = plans.find(p => p.id === currentUser.plan) || plans[0];
         subscriptionInfo = `
-            <div class="col-span-full mt-8 p-5 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl border-2 border-indigo-200">
-                <div class="flex flex-wrap items-center justify-between gap-4">
+            <div class="col-span-1 sm:col-span-2 mt-6 p-4 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl border-2 border-indigo-200 w-full">
+                <div class="flex flex-wrap items-center justify-between gap-3">
                     <div>
-                        <p class="font-bold text-indigo-700 text-lg">
+                        <p class="font-bold text-indigo-700">
                             <i class="fas fa-user-check ml-2"></i>
                             باقتك الحالية: <span class="text-indigo-900">${userPlan.name}</span>
                         </p>
@@ -3206,30 +3411,24 @@ function refreshPlansPage() {
                             <i class="fas fa-calendar-alt ml-1"></i>
                             تاريخ التجديد: <span id="userExpiryDate" class="font-bold text-indigo-600">${userExpiryDate}</span>
                         </p>
-                        <p class="text-sm text-gray-500 mt-1">
-                            ${userPlan.id === 'free' ? '💡 قم بالترقية للحصول على مميزات إضافية وامتحانات غير محدودة' : '🔄 جدد باقتك للاستمرار في الاستمتاع بالمميزات'}
-                        </p>
                     </div>
-                    <div>
-                        <button onclick="navigateTo('account')" class="bg-indigo-600 text-white px-5 py-2.5 rounded-lg hover:bg-indigo-700 transition text-sm">
-                            <i class="fas fa-user ml-1"></i> حسابي
-                        </button>
-                    </div>
+                    <button onclick="navigateTo('account')" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition text-sm">
+                        <i class="fas fa-user ml-1"></i> حسابي
+                    </button>
                 </div>
             </div>
         `;
     }
     
-    // ✅ عرض الباقات مع توزيع عريض
+    // ✅ عرض الباقات بتوزيع 2×2 (نصف عرض لكل بطاقة)
     container.innerHTML = `
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6 max-w-6xl mx-auto">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-full">
             ${plansHtml}
         </div>
         ${subscriptionInfo}
         
-        <!-- ✅ زر العودة للرئيسية -->
-        <div class="mt-10 text-center">
-            <button onclick="navigateTo('home')" class="bg-gray-600 text-white px-8 py-3 rounded-lg hover:bg-gray-700 transition text-lg">
+        <div class="col-span-1 sm:col-span-2 mt-6 text-center w-full">
+            <button onclick="navigateTo('home')" class="bg-gray-600 text-white px-6 py-2.5 rounded-lg hover:bg-gray-700 transition">
                 <i class="fas fa-home ml-2"></i> العودة للرئيسية
             </button>
         </div>
@@ -3844,10 +4043,10 @@ function renderExam(examId) {
     
     const container = document.getElementById('studentExamContent');
     container.innerHTML = `
-        <div style="background: linear-gradient(145deg, #ffffff, #f8fafc); border-radius: 20px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.15); display: flex; flex-direction: column; max-height: 95vh;">
+        <div style="background: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.15); display: flex; flex-direction: column; max-height: 95vh;">
 
-            <!-- الهيدر الثابت -->
-            <div style="background: linear-gradient(135deg, #4f46e5, #7c3aed); padding: 12px 16px; color: white; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 4px; flex-shrink: 0;">
+            <!-- الهيدر الثابت (بدون فراغ علوي) -->
+            <div style="background: linear-gradient(135deg, #4f46e5, #7c3aed); padding: 12px 16px; color: white; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 4px; flex-shrink: 0; border-radius: 20px 20px 0 0;">
                 <div style="display: flex; align-items: center; gap: 6px; font-size: 12px; opacity: 0.9;">
                     <i class="fas fa-user-graduate"></i>
                     <span>${studentName}</span>
@@ -3859,14 +4058,14 @@ function renderExam(examId) {
                 </div>
             </div>
 
-            <!-- منطقة الأسئلة -->
-            <div style="padding: 14px 14px 8px 14px; flex: 1; overflow-y: auto; background: #f1f5f9;">
+            <!-- منطقة الأسئلة مع التمرير -->
+            <div style="padding: 14px 14px 0 14px; flex: 1; overflow-y: auto; background: #f1f5f9;">
                 <form id="examForm2" onsubmit="submitStudentExam(event, '${exam.id}')">
                     ${qHtml}
                     
-                    <!-- زر الإرسال -->
+                    <!-- زر الإرسال أسفل آخر سؤال مباشرة -->
                     <button type="submit" 
-                            style="width: 100%; background: linear-gradient(135deg, #22c55e, #16a34a); color: white; padding: 16px; border-radius: 14px; font-size: 18px; font-weight: 700; border: none; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 8px 25px rgba(34, 197, 94, 0.3); margin-top: 8px;"
+                            style="width: 100%; background: linear-gradient(135deg, #22c55e, #16a34a); color: white; padding: 16px; border-radius: 14px; font-size: 18px; font-weight: 700; border: none; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 8px 25px rgba(34, 197, 94, 0.3); margin-top: 16px;"
                             onmouseover="this.style.transform='scale(1.02)'" 
                             onmouseout="this.style.transform='scale(1)'">
                         📤 إرسال الإجابات
@@ -3874,8 +4073,8 @@ function renderExam(examId) {
                 </form>
             </div>
 
-            <!-- الفوتر المصغر والمنظم -->
-            <div style="background: linear-gradient(135deg, #1e293b, #0f172a); padding: 8px 14px; border-top: 2px solid #4f46e5; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 4px; flex-shrink: 0; border-radius: 0 0 20px 20px;">
+            <!-- الفوتر أسفل زر الإرسال مباشرة -->
+            <div style="background: linear-gradient(135deg, #1e293b, #0f172a); padding: 8px 14px; border-top: 2px solid #4f46e5; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 4px; flex-shrink: 0; border-radius: 0 0 20px 20px; margin-top: 0;">
                 <div style="display: flex; align-items: center; gap: 6px; font-size: 11px; color: #94a3b8;">
                     <i class="fas fa-building" style="color: #4f46e5; font-size: 13px;"></i>
                     <span style="color: #e2e8f0; font-size: 12px; font-weight: 600;">Tecno Shark</span>
@@ -4174,6 +4373,140 @@ function closeResultScreen() {
     document.body.style.overflow = '';
     location.reload();
 }
+
+// ==================== دالة توليد الفوتر (بدون تكرار) ====================
+function generateFooter() {
+    // التحقق إذا كان الفوتر موجود مسبقاً
+    if (document.querySelector('.footer-generated')) return;
+    
+    const footerHTML = `
+        <footer class="footer footer-generated">
+            <div style="direction: rtl; max-width: 1100px; margin: 0 auto; padding: 8px 15px;">
+                
+                <!-- ====== عرض الكمبيوتر ====== -->
+                <div class="footer-desktop" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                    
+                    <div style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
+                        <a href="https://tecno-shark.vercel.app" target="_blank" class="company-btn" 
+                           style="display: inline-flex; align-items: center; gap: 8px; background: linear-gradient(135deg, #1e293b, #0f172a); border: 2px solid #6366f1; color: #a5b4fc; padding: 6px 16px; border-radius: 10px; font-size: 13px; font-weight: bold; text-decoration: none; transition: all 0.3s ease; cursor: pointer;">
+                            <i class="fas fa-building" style="color: #6366f1;"></i>
+                            <span style="color: #e2e8f0;">Tecno Shark</span>
+                            <span style="background: #6366f1; color: white; padding: 2px 10px; border-radius: 6px; font-size: 11px;">زيارة</span>
+                        </a>
+                        
+                        <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                            <p style="color: #94a3b8; font-size: 14px; margin: 0; direction: ltr;">
+                                <i class="fas fa-phone" style="color: #22c55e;"></i>
+                                <span style="color: #e2e8f0; font-weight: 600;">01126125881</span>
+                            </p>
+                            <p style="color: #94a3b8; font-size: 14px; margin: 0; direction: ltr;">
+                                <i class="fas fa-phone" style="color: #22c55e;"></i>
+                                <span style="color: #e2e8f0; font-weight: 600;">01144100018</span>
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div style="text-align: left;">
+                        <p style="color: #94a3b8; font-size: 14px; margin: 2px 0;">
+                            <strong style="color: #e2e8f0;">CEO :</strong>
+                            <span style="color: #a5b4fc;">Mohamed Emad Abdalty</span>
+                        </p>
+                        <p style="color: #94a3b8; font-size: 14px; margin: 2px 0;">
+                            <strong style="color: #e2e8f0;">CTO :</strong>
+                            <span style="color: #a5b4fc;">Abdelrahman Mohamed Sobhy</span>
+                        </p>
+                    </div>
+                </div>
+                
+                <hr style="border: none; border-top: 1px solid #334155; margin: 8px 0;">
+                
+                <!-- ====== عرض الجوال (مرة واحدة فقط) ====== -->
+                <div class="footer-mobile" style="display: none; text-align: center;">
+                    
+
+
+
+                    <!-- الصف الأول: اسم الشركة -->
+                    <div style="display: flex; justify-content: center; align-items: center; gap: 8px; margin-bottom: 6px;">
+                        <i class="fas fa-building" style="color: #6366f1; font-size: 15px;"></i>
+                        <span style="color: #e2e8f0; font-size: 14px; font-weight: 700;">Tecno Shark</span>
+                        <a href="https://tecno-shark.vercel.app" target="_blank" 
+                           style="background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; padding: 3px 14px; border-radius: 14px; font-size: 11px; font-weight: 600; text-decoration: none; transition: all 0.3s ease;">
+                            زيارة الموقع
+                        </a>
+                    </div>
+                    
+<!-- الصف الثالث: CEO و CTO -->
+                    <div style="display: flex; justify-content: center; align-items: center; gap: 14px; margin-bottom: 8px; flex-wrap: wrap;">
+                        <span style="color: #94a3b8; font-size: 12px;">
+                            <strong style="color: #e2e8f0;">CEO :</strong>
+                            <span style="color: #a5b4fc;">Mohamed Emad Abdalty</span>
+                        </span>
+                        <span style="color: #94a3b8; font-size: 12px;">
+                            <strong style="color: #e2e8f0;">CTO :</strong>
+                            <span style="color: #a5b4fc;">Abdelrahman Sobhy</span>
+                        </span>
+                    </div>
+
+
+                    <!-- الصف الثاني: الأرقام -->
+                    <div style="display: flex; justify-content: center; align-items: center; gap: 16px; margin-bottom: 6px;">
+                        <span style="color: #94a3b8; font-size: 13px; direction: ltr;">
+                            <i class="fas fa-phone" style="color: #22c55e; font-size: 12px;"></i>
+                            <span style="color: #e2e8f0; font-weight: 600;">01126125881</span>
+                        </span>
+                        <span style="color: #94a3b8; font-size: 13px; direction: ltr;">
+                            <i class="fas fa-phone" style="color: #22c55e; font-size: 12px;"></i>
+                            <span style="color: #e2e8f0; font-weight: 600;">01144100018</span>
+                        </span>
+                    </div>
+                    
+                    
+                    <!-- الصف الرابع: البريد الإلكتروني + حقوق النشر (مرة واحدة فقط) -->
+                    <div style="display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap; border-top: 1px solid #334155; padding-top: 6px;">
+                        <a href="mailto:tecnoshark1st@gmail.com" 
+                           style="color: #a5b4fc; text-decoration: none; font-size: 11px; display: inline-flex; align-items: center; gap: 4px;">
+                            <i class="fas fa-envelope" style="color: #6366f1; font-size: 11px;"></i>
+                            tecnoshark1st@gmail.com
+                        </a>
+                        <span style="color: #64748b; font-size: 11px; display: inline-flex; align-items: center; gap: 4px;">
+                            <i class="fas fa-graduation-cap" style="color: #6366f1; font-size: 11px;"></i>
+                            Imtihan 2026 &copy;
+                        </span>
+                    </div>
+                    
+                </div>
+                
+                <!-- ====== عرض الكمبيوتر: البريد + حقوق النشر (مرة واحدة فقط) ====== -->
+                <div class="footer-desktop-bottom" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                    <a href="mailto:tecnoshark1st@gmail.com" 
+                       style="color: #a5b4fc; text-decoration: none; font-size: 13px; transition: color 0.3s;">
+                        <i class="fas fa-envelope" style="color: #6366f1;"></i>
+                        tecnoshark1st@gmail.com
+                    </a>
+                    <p style="color: #64748b; font-size: 13px; margin: 0;">
+                        <i class="fas fa-graduation-cap" style="color: #6366f1;"></i>
+                        منصة الامتحانات الإلكترونية - Imtihan 2026 &copy;
+                    </p>
+                </div>
+                
+            </div>
+        </footer>
+    `;
+    
+    // إضافة الفوتر بعد كل المحتوى
+    document.body.insertAdjacentHTML('beforeend', footerHTML);
+}
+
+// ==================== استدعاء الدالة عند تحميل الصفحة ====================
+document.addEventListener('DOMContentLoaded', function() {
+    // حذف أي فوتر موجود مسبقاً (للتأكد من عدم التكرار)
+    document.querySelectorAll('.footer:not(.footer-generated)').forEach(el => el.remove());
+    
+    // إنشاء الفوتر الجديد
+    generateFooter();
+});
+
 function addQuestion() {
     const container = document.getElementById('questionsContainer');
     const id = Date.now();

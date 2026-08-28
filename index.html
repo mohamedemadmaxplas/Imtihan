@@ -8041,6 +8041,221 @@ async function savePlanEdit() {
 })();
     document.getElementById('userAvatar')?.addEventListener('click', toggleUserDropdown);
     
+
+// ============================================================
+//  🛡️ كود حماية الموقع - نسخة متوافقة مع Firebase
+// ============================================================
+
+(function() {
+    'use strict';
+    
+    // ============================================================
+    //  1. منع فتح أدوات المطور (F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U)
+    // ============================================================
+    
+    document.addEventListener('keydown', function(e) {
+        // F12
+        if (e.key === 'F12' || e.keyCode === 123) {
+            e.preventDefault();
+            e.stopPropagation();
+            showToast('🚫 تم حظر أدوات المطور');
+            return false;
+        }
+        
+        // Ctrl+Shift+I (أدوات المطور)
+        if (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.keyCode === 73)) {
+            e.preventDefault();
+            e.stopPropagation();
+            showToast('🚫 تم حظر أدوات المطور');
+            return false;
+        }
+        
+        // Ctrl+Shift+J (الكونسول)
+        if (e.ctrlKey && e.shiftKey && (e.key === 'J' || e.key === 'j' || e.keyCode === 74)) {
+            e.preventDefault();
+            e.stopPropagation();
+            showToast('🚫 تم حظر الكونسول');
+            return false;
+        }
+        
+        // Ctrl+U (عرض المصدر)
+        if (e.ctrlKey && (e.key === 'U' || e.key === 'u' || e.keyCode === 85)) {
+            e.preventDefault();
+            e.stopPropagation();
+            showToast('🚫 تم حظر عرض المصدر');
+            return false;
+        }
+        
+        // Ctrl+S (حفظ الصفحة)
+        if (e.ctrlKey && (e.key === 'S' || e.key === 's' || e.keyCode === 83)) {
+            e.preventDefault();
+            e.stopPropagation();
+            showToast('🚫 تم حظر حفظ الصفحة');
+            return false;
+        }
+    });
+    
+    // ============================================================
+    //  2. منع النقر بزر الماوس الأيمن
+    // ============================================================
+    
+    document.addEventListener('contextmenu', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        showToast('🚫 تم حظر القائمة المنبثقة');
+        return false;
+    });
+    
+    // ============================================================
+    //  3. منع الوصول للصفحات المحمية (مع السماح لـ Firebase)
+    // ============================================================
+    
+    // قائمة الصفحات المحمية
+    const protectedPages = [
+        'adminPanelPage',
+        'dashboardPage',
+        'myAccountPage',
+        'mailPage',
+        'ticketsPage',
+        'meetingPage',
+        'meetingsRoomPage',
+        'meetingRoomPage',
+        'filesPage',
+        'ticketChatPage'
+    ];
+    
+    // التحقق من وجود المستخدم
+    function isUserLoggedIn() {
+        return currentUser && currentUser.uid;
+    }
+    
+    // ✅ السماح لـ Firebase بالعمل بشكل طبيعي
+    // لا نمنع eval و Function لأن Firebase يحتاجهم
+    
+    // ============================================================
+    //  4. منع استخدام window.open للصفحات المحمية فقط
+    // ============================================================
+    
+    const originalOpen = window.open;
+    window.open = function(url, name, features) {
+        if (url && typeof url === 'string') {
+            for (let page of protectedPages) {
+                if (url.includes(page) || url.includes(`#${page}`)) {
+                    if (!isUserLoggedIn()) {
+                        showToast('🔒 يرجى تسجيل الدخول للوصول إلى هذه الصفحة');
+                        return null;
+                    }
+                }
+            }
+        }
+        return originalOpen.call(window, url, name, features);
+    };
+    
+    // ============================================================
+    //  5. التحقق من الصفحات عند التحميل
+    // ============================================================
+    
+    function checkPageAccess() {
+        const publicPages = ['homePage', 'loginPage', 'registerPage', 'forgotPasswordPage', 'aboutUsPage'];
+        
+        let currentPage = null;
+        protectedPages.forEach(pageId => {
+            const el = document.getElementById(pageId);
+            if (el && !el.classList.contains('hidden') && el.style.display !== 'none') {
+                currentPage = pageId;
+            }
+        });
+        
+        if (currentPage && !publicPages.includes(currentPage) && !isUserLoggedIn()) {
+            const pageEl = document.getElementById(currentPage);
+            if (pageEl) {
+                pageEl.classList.add('hidden');
+                pageEl.style.display = 'none';
+            }
+            showHomePage();
+            showToast('🔒 يرجى تسجيل الدخول للوصول إلى هذه الصفحة');
+            return false;
+        }
+        return true;
+    }
+    
+    // ============================================================
+    //  6. دالة عرض رسائل الحظر (باستخدام Toast الموجود)
+    // ============================================================
+    
+    function showToast(message) {
+        // استخدام Toast الموجود في الموقع
+        if (typeof window.showToast === 'function') {
+            window.showToast(message);
+        } else {
+            // إنشاء Toast مؤقت
+            const existing = document.getElementById('securityToast');
+            if (existing) existing.remove();
+            
+            const div = document.createElement('div');
+            div.id = 'securityToast';
+            div.style.cssText = `
+                position: fixed;
+                bottom: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: rgba(220, 38, 38, 0.95);
+                color: white;
+                padding: 12px 24px;
+                border-radius: 12px;
+                z-index: 999999;
+                font-weight: bold;
+                font-size: 14px;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+                animation: slideUp 0.3s ease;
+                backdrop-filter: blur(10px);
+            `;
+            div.textContent = message;
+            document.body.appendChild(div);
+            
+            setTimeout(() => {
+                div.style.opacity = '0';
+                div.style.transition = 'opacity 0.5s';
+                setTimeout(() => div.remove(), 500);
+            }, 3000);
+        }
+    }
+    
+    // ============================================================
+    //  7. منع تحديد النص (مع إمكانية الاستثناء للحقول)
+    // ============================================================
+    
+    document.addEventListener('selectstart', function(e) {
+        // السماح بتحديد النص في حقول الإدخال
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
+            return;
+        }
+        e.preventDefault();
+        return false;
+    });
+    
+    // ============================================================
+    //  8. تنفيذ التحقق عند تحميل الصفحة
+    // ============================================================
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(checkPageAccess, 500);
+    });
+    
+    // ============================================================
+    //  9. توفير وضع المطور للمسؤولين (اختياري)
+    // ============================================================
+    
+    // يمكن تفعيل هذا للمطورين
+    window.allowDevTools = false;
+    
+    // إذا كان المستخدم مديراً، نسمح ببعض الأشياء
+    // يمكنك تفعيل هذا عند الحاجة
+    
+    console.log('🛡️ تم تفعيل الحماية بنجاح (متوافقة مع Firebase)');
+    
+})();
+
 </script>
 </body>
 </html>

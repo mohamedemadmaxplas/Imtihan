@@ -3255,7 +3255,7 @@ function getMonthlyExamUsage() {
 
 
 // ============================================================
-// دالة refreshPlansPage - معدلة بالكامل
+// دالة refreshPlansPage - معدلة (إخفاء الباقة المجانية)
 // ============================================================
 
 async function refreshPlansPage() {
@@ -3287,24 +3287,37 @@ async function refreshPlansPage() {
         const isFree = currentPlanId === 'free';
         const needsRenewal = !isFree && (remaining <= 0 || isExpired);
         
-        // تصفية الباقات
+        // ====== تصفية الباقات: إزالة الباقة المجانية ======
         const allPlans = plans.length > 0 ? plans : defaultPlans;
-        const sortedPlans = allPlans.sort((a, b) => {
-            if (a.id === 'free') return -1;
-            if (b.id === 'free') return 1;
-            return a.price - b.price;
-        });
+        const paidPlans = allPlans.filter(p => p.id !== 'free');
         
+        // ترتيب الباقات المدفوعة حسب السعر
+        const sortedPlans = paidPlans.sort((a, b) => a.price - b.price);
+        
+        // ====== إذا لم توجد باقات مدفوعة ======
+        if (sortedPlans.length === 0) {
+            container.innerHTML = `
+                <div class="text-center p-8 bg-gray-50 rounded-xl">
+                    <i class="fas fa-gem text-4xl text-gray-300 mb-3"></i>
+                    <p class="text-gray-500 text-lg">📭 لا توجد باقات مدفوعة حالياً</p>
+                    <p class="text-sm text-gray-400">سيتم إضافة باقات قريباً</p>
+                    <button onclick="navigateTo('home')" class="mt-4 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition">
+                        <i class="fas fa-home ml-2"></i> العودة للرئيسية
+                    </button>
+                </div>
+            `;
+            return;
+        }
+        
+        // ====== عرض الباقات المدفوعة فقط ======
         let plansHtml = sortedPlans.map((plan, index) => {
             const isCurrentPlan = currentPlanId === plan.id;
-            const isFreePlan = plan.id === 'free';
             
             let bgColor = "";
             let btnColor = "";
             let icon = "";
             
             const colors = [
-                { bg: "from-gray-500 to-gray-600", btn: "bg-gray-600 hover:bg-gray-700", icon: "📖" },
                 { bg: "from-blue-500 to-blue-600", btn: "bg-blue-600 hover:bg-blue-700", icon: "🥉" },
                 { bg: "from-purple-500 to-purple-600", btn: "bg-purple-600 hover:bg-purple-700", icon: "🥈" },
                 { bg: "from-amber-500 to-amber-600", btn: "bg-amber-600 hover:bg-amber-700", icon: "🥇" },
@@ -3323,32 +3336,7 @@ async function refreshPlansPage() {
             // ========== زر مخصص حسب الحالة ==========
             let actionButton = '';
             
-            if (isFreePlan) {
-                // الباقة المجانية
-                if (isCurrentPlan) {
-                    const formattedExpiry = expiryDate ? expiryDate.toLocaleDateString('ar-EG', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
-                    }) : 'غير محدد';
-                    actionButton = `
-                        <div class="mt-3 w-full bg-green-500 text-white py-2.5 rounded-lg font-bold text-sm cursor-default">
-                            <i class="fas fa-check-circle ml-2"></i> باقتك الحالية
-                        </div>
-                        <p class="text-center text-xs text-gray-500 mt-1">
-                            🔄 تتجدد تلقائياً في ${formattedExpiry}
-                        </p>
-                    `;
-                } else {
-                    actionButton = `
-                        <button onclick="navigateTo('account')" 
-                            class="mt-3 w-full bg-gray-500 hover:bg-gray-600 text-white py-2.5 rounded-lg transition font-bold text-sm">
-                            <i class="fas fa-user ml-2"></i> اختيار هذه الباقة
-                        </button>
-                    `;
-                }
-            } 
-            else if (isCurrentPlan) {
+            if (isCurrentPlan) {
                 // الباقة الحالية (مدفوعة)
                 const formattedExpiry = expiryDate ? expiryDate.toLocaleDateString('ar-EG', {
                     year: 'numeric',
@@ -3385,9 +3373,8 @@ async function refreshPlansPage() {
                         </button>
                     `;
                 }
-            } 
-            else {
-                // باقة أخرى (ليست المجانية وليست الحالية)
+            } else {
+                // باقة أخرى (ليست الحالية)
                 actionButton = `
                     <button onclick="requestUpgrade('${plan.id}')" 
                             class="mt-3 w-full ${btnColor} text-white py-2.5 rounded-lg transition font-bold text-sm hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]">
@@ -3398,7 +3385,7 @@ async function refreshPlansPage() {
             
             // شارة الخصم
             let discountBadge = '';
-            if (discountPercent > 0 && !isFreePlan) {
+            if (discountPercent > 0) {
                 discountBadge = `
                     <div class="absolute top-2 right-2 bg-red-500 text-white text-xs px-3 py-1 rounded-full font-bold z-10 animate-pulse">
                         -${discountPercent}%
@@ -3440,7 +3427,7 @@ async function refreshPlansPage() {
             `;
         }).join('');
         
-        // معلومات الاشتراك الحالي
+        // ====== معلومات الاشتراك الحالي ======
         let subscriptionInfo = '';
         if (currentUser) {
             const userPlan = plans.find(p => p.id === currentPlanId) || plans.find(p => p.id === 'free');
@@ -3450,39 +3437,75 @@ async function refreshPlansPage() {
                 day: 'numeric'
             }) : 'غير محدد';
             
-            subscriptionInfo = `
-                <div class="col-span-1 sm:col-span-2 mt-6 p-4 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl border-2 border-indigo-200 w-full">
-                    <div class="flex flex-wrap items-center justify-between gap-3">
-                        <div>
-                            <p class="font-bold text-indigo-700">
-                                <i class="fas fa-user-check ml-2"></i>
-                                باقتك الحالية: <span class="text-indigo-900">${userPlan.name}</span>
-                            </p>
-                            <p class="text-sm text-gray-600 mt-1">
-                                <i class="fas fa-calendar-alt ml-1"></i>
-                                ${isFree ? '🔄 تتجدد تلقائياً في' : '📅 تنتهي في'}: <span class="font-bold text-indigo-600">${formattedExpiry}</span>
-                            </p>
-                            <p class="text-sm text-gray-600 mt-1">
-                                <i class="fas fa-coins ml-1"></i>
-                                الامتحانات المتبقية: <span class="font-bold ${remaining > 0 ? 'text-green-600' : 'text-red-600'}">${remaining}</span>
-                                من ${userPlan.examsCount}
-                            </p>
-                            ${!isFree && (remaining <= 0 || isExpired) ? `
-                                <button onclick="requestRenewalFromUser()" 
-                                    class="mt-2 bg-red-600 hover:bg-red-700 text-white px-4 py-1.5 rounded-lg text-sm transition font-bold">
-                                    <i class="fab fa-whatsapp ml-1"></i> طلب تجديد
+            // إذا كانت الباقة مجانية، نعرض رسالة مختلفة
+            if (isFree) {
+                subscriptionInfo = `
+                    <div class="col-span-1 sm:col-span-2 mt-6 p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl border-2 border-green-300 w-full">
+                        <div class="flex flex-wrap items-center justify-between gap-3">
+                            <div>
+                                <p class="font-bold text-green-700">
+                                    <i class="fas fa-gift ml-2"></i>
+                                    باقتك الحالية: <span class="text-green-900">📖 مجانية</span>
+                                </p>
+                                <p class="text-sm text-gray-600 mt-1">
+                                    <i class="fas fa-calendar-alt ml-1"></i>
+                                    🔄 تتجدد تلقائياً في: <span class="font-bold text-green-600">${formattedExpiry}</span>
+                                </p>
+                                <p class="text-sm text-gray-600 mt-1">
+                                    <i class="fas fa-coins ml-1"></i>
+                                    الامتحانات المتبقية: <span class="font-bold ${remaining > 0 ? 'text-green-600' : 'text-red-600'}">${remaining}</span>
+                                    من 5
+                                </p>
+                                ${remaining <= 0 ? `
+                                    <p class="text-sm text-amber-600 mt-1">
+                                        ⏳ انتظر حتى ${formattedExpiry} لتجديد امتحاناتك مجاناً
+                                    </p>
+                                ` : ''}
+                            </div>
+                            <div class="flex flex-col gap-2">
+                                <button onclick="navigateTo('account')" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition text-sm">
+                                    <i class="fas fa-user ml-1"></i> حسابي
                                 </button>
-                            ` : ''}
+                            </div>
                         </div>
-                        <button onclick="navigateTo('account')" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition text-sm">
-                            <i class="fas fa-user ml-1"></i> حسابي
-                        </button>
                     </div>
-                </div>
-            `;
+                `;
+            } else {
+                // باقة مدفوعة
+                subscriptionInfo = `
+                    <div class="col-span-1 sm:col-span-2 mt-6 p-4 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl border-2 border-indigo-200 w-full">
+                        <div class="flex flex-wrap items-center justify-between gap-3">
+                            <div>
+                                <p class="font-bold text-indigo-700">
+                                    <i class="fas fa-user-check ml-2"></i>
+                                    باقتك الحالية: <span class="text-indigo-900">${userPlan.name}</span>
+                                </p>
+                                <p class="text-sm text-gray-600 mt-1">
+                                    <i class="fas fa-calendar-alt ml-1"></i>
+                                    📅 تنتهي في: <span class="font-bold text-indigo-600">${formattedExpiry}</span>
+                                </p>
+                                <p class="text-sm text-gray-600 mt-1">
+                                    <i class="fas fa-coins ml-1"></i>
+                                    الامتحانات المتبقية: <span class="font-bold ${remaining > 0 ? 'text-green-600' : 'text-red-600'}">${remaining}</span>
+                                    من ${userPlan.examsCount}
+                                </p>
+                                ${needsRenewal ? `
+                                    <button onclick="requestRenewalFromUser()" 
+                                        class="mt-2 bg-red-600 hover:bg-red-700 text-white px-4 py-1.5 rounded-lg text-sm transition font-bold">
+                                        <i class="fab fa-whatsapp ml-1"></i> طلب تجديد
+                                    </button>
+                                ` : ''}
+                            </div>
+                            <button onclick="navigateTo('account')" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition text-sm">
+                                <i class="fas fa-user ml-1"></i> حسابي
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
         }
         
-        // عرض الباقات
+        // ====== عرض الباقات ======
         container.innerHTML = `
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-full">
                 ${plansHtml}

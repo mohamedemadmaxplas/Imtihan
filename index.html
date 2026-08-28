@@ -3846,7 +3846,7 @@ async function forceRenewFreeForUser(userId) {
 
     
  // ============================================================
-// دالة createNewExam - معدلة (جزء التحقق من الامتحانات المتبقية)
+// دالة createNewExam - كاملة (مع زيادة الامتحانات المستخدمة)
 // ============================================================
 
 async function createNewExam() {
@@ -3873,6 +3873,36 @@ async function createNewExam() {
             
             if (sub.planId === 'free') {
                 showToast(`⏳ انتظر حتى ${formattedDate} لتجديد امتحاناتك مجاناً`);
+                // عرض رسالة في صفحة الإنشاء
+                const warning = document.getElementById('examLimitWarning');
+                if (warning) {
+                    warning.classList.remove('hidden');
+                    warning.className = 'bg-amber-50 border border-amber-200 rounded-xl p-3 mb-4';
+                    const limitMsg = document.getElementById('limitMsg');
+                    if (limitMsg) {
+                        limitMsg.innerHTML = `
+                            <div class="text-right">
+                                <div class="flex items-center gap-3 mb-2">
+                                    <i class="fas fa-clock text-amber-600 text-2xl"></i>
+                                    <span class="font-bold text-amber-800 text-lg">⏳ لقد استنفذت امتحاناتك!</span>
+                                </div>
+                                <p class="text-gray-700 mb-2">
+                                    <i class="fas fa-calendar-alt ml-1"></i> 
+                                    <strong>موعد التجديد التلقائي:</strong> ${formattedDate}
+                                </p>
+                                <p class="text-gray-600">
+                                    💡 سيتم تجديد 5 امتحانات تلقائياً في ${formattedDate}
+                                </p>
+                                <div class="bg-amber-100 p-3 rounded-lg mt-2">
+                                    <p class="text-amber-800 text-sm">
+                                        <i class="fas fa-info-circle ml-1"></i>
+                                        انتظر حتى ${formattedDate} لتجديد امتحاناتك مجاناً
+                                    </p>
+                                </div>
+                            </div>
+                        `;
+                    }
+                }
             } else {
                 showToast('❌ انتهت صلاحية باقتك المدفوعة. قم بطلب تجديد');
                 // عرض زر طلب تجديد
@@ -3884,8 +3914,14 @@ async function createNewExam() {
                     if (limitMsg) {
                         limitMsg.innerHTML = `
                             <div class="text-right">
-                                <p class="font-bold text-red-800">⚠️ انتهت صلاحية باقتك!</p>
-                                <p class="text-gray-700">تاريخ الانتهاء: ${formattedDate}</p>
+                                <div class="flex items-center gap-3 mb-2">
+                                    <i class="fas fa-exclamation-triangle text-red-600 text-2xl"></i>
+                                    <span class="font-bold text-red-800 text-lg">⚠️ انتهت صلاحية باقتك!</span>
+                                </div>
+                                <p class="text-gray-700 mb-2">
+                                    <i class="fas fa-calendar-alt ml-1"></i> 
+                                    <strong>تاريخ الانتهاء:</strong> ${formattedDate}
+                                </p>
                                 <button onclick="requestRenewalFromUser()" 
                                     class="mt-2 bg-amber-500 text-white px-4 py-2 rounded-lg font-bold hover:bg-amber-600 transition">
                                     <i class="fab fa-whatsapp ml-2"></i> طلب تجديد
@@ -3908,6 +3944,7 @@ async function createNewExam() {
         return false;
     }
     
+    // جلب البيانات من النموذج
     const title = document.getElementById('examTitle').value.trim();
     const className = document.getElementById('examClass').value.trim();
     const teacherName = document.getElementById('examTeacher').value.trim();
@@ -3915,13 +3952,19 @@ async function createNewExam() {
     const passScore = parseInt(document.getElementById('examPassScore').value) || 50;
     const showResult = document.querySelector('input[name="showResult"]:checked')?.value === 'true';
     
+    // التحقق من الحقول المطلوبة
     if (!title || !className || !teacherName) {
         showToast('❌ املأ جميع الحقول المطلوبة');
         return false;
     }
     
+    // حساب المجموع الكلي للدرجات
     const totalScore = questions.reduce((sum, q) => sum + (q.score || 10), 0);
+    
+    // إنشاء معرف فريد للامتحان
     const examId = genId();
+    
+    // بناء بيانات الامتحان
     const examData = {
         id: examId,
         title: title,
@@ -3939,29 +3982,38 @@ async function createNewExam() {
     };
     
     try {
+        // ✅ حفظ الامتحان في قاعدة البيانات
         await db.ref(`exams/${examId}`).set(examData);
+        
+        // ✅ إضافة الامتحان إلى المصفوفة المحلية
         exams.push(examData);
         
-        // ✅ زيادة عدد الامتحانات المستخدمة في الاشتراك
-        // يتم حسابها تلقائياً من خلال getUsedExamsInCurrentMonth
+        // ✅ ✅ ✅ زيادة عدد الامتحانات المستخدمة في الاشتراك
+        await incrementUsedExams(currentUser.uid);
         
+        // إنشاء رابط الامتحان
         const examLink = `${window.location.origin}${window.location.pathname}?exam=${examId}`;
+        
+        // عرض نافذة الرابط
         showExamLinkPopup(examLink, title, className);
         
-        // ✅ تحديث العداد
+        // ✅ تحديث العداد وعرض الامتحانات المتبقية
         await refreshExamLimit();
+        
+        // ✅ تحديث صفحة الحساب
+        await updateAccountPageSubscription(currentUser.uid);
         
         // إعادة تعيين النموذج
         document.getElementById('examForm').reset();
         document.getElementById('questionsContainer').innerHTML = '';
-        addQuestion();
+        addQuestion(); // إضافة سؤال افتراضي جديد
         
         showToast('✅ تم إنشاء الامتحان بنجاح!');
         return true;
         
     } catch (error) {
         console.error('خطأ في إنشاء الامتحان:', error);
-        showToast('❌ حدث خطأ في حفظ الامتحان');
+        showToast('❌ حدث خطأ في حفظ الامتحان: ' + error.message);
         return false;
     }
 }
@@ -4058,7 +4110,10 @@ async function renewFreeSubscription(userId) {
     }
 }
 
-// دالة تجديد الباقة المدفوعة (يدوياً من قبل المدير)
+// ============================================================
+// دالة renewPaidSubscription - معدلة (إعادة تعيين الامتحانات بالكامل)
+// ============================================================
+
 async function renewPaidSubscription(userId) {
     try {
         const subSnapshot = await db.ref(`subscriptions/${userId}`).once('value');
@@ -4079,33 +4134,40 @@ async function renewPaidSubscription(userId) {
         const newExpiry = new Date(oldExpiry);
         newExpiry.setMonth(newExpiry.getMonth() + 1);
         
-        // ✅ إعادة تعيين عدد الامتحانات المستخدمة
+        // ✅ ✅ ✅ إعادة تعيين عدد الامتحانات إلى الحد الأقصى للباقة (وليس الإضافة)
         const updatedSub = {
             ...sub,
             startDate: oldExpiry.toISOString(),
             expiryDate: newExpiry.toISOString(),
             isActive: true,
             renewedCount: (sub.renewedCount || 0) + 1,
-            lastRenewalDate: new Date().toISOString()
+            lastRenewalDate: new Date().toISOString(),
+            // ✅ إعادة تعيين الامتحانات المستخدمة إلى 0 (أي يرجع العدد كاملاً)
+            examsUsed: 0,
+            // ✅ حفظ عدد الامتحانات التي تم تجديدها (للتوثيق)
+            lastRenewedExamsCount: plan.examsCount
         };
         
         await db.ref(`subscriptions/${userId}`).set(updatedSub);
         
-        console.log(`✅ تم تجديد الباقة المدفوعة ${plan.name} للمستخدم ${userId}`);
+        console.log(`✅ تم تجديد الباقة ${plan.name} للمستخدم ${userId}`);
+        console.log(`📊 عدد الامتحانات: ${plan.examsCount} (تم إعادة تعيينها)`);
+        console.log(`📅 تاريخ الانتهاء الجديد: ${newExpiry.toLocaleDateString('ar-EG')}`);
+        
         return updatedSub;
         
     } catch (error) {
-        console.error('خطأ في تجديد المدفوع:', error);
+        console.error('خطأ في تجديد الباقة:', error);
         return null;
     }
 }
 
-// ==================== دوال حساب الامتحانات المتبقية ====================
+// ============================================================
+// دالة getRemainingExamsForUser - للتأكد من حساب المتبقي بشكل صحيح
+// ============================================================
 
-// دالة للحصول على عدد الامتحانات المتبقية للمستخدم
 async function getRemainingExamsForUser(userId) {
     try {
-        // 1. جلب الاشتراك
         const subSnapshot = await db.ref(`subscriptions/${userId}`).once('value');
         if (!subSnapshot.exists()) {
             await createFreeSubscription(userId);
@@ -4116,33 +4178,32 @@ async function getRemainingExamsForUser(userId) {
         const now = new Date();
         const expiryDate = new Date(sub.expiryDate);
         
-        // 2. جلب خطة المستخدم
         const plan = plans.find(p => p.id === sub.planId) || plans.find(p => p.id === 'free');
         const maxExams = plan?.examsCount || 5;
         
-        // 3. إذا كانت الباقة مجانية
+        // ✅ إذا كانت الباقة مجانية
         if (sub.planId === 'free') {
-            // ✅ المجاني: إذا انتهت الصلاحية، جدد تلقائياً
             if (now > expiryDate) {
                 await renewFreeSubscription(userId);
                 return maxExams;
             }
-            
-            // حساب المستخدم من هذا الشهر
             const used = getUsedExamsInCurrentMonth(userId);
             return Math.max(0, maxExams - used);
         }
         
-        // 4. الباقات المدفوعة
+        // ✅ الباقات المدفوعة
         else {
-            // ❌ المدفوع: إذا انتهت الصلاحية، لا يوجد امتحانات متبقية
+            // ✅ إذا انتهت الصلاحية، لا يوجد امتحانات
             if (now > expiryDate) {
                 return 0;
             }
             
-            // حساب المستخدم من هذا الشهر
-            const used = getUsedExamsInCurrentMonth(userId);
-            return Math.max(0, maxExams - used);
+            // ✅ حساب الامتحانات المتبقية من الاشتراك
+            // نستخدم examsUsed المخزنة في الاشتراك
+            const usedExams = sub.examsUsed || 0;
+            const remaining = Math.max(0, maxExams - usedExams);
+            
+            return remaining;
         }
         
     } catch (error) {
@@ -4151,9 +4212,10 @@ async function getRemainingExamsForUser(userId) {
     }
 }
 
-// ==================== دوال صفحة اشتراكات العملاء (الإدارة) ====================
+// ============================================================
+// دالة renderSubscriptionsListAdmin - معدلة (زر تجديد مع تأكيد)
+// ============================================================
 
-// عرض اشتراكات العملاء (فقط المدفوعة مع زر تجديد)
 async function renderSubscriptionsListAdmin() {
     const container = document.getElementById('subscriptionsList');
     if (!container) {
@@ -4191,7 +4253,14 @@ async function renderSubscriptionsListAdmin() {
         for (const [uid, sub] of paidSubs) {
             const userData = usersMap[uid] || {};
             const plan = plans.find(p => p.id === sub.planId);
+            
+            // ✅ حساب الامتحانات المتبقية
             const remaining = await getRemainingExamsForUser(uid);
+            
+            // ✅ حساب عدد الامتحانات المستخدمة (الفرق بين الحد الأقصى والمتبقي)
+            const maxExams = plan?.examsCount || 0;
+            const usedExams = Math.max(0, maxExams - remaining);
+            
             const expiryDate = new Date(sub.expiryDate);
             const formattedExpiry = expiryDate.toLocaleDateString('ar-EG', {
                 year: 'numeric',
@@ -4200,6 +4269,9 @@ async function renderSubscriptionsListAdmin() {
             });
             const now = new Date();
             const isExpired = now > expiryDate;
+            
+            // ✅ نسبة استخدام الامتحانات
+            const usagePercent = maxExams > 0 ? Math.round((usedExams / maxExams) * 100) : 0;
             
             html += `
                 <div class="bg-white rounded-xl p-5 shadow-md border-r-4 ${isExpired ? 'border-red-500' : 'border-green-500'} hover:shadow-lg transition mb-4">
@@ -4221,8 +4293,11 @@ async function renderSubscriptionsListAdmin() {
                                     <p class="font-bold text-indigo-600">${plan?.name || sub.planId}</p>
                                 </div>
                                 <div class="bg-gray-50 p-3 rounded-lg text-center">
-                                    <p class="text-xs text-gray-500">📊 المتبقي</p>
-                                    <p class="font-bold ${remaining > 0 ? 'text-green-600' : 'text-red-600'} text-lg">${remaining}</p>
+                                    <p class="text-xs text-gray-500">📊 المستخدم</p>
+                                    <p class="font-bold text-amber-600">${usedExams} / ${maxExams}</p>
+                                    <div class="w-full bg-gray-200 rounded-full h-1.5 mt-1">
+                                        <div class="bg-amber-500 h-1.5 rounded-full" style="width: ${usagePercent}%"></div>
+                                    </div>
                                 </div>
                                 <div class="bg-gray-50 p-3 rounded-lg text-center">
                                     <p class="text-xs text-gray-500">📅 تاريخ الانتهاء</p>
@@ -4240,13 +4315,17 @@ async function renderSubscriptionsListAdmin() {
                                 </div>
                             ` : remaining <= 0 ? `
                                 <div class="mt-2 p-2 bg-amber-50 rounded-lg border border-amber-200">
-                                    <p class="text-amber-600 text-sm font-semibold">⚠️ الامتحانات مستهلكة - يمكن التجديد</p>
+                                    <p class="text-amber-600 text-sm font-semibold">⚠️ الامتحانات مستهلكة بالكامل - يرجى التجديد</p>
+                                </div>
+                            ` : usagePercent >= 80 ? `
+                                <div class="mt-2 p-2 bg-blue-50 rounded-lg border border-blue-200">
+                                    <p class="text-blue-600 text-sm font-semibold">📊 استهلكت ${usagePercent}% من الامتحانات</p>
                                 </div>
                             ` : ''}
                         </div>
                         
                         <div class="flex flex-col gap-2 min-w-[140px]">
-                            <button onclick="renewPaidSubscriptionFromAdmin('${uid}')" 
+                            <button onclick="confirmRenewSubscription('${uid}', '${userData.name || 'مستخدم'}', '${plan?.name || sub.planId}', ${maxExams})" 
                                 class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-lg font-bold text-sm transition flex items-center justify-center gap-2 shadow-md hover:shadow-lg">
                                 <i class="fas fa-sync-alt"></i> 🔄 تجديد
                             </button>
@@ -4280,6 +4359,115 @@ async function renderSubscriptionsListAdmin() {
                 <p>حدث خطأ في تحميل البيانات</p>
             </div>
         `;
+    }
+}
+
+
+// ============================================================
+// دالة confirmRenewSubscription - جديدة (تأكيد قبل التجديد)
+// ============================================================
+
+function confirmRenewSubscription(userId, userName, planName, maxExams) {
+    // إنشاء نافذة تأكيد مخصصة
+    const confirmHtml = `
+        <div id="renewConfirmPopup" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]">
+            <div class="bg-white rounded-2xl p-6 max-w-md w-full mx-4 text-center shadow-2xl">
+                <div class="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-sync-alt text-amber-500 text-3xl animate-spin" style="animation-duration: 3s;"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-800 mb-2">🔄 تأكيد تجديد الباقة</h3>
+                <div class="bg-gray-50 rounded-xl p-4 mb-4 text-right">
+                    <p class="text-sm text-gray-600"><strong>👤 العميل:</strong> ${userName}</p>
+                    <p class="text-sm text-gray-600"><strong>📦 الباقة:</strong> ${planName}</p>
+                    <p class="text-sm text-gray-600"><strong>📊 عدد الامتحانات:</strong> ${maxExams} امتحان</p>
+                    <p class="text-sm text-amber-600 font-semibold mt-2">
+                        ⚠️ سيتم إعادة تعيين الامتحانات إلى ${maxExams} بغض النظر عن المتبقي
+                    </p>
+                    <p class="text-sm text-green-600">
+                        ✅ سيتم تمديد تاريخ الانتهاء بشهر واحد
+                    </p>
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="executeRenewSubscription('${userId}')" 
+                        class="flex-1 bg-green-600 hover:bg-green-700 text-white py-2.5 rounded-lg font-bold transition">
+                        <i class="fas fa-check ml-1"></i> تأكيد التجديد
+                    </button>
+                    <button onclick="closeRenewConfirmPopup()" 
+                        class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 py-2.5 rounded-lg font-bold transition">
+                        إلغاء
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // إزالة أي نافذة تأكيد سابقة
+    const oldPopup = document.getElementById('renewConfirmPopup');
+    if (oldPopup) oldPopup.remove();
+    
+    document.body.insertAdjacentHTML('beforeend', confirmHtml);
+}
+
+// ============================================================
+// دالة closeRenewConfirmPopup - جديدة (إغلاق نافذة التأكيد)
+// ============================================================
+
+function closeRenewConfirmPopup() {
+    const popup = document.getElementById('renewConfirmPopup');
+    if (popup) popup.remove();
+}
+
+// ============================================================
+// دالة executeRenewSubscription - جديدة (تنفيذ التجديد)
+// ============================================================
+
+async function executeRenewSubscription(userId) {
+    if (!userId) {
+        showToast('❌ معرف المستخدم غير صحيح');
+        return;
+    }
+    
+    try {
+        // إغلاق نافذة التأكيد
+        closeRenewConfirmPopup();
+        
+        // ✅ تنفيذ التجديد
+        const updatedSub = await renewPaidSubscription(userId);
+        
+        if (updatedSub) {
+            // جلب بيانات المستخدم لعرض رسالة مناسبة
+            const userSnap = await db.ref(`users/${userId}`).once('value');
+            const userData = userSnap.val() || {};
+            const plan = plans.find(p => p.id === updatedSub.planId);
+            
+            // ✅ عرض رسالة نجاح مع تفاصيل التجديد
+            const expiryDate = new Date(updatedSub.expiryDate);
+            const formattedExpiry = expiryDate.toLocaleDateString('ar-EG', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            
+            showToast(`✅ تم تجديد باقة ${plan?.name || updatedSub.planId} للمستخدم ${userData.name || 'مستخدم'}`);
+            showToast(`📊 تم إعادة تعيين الامتحانات إلى ${plan?.examsCount || 0}`);
+            showToast(`📅 تاريخ الانتهاء الجديد: ${formattedExpiry}`);
+            
+            // ✅ تحديث القائمة
+            await renderSubscriptionsListAdmin();
+            
+            // ✅ تحديث صفحة الباقات إذا كانت مفتوحة
+            const plansPage = document.getElementById('upgradePage');
+            if (plansPage && !plansPage.classList.contains('hidden-page')) {
+                await refreshPlansPage();
+            }
+            
+        } else {
+            showToast('❌ حدث خطأ في تجديد الباقة');
+        }
+        
+    } catch (error) {
+        console.error('خطأ في تنفيذ التجديد:', error);
+        showToast('❌ حدث خطأ في تجديد الباقة');
     }
 }
 
@@ -6465,16 +6653,24 @@ async function getUsedExamsCount(userId) {
     return 0;
 }
 
-// دالة لزيادة عدد الامتحانات المستخدمة
+// ============================================================
+// دالة incrementUsedExams - جديدة (زيادة عدد الامتحانات المستخدمة)
+// ============================================================
+
 async function incrementUsedExams(userId) {
-    const subSnapshot = await db.ref(`subscriptions/${userId}`).once('value');
-    if (subSnapshot.exists()) {
-        const sub = subSnapshot.val();
-        const currentUsed = sub.examsUsed || 0;
-        await db.ref(`subscriptions/${userId}/examsUsed`).set(currentUsed + 1);
-        return currentUsed + 1;
+    try {
+        const subSnapshot = await db.ref(`subscriptions/${userId}`).once('value');
+        if (subSnapshot.exists()) {
+            const sub = subSnapshot.val();
+            const currentUsed = sub.examsUsed || 0;
+            await db.ref(`subscriptions/${userId}/examsUsed`).set(currentUsed + 1);
+            return currentUsed + 1;
+        }
+        return 0;
+    } catch (error) {
+        console.error('خطأ في زيادة الامتحانات المستخدمة:', error);
+        return 0;
     }
-    return 0;
 }
     
     // ==================== دوال البطاقات ونافذة التفاصيل ====================

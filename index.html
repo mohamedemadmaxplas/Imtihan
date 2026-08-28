@@ -5679,14 +5679,46 @@ function closeEditPlanPopup() {
         if (tab === 'subscriptions') renderSubscriptionsList();
     }
     
-    function requestUpgrade(planId) {
-        const plan = plans.find(p => p.id === planId);
-        if (plan && currentUser) {
-            window.open(`https://wa.me/201026463211?text=${encodeURIComponent(`🚀 طلب ترقية حساب\n\nالاسم: ${currentUser.name}\nالبريد: ${currentUser.email}\nالباقة المطلوبة: ${plan.name}\nالسعر: ${plan.price} ج`)}`, '_blank');
-        } else if (plan) {
-            window.open(`https://wa.me/201026463211?text=${encodeURIComponent(`🚀 طلب ترقية حساب\nالباقة المطلوبة: ${plan.name}\nالسعر: ${plan.price} ج`)}`, '_blank');
-        }
+  function requestUpgrade(planId) {
+    const plan = plans.find(p => p.id === planId);
+    if (!plan) {
+        showToast('❌ الباقة غير موجودة');
+        return;
     }
+
+    // بناء رسالة منسقة وجميلة
+    let message = `📋 *طلب ترقية حساب - Imtihan*\n\n`;
+    message += `━━━━━━━━━━━━━━━━━━\n`;
+    
+    if (currentUser) {
+        message += `👤 *الاسم:* ${currentUser.name || 'غير محدد'}\n`;
+        message += `📧 *البريد:* ${currentUser.email || 'غير محدد'}\n`;
+        message += `📱 *الهاتف:* ${currentUser.phone || 'غير محدد'}\n`;
+        message += `━━━━━━━━━━━━━━━━━━\n`;
+    }
+    
+    message += `📦 *الباقة المطلوبة:* ${plan.name}\n`;
+    message += `💰 *السعر:* ${plan.price} ج\n`;
+    message += `📊 *عدد الامتحانات:* ${plan.examsCount} امتحان شهرياً\n`;
+    
+    if (plan.features && plan.features.length > 0) {
+        message += `━━━━━━━━━━━━━━━━━━\n`;
+        message += `✨ *المميزات:*\n`;
+        plan.features.forEach(f => {
+            message += `   ✅ ${f}\n`;
+        });
+    }
+    
+    message += `━━━━━━━━━━━━━━━━━━\n`;
+    message += `📅 *تاريخ الطلب:* ${new Date().toLocaleDateString('ar-EG')}\n`;
+    message += `🕐 *الوقت:* ${new Date().toLocaleTimeString('ar-EG')}\n`;
+    message += `━━━━━━━━━━━━━━━━━━\n`;
+    message += `🌟 *شكراً لاستخدامك Imtihan!*`;
+
+    // فتح واتساب مع الرسالة المنسقة
+    const encodedMessage = encodeURIComponent(message);
+    window.open(`https://wa.me/201144100018?text=${encodedMessage}`, '_blank');
+}
     
     // ==================== دوال البطاقات ونافذة التفاصيل ====================
     function showStatDetails(type) {

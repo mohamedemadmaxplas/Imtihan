@@ -2050,6 +2050,158 @@ body {
 }
 
 
+/* ============================================================
+   أنيميشن اللوجو - أضفها في قسم <style>
+   ============================================================ */
+
+/* الحاوية الرئيسية للوجو */
+.logo-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.3s ease;
+    user-select: none;
+}
+
+/* الأيقونة */
+.logo-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    border-radius: 12px;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    position: relative;
+    overflow: hidden;
+}
+
+.logo-icon i {
+    color: white;
+    font-size: 18px;
+    transition: all 0.4s ease;
+    position: relative;
+    z-index: 2;
+}
+
+/* تأثير الخلفية المتحركة للأيقونة */
+.logo-icon::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, transparent 60%);
+    opacity: 0;
+    transition: opacity 0.6s ease;
+    transform: scale(0.5);
+    border-radius: 50%;
+}
+
+/* ====== HOVER ====== */
+
+/* عند hover على الحاوية */
+.logo-container:hover .logo-icon {
+    transform: rotate(-10deg) scale(1.1);
+    box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
+}
+
+.logo-container:hover .logo-icon::before {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.logo-container:hover .logo-icon i {
+    transform: scale(1.1) rotate(5deg);
+}
+
+.logo-container:hover .logo-text {
+    color: #4f46e5;
+    transform: scale(1.02);
+}
+
+/* ====== CLICK (Active) ====== */
+
+/* عند الضغط */
+.logo-container:active .logo-icon {
+    transform: scale(0.85) rotate(-5deg);
+    box-shadow: 0 2px 10px rgba(99, 102, 241, 0.3);
+    transition-duration: 0.1s;
+}
+
+.logo-container:active .logo-icon i {
+    transform: scale(0.9);
+}
+
+.logo-container:active .logo-text {
+    transform: scale(0.95);
+}
+
+/* ====== النص ====== */
+.logo-text {
+    font-size: 22px;
+    font-weight: 800;
+    color: #1e293b;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    letter-spacing: -0.5px;
+}
+
+/* ====== تأثير نبض عند التحميل ====== */
+@keyframes logoPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.logo-container.loading .logo-icon {
+    animation: logoPulse 1s ease-in-out 3;
+}
+
+/* ====== تأثير دوار للأيقونة ====== */
+@keyframes iconSpin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.logo-container.spin .logo-icon i {
+    animation: iconSpin 0.8s ease-in-out;
+}
+
+/* ====== تأثير تموج عند الضغط ====== */
+@keyframes ripple {
+    0% {
+        box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4);
+    }
+    100% {
+        box-shadow: 0 0 0 20px rgba(99, 102, 241, 0);
+    }
+}
+
+.logo-container:active .logo-icon {
+    animation: ripple 0.6s ease-out;
+}
+
+/* ====== تنسيق الجوال ====== */
+@media (max-width: 640px) {
+    .logo-icon {
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+    }
+    
+    .logo-icon i {
+        font-size: 15px;
+    }
+    
+    .logo-text {
+        font-size: 18px;
+    }
+}
+
     </style>
 </head>
 <body>
@@ -2129,10 +2281,13 @@ body {
                 <i class="fas fa-bars"></i>
             </button>
             
-            <div class="flex items-center gap-2 cursor-pointer" onclick="navigateTo('home')">
-                <i class="fas fa-pen-alt text-indigo-600 text-xl"></i>
-                <span class="text-xl font-bold text-gray-800">Imtihan</span>
-            </div>
+           <!-- استبدل قسم الوجو في الهيدر بهذا -->
+<div class="flex items-center gap-2 cursor-pointer logo-container" onclick="navigateTo('home')">
+    <div class="logo-icon">
+        <i class="fas fa-pen-alt text-indigo-600 text-xl"></i>
+    </div>
+    <span class="text-xl font-bold text-gray-800 logo-text">Imtihan</span>
+</div>
         </div>
         
         <div class="flex items-center gap-4">
@@ -3232,6 +3387,66 @@ function refreshAccountPage() {
         expiryElement.innerText = 'غير متاح';
     }
 } 
+
+// ============================================================
+// دوال أنيميشن اللوجو - أضفها في قسم <script>
+// ============================================================
+
+// دالة لتشغيل أنيميشن عند الضغط على اللوجو
+function animateLogo() {
+    const container = document.querySelector('.logo-container');
+    if (!container) return;
+    
+    // إضافة تأثير النبض
+    container.classList.add('loading');
+    
+    // إضافة تأثير الدوران للأيقونة
+    container.classList.add('spin');
+    
+    // إزالة التأثيرات بعد انتهاء الأنيميشن
+    setTimeout(() => {
+        container.classList.remove('loading');
+    }, 3000);
+    
+    setTimeout(() => {
+        container.classList.remove('spin');
+    }, 800);
+}
+
+// دالة لتشغيل تأثير hover محسن
+function setupLogoAnimation() {
+    const container = document.querySelector('.logo-container');
+    if (!container) return;
+    
+    // عند الضغط
+    container.addEventListener('click', function(e) {
+        // تشغيل الأنيميشن
+        animateLogo();
+        
+        // تشغيل التموج
+        const icon = this.querySelector('.logo-icon');
+        if (icon) {
+            icon.style.animation = 'none';
+            // إعادة تشغيل التموج
+            setTimeout(() => {
+                icon.style.animation = 'ripple 0.6s ease-out';
+            }, 10);
+        }
+    });
+    
+    // عند hover (تأثير إضافي)
+    container.addEventListener('mouseenter', function() {
+        const icon = this.querySelector('.logo-icon');
+        if (icon) {
+            icon.style.transition = 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+        }
+    });
+}
+
+// تشغيل عند تحميل الصفحة
+document.addEventListener('DOMContentLoaded', function() {
+    setupLogoAnimation();
+});
 function getMonthlyExamUsage() {
     if (!currentUser) return 0;
     

@@ -3613,11 +3613,7 @@ async function refreshAccountPage() {
                     <i class="fas fa-coins text-xl"></i>
                     <span>🏢 تسجيل الدخول بـ تكنو شرك</span>
                 </a>
-                
-                <p class="mt-6 text-sm text-gray-500">
-                    ليس لديك حساب؟ 
-                    <a onclick="showRegisterPopup()" class="text-indigo-600 font-semibold hover:underline cursor-pointer">إنشاء حساب</a>
-                </p>
+            
             </div>
         `;
         
@@ -3717,10 +3713,7 @@ function getMonthlyExamUsage() {
     return userExams.length + userResults.length;
 }
 
-
-// ============================================================
-// دالة refreshPlansPage - معدلة (إخفاء الباقة المجانية)
-// ============================================================
+// ==================== صفحة الباقات - عرض شبكي 2×2 ====================
 
 async function refreshPlansPage() {
     const container = document.getElementById('plansList');
@@ -3773,7 +3766,7 @@ async function refreshPlansPage() {
             return;
         }
         
-        // ====== عرض الباقات المدفوعة فقط ======
+        // ====== عرض الباقات المدفوعة فقط - شبكة 2×2 ======
         let plansHtml = sortedPlans.map((plan, index) => {
             const isCurrentPlan = currentPlanId === plan.id;
             
@@ -3809,7 +3802,6 @@ async function refreshPlansPage() {
                 }) : 'غير محدد';
                 
                 if (needsRenewal) {
-                    // ✅ الباقة منتهية أو الامتحانات خلصت - عرض زر تجديد
                     actionButton = `
                         <button onclick="requestRenewalFromUser()" 
                                 class="mt-3 w-full bg-red-600 hover:bg-red-700 text-white py-2.5 rounded-lg transition font-bold text-sm hover:shadow-lg animate-pulse">
@@ -3820,7 +3812,6 @@ async function refreshPlansPage() {
                         </p>
                     `;
                 } else {
-                    // ✅ الباقة سارية
                     actionButton = `
                         <div class="mt-3 w-full bg-green-500 text-white py-2.5 rounded-lg font-bold text-sm cursor-default">
                             <i class="fas fa-check-circle ml-2"></i> باقتك الحالية
@@ -3901,7 +3892,7 @@ async function refreshPlansPage() {
                 day: 'numeric'
             }) : 'غير محدد';
             
-            // إذا كانت الباقة مجانية، نعرض رسالة مختلفة
+            // إذا كانت الباقة مجانية
             if (isFree) {
                 subscriptionInfo = `
                     <div class="col-span-1 sm:col-span-2 mt-6 p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl border-2 border-green-300 w-full">
@@ -3920,11 +3911,6 @@ async function refreshPlansPage() {
                                     الامتحانات المتبقية: <span class="font-bold ${remaining > 0 ? 'text-green-600' : 'text-red-600'}">${remaining}</span>
                                     من 5
                                 </p>
-                                ${remaining <= 0 ? `
-                                    <p class="text-sm text-amber-600 mt-1">
-                                        ⏳ انتظر حتى ${formattedExpiry} لتجديد امتحاناتك مجاناً
-                                    </p>
-                                ` : ''}
                             </div>
                             <div class="flex flex-col gap-2">
                                 <button onclick="navigateTo('account')" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition text-sm">
@@ -3953,12 +3939,6 @@ async function refreshPlansPage() {
                                     الامتحانات المتبقية: <span class="font-bold ${remaining > 0 ? 'text-green-600' : 'text-red-600'}">${remaining}</span>
                                     من ${userPlan.examsCount}
                                 </p>
-                                ${needsRenewal ? `
-                                    <button onclick="requestRenewalFromUser()" 
-                                        class="mt-2 bg-red-600 hover:bg-red-700 text-white px-4 py-1.5 rounded-lg text-sm transition font-bold">
-                                        <i class="fab fa-whatsapp ml-1"></i> طلب تجديد
-                                    </button>
-                                ` : ''}
                             </div>
                             <button onclick="navigateTo('account')" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition text-sm">
                                 <i class="fas fa-user ml-1"></i> حسابي
@@ -3969,9 +3949,112 @@ async function refreshPlansPage() {
             }
         }
         
-        // ====== عرض الباقات ======
+        // ====== عرض الباقات - شبكة 2×2 ======
         container.innerHTML = `
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-full">
+            <style>
+                /* تنسيق شبكة الباقات 2×2 */
+                #plansList .grid {
+                    display: grid;
+                    grid-template-columns: 1fr 1fr !important;
+                    gap: 1.5rem !important;
+                    width: 100% !important;
+                    max-width: 100% !important;
+                    margin: 0 !important;
+                    padding: 0 !important;
+                }
+                
+                /* كل بطاقة تأخذ نصف العرض */
+                #plansList .grid > div {
+                    width: 100% !important;
+                    max-width: 100% !important;
+                    min-height: 380px;
+                    display: flex;
+                    flex-direction: column;
+                    transition: all 0.3s ease;
+                }
+                
+                #plansList .grid > div:hover {
+                    transform: translateY(-6px);
+                    box-shadow: 0 20px 40px -10px rgba(0,0,0,0.2);
+                }
+                
+                #plansList .grid > div .p-4 {
+                    flex: 1;
+                    display: flex;
+                    flex-direction: column;
+                }
+                
+                #plansList .grid > div ul {
+                    flex: 1;
+                }
+                
+                /* على الجوال: بطاقة واحدة */
+                @media (max-width: 640px) {
+                    #plansList .grid {
+                        grid-template-columns: 1fr !important;
+                        gap: 1rem !important;
+                    }
+                    
+                    #plansList .grid > div {
+                        min-height: 320px;
+                    }
+                }
+                
+                /* على التابلت: 2 بطاقات */
+                @media (min-width: 641px) and (max-width: 1024px) {
+                    #plansList .grid {
+                        grid-template-columns: 1fr 1fr !important;
+                        gap: 1.2rem !important;
+                    }
+                }
+                
+                /* على الشاشات الكبيرة: 2 بطاقات فقط (نفس العرض) */
+                @media (min-width: 1025px) {
+                    #plansList .grid {
+                        grid-template-columns: 1fr 1fr !important;
+                        gap: 1.5rem !important;
+                    }
+                }
+                
+                /* إزالة المسافات البيضاء */
+                #plansList {
+                    padding: 0 !important;
+                    margin: 0 !important;
+                    width: 100% !important;
+                    max-width: 100% !important;
+                }
+                
+                /* الحاوية الرئيسية تأخذ عرض كامل */
+                #upgradePage .bg-white {
+                    padding: 1.5rem 1rem !important;
+                    border-radius: 20px !important;
+                    width: 100% !important;
+                    max-width: 100% !important;
+                }
+                
+                .container {
+                    padding-left: 0.5rem !important;
+                    padding-right: 0.5rem !important;
+                    max-width: 100% !important;
+                }
+                
+                /* تنسيق شارة الخصم */
+                #plansList .absolute {
+                    animation: pulse-discount 2s ease-in-out infinite;
+                }
+                
+                @keyframes pulse-discount {
+                    0%, 100% { transform: scale(1); }
+                    50% { transform: scale(1.1); }
+                }
+                
+                /* تنسيق العمود الكامل */
+                #plansList .col-span-1.sm\\:col-span-2 {
+                    grid-column: 1 / -1 !important;
+                }
+            </style>
+            
+            <div class="grid">
                 ${plansHtml}
             </div>
             ${subscriptionInfo}

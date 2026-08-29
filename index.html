@@ -3246,7 +3246,7 @@ function refreshQuestionBank() {
     });
 }
     
-// دالة refreshAccountPage المحسنة
+// دالة refreshAccountPage المحسنة - بطاقة بعرض الصفحة بالكامل + صورة Google
 async function refreshAccountPage() {
     const container = document.getElementById('accountContent');
     if (!container) return;
@@ -3274,77 +3274,117 @@ async function refreshAccountPage() {
         if (usagePercent > 80) progressColor = 'bg-red-500';
         else if (usagePercent > 50) progressColor = 'bg-yellow-500';
         
+        // ✅ جلب صورة المستخدم من حساب Google
+        const userPhoto = currentUser.photoURL || null;
+        const userInitial = currentUser.name?.charAt(0).toUpperCase() || 'U';
+        
         container.innerHTML = `
-            <div class="text-center">
-                <!-- بطاقة الملف الشخصي -->
-                <div class="relative bg-gradient-to-br from-indigo-600 to-purple-600 rounded-2xl p-6 mb-6 text-white shadow-xl">
-                    <div class="absolute top-3 right-3 text-white/20 text-6xl">👤</div>
+            <div class="w-full">
+                <!-- بطاقة الملف الشخصي - عرض كامل -->
+                <div class="relative bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 rounded-2xl p-8 mb-6 text-white shadow-2xl">
+                    <div class="absolute top-3 right-3 text-white/10 text-8xl">👤</div>
+                    <div class="absolute bottom-0 left-0 text-white/5 text-6xl">📚</div>
+                    
                     <div class="relative z-10">
-                        <div class="w-28 h-28 mx-auto rounded-full border-4 border-white/30 shadow-xl flex items-center justify-center text-5xl font-bold bg-white/20 backdrop-blur-sm mb-4 transition-transform hover:scale-105">
-                            ${currentUser.name?.charAt(0).toUpperCase() || 'U'}
-                        </div>
-                        <h3 class="text-2xl font-bold">${currentUser.name || 'مستخدم'}</h3>
-                        <p class="text-indigo-200 text-sm">${currentUser.email || ''}</p>
-                        <div class="mt-2 inline-block bg-white/20 backdrop-blur-sm px-4 py-1 rounded-full text-sm">
-                            🎯 ${plan?.name || 'مجاني'}
+                        <div class="flex flex-col items-center">
+                            <!-- صورة الملف الشخصي -->
+                            <div class="w-32 h-32 rounded-full border-4 border-white/40 shadow-2xl mb-4 overflow-hidden bg-gradient-to-br from-indigo-400 to-purple-500 transition-transform hover:scale-105 duration-300">
+                                ${userPhoto ? `
+                                    <img src="${userPhoto}" alt="${currentUser.name}" class="w-full h-full object-cover">
+                                ` : `
+                                    <div class="w-full h-full flex items-center justify-center text-5xl font-bold text-white">
+                                        ${userInitial}
+                                    </div>
+                                `}
+                            </div>
+                            
+                            <h3 class="text-2xl font-bold">${currentUser.name || 'مستخدم'}</h3>
+                            <p class="text-indigo-200 text-sm">${currentUser.email || ''}</p>
+                            
+                            <div class="mt-3 flex flex-wrap items-center justify-center gap-2">
+                                <span class="bg-white/20 backdrop-blur-sm px-4 py-1.5 rounded-full text-sm font-semibold flex items-center gap-2">
+                                    🎯 ${plan?.name || 'مجاني'}
+                                </span>
+                                ${currentUser.photoURL ? `
+                                    <span class="bg-green-400/30 backdrop-blur-sm px-3 py-1 rounded-full text-xs flex items-center gap-1">
+                                        <i class="fas fa-check-circle text-green-300"></i> متصل بـ Google
+                                    </span>
+                                ` : ''}
+                            </div>
                         </div>
                     </div>
                 </div>
                 
-                <!-- إحصائيات الباقة -->
-                <div class="grid grid-cols-2 gap-3 mb-6">
-                    <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4">
-                        <p class="text-xs text-blue-600 font-semibold">📊 الامتحانات المتبقية</p>
+                <!-- إحصائيات الباقة - شبكة 2×2 -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+                    <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4 text-center shadow-sm">
+                        <p class="text-xs text-blue-600 font-semibold">📊 المتبقي</p>
                         <p class="text-2xl font-bold text-blue-700">${remaining}</p>
                         <p class="text-xs text-blue-500">من ${maxExams}</p>
                     </div>
-                    <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4">
-                        <p class="text-xs text-purple-600 font-semibold">📅 تاريخ التجديد</p>
+                    <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4 text-center shadow-sm">
+                        <p class="text-xs text-purple-600 font-semibold">📅 التجديد</p>
                         <p class="text-sm font-bold text-purple-700">${formattedExpiry}</p>
-                        <p class="text-xs text-purple-500">${sub.planId === 'free' ? '🔄 تجديد تلقائي' : '📆 شهرياً'}</p>
+                        <p class="text-xs text-purple-500">${sub.planId === 'free' ? '🔄 تلقائي' : '📆 شهرياً'}</p>
+                    </div>
+                    <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-4 text-center shadow-sm">
+                        <p class="text-xs text-green-600 font-semibold">✅ المستخدم</p>
+                        <p class="text-sm font-bold text-green-700">${usedExams}</p>
+                        <p class="text-xs text-green-500">امتحان مستخدم</p>
+                    </div>
+                    <div class="bg-gradient-to-br from-amber-50 to-amber-100 rounded-xl p-4 text-center shadow-sm">
+                        <p class="text-xs text-amber-600 font-semibold">🔄 التجديدات</p>
+                        <p class="text-sm font-bold text-amber-700">${sub.renewedCount || 0}</p>
+                        <p class="text-xs text-amber-500">مرة</p>
                     </div>
                 </div>
                 
                 <!-- شريط التقدم -->
-                <div class="mb-6">
-                    <div class="flex justify-between text-xs text-gray-500 mb-1">
-                        <span>نسبة الاستخدام</span>
-                        <span>${Math.round(usagePercent)}%</span>
+                <div class="mb-6 bg-white rounded-xl p-4 shadow-sm">
+                    <div class="flex justify-between text-sm text-gray-600 mb-1">
+                        <span>نسبة استخدام الامتحانات</span>
+                        <span class="font-bold">${Math.round(usagePercent)}%</span>
                     </div>
-                    <div class="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
-                        <div class="${progressColor} h-2.5 rounded-full transition-all duration-1000" style="width: ${usagePercent}%"></div>
+                    <div class="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                        <div class="${progressColor} h-3 rounded-full transition-all duration-1000" style="width: ${usagePercent}%"></div>
+                    </div>
+                    <div class="flex justify-between text-xs text-gray-400 mt-1">
+                        <span>0%</span>
+                        <span>50%</span>
+                        <span>100%</span>
                     </div>
                 </div>
                 
                 <!-- الأزرار -->
-                <div class="space-y-3">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                     <button onclick="navigateTo('upgrade')" 
                         class="w-full bg-gradient-to-r from-amber-500 to-orange-500 text-white py-3 rounded-xl font-bold hover:shadow-lg hover:scale-[1.02] transition-all duration-300 flex items-center justify-center gap-2">
-                        <i class="fas fa-rocket"></i> 🚀 ترقية الحساب
+                        <i class="fas fa-rocket"></i> 🚀 ترقية
                     </button>
-                    
-                    <a href="https://mohamedemadmaxplas.github.io/NABD_/" target="_blank" 
-                       class="w-full bg-gradient-to-r from-emerald-500 to-green-600 text-white py-3 rounded-xl font-bold hover:shadow-lg hover:scale-[1.02] transition-all duration-300 flex items-center justify-center gap-2 block">
-                        <i class="fas fa-coins"></i> 🏢 تسجيل الدخول بـ تكنو شرك
-                    </a>
                     
                     <button onclick="logout()" 
                         class="w-full bg-gradient-to-r from-red-500 to-rose-600 text-white py-3 rounded-xl font-bold hover:shadow-lg hover:scale-[1.02] transition-all duration-300 flex items-center justify-center gap-2">
-                        <i class="fas fa-sign-out-alt"></i> 🚪 تسجيل خروج
+                        <i class="fas fa-sign-out-alt"></i> 🚪 خروج
                     </button>
                 </div>
                 
                 <!-- معلومات إضافية -->
-                <div class="mt-4 text-xs text-gray-400 border-t border-gray-100 pt-4">
-                    <p>🆔 معرف المستخدم: ${currentUser.uid?.substring(0, 12) || 'غير متاح'}</p>
-                    <p>📅 تاريخ الإنشاء: ${new Date(currentUser.createdAt || Date.now()).toLocaleDateString('ar-EG')}</p>
+                <div class="mt-6 text-xs text-gray-400 border-t border-gray-200 pt-4 grid grid-cols-2 gap-2">
+                    <div>
+                        <span class="text-gray-500">🆔 المعرف:</span>
+                        <span class="text-gray-600">${currentUser.uid?.substring(0, 16) || 'غير متاح'}</span>
+                    </div>
+                    <div class="text-left">
+                        <span class="text-gray-500">📅 الإنشاء:</span>
+                        <span class="text-gray-600">${new Date(currentUser.createdAt || Date.now()).toLocaleDateString('ar-EG')}</span>
+                    </div>
                 </div>
             </div>
         `;
     } else {
-        // ... كود تسجيل الدخول كما هو
+        // ... كود تسجيل الدخول
         container.innerHTML = `
-            <div class="text-center">
+            <div class="w-full max-w-md mx-auto text-center">
                 <div class="w-28 h-28 mx-auto bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center text-white text-4xl font-bold shadow-xl mb-4">
                     <i class="fas fa-user"></i>
                 </div>
@@ -3361,7 +3401,10 @@ async function refreshAccountPage() {
                     <i class="fas fa-coins"></i> 🏢 تسجيل الدخول بـ تكنو شرك
                 </a>
                 
-                
+                <p class="mt-4 text-sm text-gray-500">
+                    ليس لديك حساب؟ 
+                    <a onclick="showRegisterPopup()" class="text-indigo-600 font-semibold hover:underline cursor-pointer">إنشاء حساب</a>
+                </p>
             </div>
         `;
         
@@ -3380,72 +3423,6 @@ async function refreshAccountPage() {
         }
     }
 }
-   async function loadUserSubscription() {
-    if (!currentUser) return;
-    
-    // ✅ البحث عن عنصر تاريخ التجديد
-    const expiryElement = document.getElementById('expiryDateText');
-    if (!expiryElement) {
-        console.log('⚠️ عنصر expiryDateText غير موجود');
-        return;
-    }
-    
-    try {
-        // ✅ جلب الاشتراك من قاعدة البيانات
-        const subSnapshot = await db.ref(`subscriptions/${currentUser.uid}`).once('value');
-        
-        if (subSnapshot.exists()) {
-            const sub = subSnapshot.val();
-            const expiryDate = new Date(sub.expiryDate);
-            const formattedDate = expiryDate.toLocaleDateString('ar-EG', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-            });
-            
-            // ✅ عرض تاريخ التجديد
-            expiryElement.innerText = formattedDate;
-            
-            // ✅ تحديث عدد الامتحانات المتبقية أيضاً
-            const remainingElement = document.getElementById('accountRemaining');
-            if (remainingElement) {
-                const plan = plans.find(p => p.id === currentUser.plan) || plans[0];
-                const maxExams = plan?.examsCount || 8;
-                const usedExams = getMonthlyExamUsage();
-                const remaining = Math.max(0, maxExams - usedExams);
-                remainingElement.innerText = `الامتحانات المتبقية: ${remaining} من ${maxExams}`;
-            }
-            
-        } else {
-            // ❌ إذا لم يكن هناك اشتراك، قم بإنشاء اشتراك افتراضي
-            console.log('⚠️ لا يوجد اشتراك، جاري إنشاء اشتراك افتراضي...');
-            
-            const defaultSub = {
-                userId: currentUser.uid,
-                planId: 'free',
-                planName: 'مجاني',
-                examsLimit: 8,
-                startDate: new Date().toISOString(),
-                expiryDate: new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString(),
-                isActive: true,
-                renewedCount: 0
-            };
-            
-            await db.ref(`subscriptions/${currentUser.uid}`).set(defaultSub);
-            
-            const expiryDate = new Date(defaultSub.expiryDate);
-            expiryElement.innerText = expiryDate.toLocaleDateString('ar-EG', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-            });
-        }
-        
-    } catch (error) {
-        console.error('❌ خطأ في تحميل الاشتراك:', error);
-        expiryElement.innerText = 'غير متاح';
-    }
-} 
 
 // ============================================================
 // دوال أنيميشن اللوجو - أضفها في قسم <script>
@@ -5875,36 +5852,35 @@ function resetToNormalMode() {
         showToast('تم حذف السؤال');
     }
     
-    // ==================== دوال تسجيل الدخول ====================
-    
-    async function handleGoogleLogin(response) {
-        try {
-            const cred = firebase.auth.GoogleAuthProvider.credential(response.credential);
-            const result = await auth.signInWithCredential(cred);
-            const user = result.user;
-            const snap = await db.ref(`users/${user.uid}`).once('value');
-            
-            if (!snap.val()) {
-                const newUser = {
-                    name: user.displayName,
-                    email: user.email,
-                    phone: '',
-                    plan: 'free',
-                    createdAt: new Date().toISOString()
-                };
-                await db.ref(`users/${user.uid}`).set(newUser);
-                await activateFreePlan(user.uid);
-            }
-            
-            currentUser = { uid: user.uid, ...(snap.val() || newUser) };
-            updateUserUI();
-            showToast(`مرحباً ${currentUser.name}`);
-            await loadAllData();
-            navigateTo('home');
-        } catch (e) {
-            showToast('خطأ في التسجيل');
+   async function handleGoogleLogin(response) {
+    try {
+        const cred = firebase.auth.GoogleAuthProvider.credential(response.credential);
+        const result = await auth.signInWithCredential(cred);
+        const user = result.user;
+        const snap = await db.ref(`users/${user.uid}`).once('value');
+        
+        if (!snap.val()) {
+            const newUser = {
+                name: user.displayName,
+                email: user.email,
+                phone: '',
+                photoURL: user.photoURL,  // ✅ حفظ صورة Google
+                plan: 'free',
+                createdAt: new Date().toISOString()
+            };
+            await db.ref(`users/${user.uid}`).set(newUser);
+            await activateFreePlan(user.uid);
         }
+        
+        currentUser = { uid: user.uid, photoURL: user.photoURL, ...(snap.val() || newUser) };
+        updateUserUI();
+        showToast(`مرحباً ${currentUser.name}`);
+        await loadAllData();
+        navigateTo('home');
+    } catch (e) {
+        showToast('خطأ في التسجيل');
     }
+}
     
   // ============================================================
 // دالة activateFreePlan - معدلة (إضافة subscriptionType)

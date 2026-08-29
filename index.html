@@ -3713,7 +3713,7 @@ function getMonthlyExamUsage() {
     return userExams.length + userResults.length;
 }
 
-// ==================== صفحة الباقات - بطاقتين بعرض كامل بدون مسافات ====================
+// ==================== صفحة الباقات - هيدر مع مسافات + بطاقتين بعرض كامل ====================
 
 async function refreshPlansPage() {
     const container = document.getElementById('plansList');
@@ -3945,23 +3945,23 @@ async function refreshPlansPage() {
             }
         }
         
-        // ====== عرض الباقات - بدون أي مسافات ======
+        // ====== عرض الباقات - مع الحفاظ على الهيدر ======
         container.innerHTML = `
             <style>
-                /* ====== إزالة كل المسافات من الصفحة ====== */
-                * {
-                    margin: 0;
-                    padding: 0;
-                    box-sizing: border-box;
+                /* ====== الحفاظ على الهيدر والمسافات ====== */
+                #upgradePage .bg-white {
+                    padding: 1.5rem 1rem !important;
+                    border-radius: 20px !important;
+                    width: 100% !important;
+                    max-width: 100% !important;
                 }
                 
-                /* ====== تنسيق الحاوية الرئيسية ====== */
+                /* ====== تنسيق الحاوية ====== */
                 #plansList {
                     width: 100% !important;
                     max-width: 100% !important;
                     padding: 0 !important;
                     margin: 0 !important;
-                    display: block !important;
                 }
                 
                 /* ====== الشبكة ====== */
@@ -4029,36 +4029,6 @@ async function refreshPlansPage() {
                     }
                 }
                 
-                /* ====== إزالة كل المسافات من الصفحة ====== */
-                #upgradePage {
-                    padding: 0 !important;
-                    margin: 0 !important;
-                    width: 100% !important;
-                    max-width: 100% !important;
-                }
-                
-                #upgradePage .bg-white {
-                    padding: 1rem 0 !important;
-                    border-radius: 0 !important;
-                    width: 100% !important;
-                    max-width: 100% !important;
-                    margin: 0 !important;
-                }
-                
-                .container {
-                    padding: 0 !important;
-                    margin: 0 !important;
-                    max-width: 100% !important;
-                    width: 100% !important;
-                }
-                
-                /* ====== إزالة المسافات من body ====== */
-                body {
-                    margin: 0 !important;
-                    padding: 0 !important;
-                    overflow-x: hidden !important;
-                }
-                
                 /* ====== شارة الخصم ====== */
                 #plansList .absolute {
                     animation: pulse-discount 2s ease-in-out infinite;
@@ -4074,36 +4044,53 @@ async function refreshPlansPage() {
                     grid-column: 1 / -1 !important;
                 }
                 
-                /* ====== إزالة أي هوامش داخلية من البطاقات ====== */
+                /* ====== تحسين مظهر البطاقات ====== */
                 #plansList .grid > div .bg-gradient-to-r {
                     border-radius: 0;
                 }
                 
-                /* ====== تحسين مظهر البطاقات ====== */
                 #plansList .grid > div {
                     border-radius: 16px !important;
                     overflow: hidden !important;
                 }
                 
-                /* ====== إزالة المسافات من الـ page ====== */
+                /* ====== الحفاظ على مسافات الهيدر ====== */
+                .container {
+                    padding-left: 1rem !important;
+                    padding-right: 1rem !important;
+                    max-width: 100% !important;
+                }
+                
+                /* ====== إزالة المسافات من البطاقات فقط ====== */
                 .page {
                     padding: 0 !important;
                     margin: 0 !important;
                 }
                 
-                /* ====== إزالة المسافات من الهيدر ====== */
-                .container.mx-auto {
-                    padding-left: 0 !important;
-                    padding-right: 0 !important;
+                /* ====== عنوان الباقات ====== */
+                #upgradePage h2 {
+                    margin-bottom: 1.5rem !important;
+                    padding-right: 0.5rem !important;
                 }
             </style>
+            
+            <!-- الهيدر مع المسافات -->
+            <div class="mb-6">
+                <h2 class="text-2xl md:text-3xl font-bold text-gray-800 flex items-center gap-3">
+                    <span class="bg-gradient-to-r from-indigo-500 to-purple-500 text-white p-2 rounded-xl">
+                        <i class="fas fa-gem"></i>
+                    </span>
+                    باقات الترقية
+                </h2>
+                <p class="text-gray-500 text-sm mt-1 pr-2">اختر الباقة المناسبة لك واستمتع بمميزات لا محدودة</p>
+            </div>
             
             <div class="grid">
                 ${plansHtml}
             </div>
             ${subscriptionInfo}
             
-            <div class="col-span-1 sm:col-span-2 mt-4 text-center w-full">
+            <div class="col-span-1 sm:col-span-2 mt-6 text-center w-full">
                 <button onclick="navigateTo('home')" class="bg-gray-600 text-white px-6 py-2.5 rounded-lg hover:bg-gray-700 transition">
                     <i class="fas fa-home ml-2"></i> العودة للرئيسية
                 </button>

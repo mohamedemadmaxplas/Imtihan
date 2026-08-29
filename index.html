@@ -3713,7 +3713,7 @@ function getMonthlyExamUsage() {
     return userExams.length + userResults.length;
 }
 
-// ==================== صفحة الباقات - بدون نص وصف + بطاقتين بعرض كامل ====================
+// ==================== صفحة الباقات - نسخة تعتمد على قاعدة البيانات ====================
 
 async function refreshPlansPage() {
     const container = document.getElementById('plansList');
@@ -3732,27 +3732,16 @@ async function refreshPlansPage() {
     }
     
     try {
-        // جلب الاشتراك الحالي للمستخدم
-        const subSnapshot = await db.ref(`subscriptions/${currentUser.uid}`).once('value');
-        const currentSub = subSnapshot.val();
-        const currentPlanId = currentSub?.planId || 'free';
-        const currentPlan = plans.find(p => p.id === currentPlanId) || plans.find(p => p.id === 'free');
-        const remaining = await getRemainingExamsForUser(currentUser.uid);
-        const expiryDate = currentSub ? new Date(currentSub.expiryDate) : null;
-        const now = new Date();
-        const isExpired = expiryDate ? now > expiryDate : false;
-        const isFree = currentPlanId === 'free';
-        const needsRenewal = !isFree && (remaining <= 0 || isExpired);
+        // ====== جلب الباقات من قاعدة البيانات ======
+        // التأكد من تحميل الباقات أولاً
+        if (plans.length === 0) {
+            await loadPlans();
+        }
         
-        // ====== تصفية الباقات: إزالة الباقة المجانية ======
-        const allPlans = plans.length > 0 ? plans : defaultPlans;
-        const paidPlans = allPlans.filter(p => p.id !== 'free');
+        // تصفية الباقات: إزالة الباقة المجانية إذا وجدت (لأنها مش مدفوعة)
+        const paidPlans = plans.filter(p => p.id !== 'free' && p.id !== 'Free');
         
-        // ترتيب الباقات المدفوعة حسب السعر
-        const sortedPlans = paidPlans.sort((a, b) => a.price - b.price);
-        
-        // ====== إذا لم توجد باقات مدفوعة ======
-        if (sortedPlans.length === 0) {
+        if (paidPlans.length === 0) {
             container.innerHTML = `
                 <div class="text-center p-8 bg-gray-50 rounded-xl">
                     <i class="fas fa-gem text-4xl text-gray-300 mb-3"></i>
@@ -3766,53 +3755,81 @@ async function refreshPlansPage() {
             return;
         }
         
-        // ====== عرض الباقات المدفوعة فقط - بطاقتين في الصف ======
+        // ====== جلب الاشتراك الحالي للمستخدم ======
+        const subSnapshot = await db.ref(`subscriptions/${currentUser.uid}`).once('value');
+        const currentSub = subSnapshot.val();
+        const currentPlanId = currentSub?.planId || 'free';
+        const remaining = await getRemainingExamsForUser(currentUser.uid);
+        const expiryDate = currentSub ? new Date(currentSub.expiryDate) : null;
+        const now = new Date();
+        const isExpired = expiryDate ? now > expiryDate : false;
+        const isFree = currentPlanId === 'free';
+        const needsRenewal = !isFree && (remaining <= 0 || isExpired);
+        
+        // ====== عرض الباقات ======
+        // ترتيب الباقات حسب السعر (من الأقل للأعلى)
+        const sortedPlans = [...paidPlans].sort((a, b) => (a.price || 0) - (b.price || 0));
+        
+        // ألوان متدرجة للبطاقات
+        const bgColors = [
+            "from-blue-500 to-cyan-600",
+            "from-indigo-500 to-purple-600",
+            "from-purple-500 to-pink-600",
+            "from-emerald-500 to-teal-600",
+            "from-amber-500 to-orange-600"
+        ];
+        
+        const btnColors = [
+            "bg-blue-600 hover:bg-blue-700",
+            "bg-indigo-600 hover:bg-indigo-700",
+            "bg-purple-600 hover:bg-purple-700",
+            "bg-emerald-600 hover:bg-emerald-700",
+            "bg-amber-600 hover:bg-amber-700"
+        ];
+        
         let plansHtml = sortedPlans.map((plan, index) => {
             const isCurrentPlan = currentPlanId === plan.id;
-            
-            let bgColor = "";
-            let btnColor = "";
-            let icon = "";
-            
-            const colors = [
-                { bg: "from-blue-500 to-blue-600", btn: "bg-blue-600 hover:bg-blue-700", icon: "🥉" },
-                { bg: "from-purple-500 to-purple-600", btn: "bg-purple-600 hover:bg-purple-700", icon: "🥈" },
-                { bg: "from-amber-500 to-amber-600", btn: "bg-amber-600 hover:bg-amber-700", icon: "🥇" },
-                { bg: "from-emerald-500 to-emerald-600", btn: "bg-emerald-600 hover:bg-emerald-700", icon: "🏫" }
-            ];
-            
-            const colorIndex = index % colors.length;
-            bgColor = colors[colorIndex].bg;
-            btnColor = colors[colorIndex].btn;
-            icon = colors[colorIndex].icon;
+            const colorIndex = index % bgColors.length;
             
             // حساب الخصم
-            let discountPercent = plan.discountPercent || 0;
-            let originalPrice = plan.originalPrice || plan.price;
+            let discountBadge = '';
+            const discountPercent = plan.discountPercent || 0;
+            if (discountPercent > 0) {
+                discountBadge = `
+                    <div class="absolute top-3 right-3 bg-red-500 text-white text-xs px-3 py-1 rounded-full font-bold z-10 discount-badge">
+                        -${discountPercent}%
+                    </div>
+                `;
+            }
             
-            // ========== زر مخصص حسب الحالة ==========
-            let actionButton = '';
-            
+            // شارة الباقة الحالية
+            let currentBadge = '';
             if (isCurrentPlan) {
-                const formattedExpiry = expiryDate ? expiryDate.toLocaleDateString('ar-EG', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                }) : 'غير محدد';
-                
+                currentBadge = `
+                    <div class="absolute top-3 left-3 bg-green-500 text-white text-xs px-3 py-1 rounded-full font-bold z-10">
+                        ✓ نشط
+                    </div>
+                `;
+            }
+            
+            // زر الإجراء
+            let actionButton = '';
+            if (isCurrentPlan) {
                 if (needsRenewal) {
                     actionButton = `
                         <button onclick="requestRenewalFromUser()" 
                                 class="mt-3 w-full bg-red-600 hover:bg-red-700 text-white py-2.5 rounded-lg transition font-bold text-sm hover:shadow-lg animate-pulse">
                             <i class="fab fa-whatsapp ml-2"></i> 🔄 طلب تجديد
                         </button>
-                        <p class="text-center text-xs text-red-500 mt-1">
-                            ⚠️ باقتك منتهية أو استنفذت الامتحانات
-                        </p>
                     `;
                 } else {
+                    const formattedExpiry = expiryDate ? expiryDate.toLocaleDateString('ar-EG', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    }) : 'غير محدد';
                     actionButton = `
-                        <div class="mt-3 w-full bg-green-500 text-white py-2.5 rounded-lg font-bold text-sm cursor-default">
+                        <div class="mt-3 w-full bg-green-500 text-white py-2.5 rounded-lg font-bold text-sm cursor-default text-center">
                             <i class="fas fa-check-circle ml-2"></i> باقتك الحالية
                         </div>
                         <p class="text-center text-xs text-gray-500 mt-1">
@@ -3821,55 +3838,53 @@ async function refreshPlansPage() {
                         <p class="text-center text-xs text-gray-500">
                             📊 متبقي ${remaining} امتحان
                         </p>
-                        <button onclick="requestRenewalFromUser()" 
-                                class="mt-2 w-full bg-amber-500 hover:bg-amber-600 text-white py-2 rounded-lg transition font-bold text-sm">
-                            <i class="fab fa-whatsapp ml-1"></i> طلب تجديد مبكر
-                        </button>
                     `;
                 }
             } else {
                 actionButton = `
                     <button onclick="requestUpgrade('${plan.id}')" 
-                            class="mt-3 w-full ${btnColor} text-white py-2.5 rounded-lg transition font-bold text-sm hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]">
+                            class="mt-3 w-full ${btnColors[colorIndex]} text-white py-2.5 rounded-lg transition font-bold text-sm hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]">
                         <i class="fas fa-rocket ml-2"></i> اشترك الآن
                     </button>
                 `;
             }
             
-            // شارة الخصم
-            let discountBadge = '';
-            if (discountPercent > 0) {
-                discountBadge = `
-                    <div class="absolute top-2 right-2 bg-red-500 text-white text-xs px-3 py-1 rounded-full font-bold z-10 animate-pulse">
-                        -${discountPercent}%
-                    </div>
-                `;
-            }
+            // عرض السعر
+            const originalPrice = plan.originalPrice || plan.price;
+            const finalPrice = plan.price || 0;
             
             return `
-                <div class="bg-white rounded-2xl shadow-lg overflow-hidden border-2 hover:shadow-2xl transition-all duration-300 relative ${isCurrentPlan ? 'border-green-500 ring-2 ring-green-200' : 'border-gray-200'} w-full h-full flex flex-col">
-                    ${isCurrentPlan ? `<div class="absolute top-2 left-2 bg-green-500 text-white text-xs px-3 py-1 rounded-full font-bold z-10">✓ نشط</div>` : ''}
+                <div class="bg-white rounded-2xl shadow-lg overflow-hidden border-2 ${isCurrentPlan ? 'border-green-500 ring-2 ring-green-200' : 'border-gray-200'} hover:shadow-2xl transition-all duration-300 relative w-full h-full flex flex-col">
+                    ${currentBadge}
                     ${discountBadge}
                     
-                    <div class="bg-gradient-to-r ${bgColor} p-5 text-center text-white flex-shrink-0">
-                        <div class="text-4xl mb-2">${icon}</div>
-                        <h3 class="text-xl font-bold">${plan.name}</h3>
+                    <div class="bg-gradient-to-r ${bgColors[colorIndex]} p-5 text-center text-white flex-shrink-0">
+                        <div class="text-4xl mb-2">💎</div>
+                        <h3 class="text-xl font-bold">${plan.name || 'باقة'}</h3>
                         <div class="mt-2">
-                            ${originalPrice > plan.price ? `<span class="text-sm line-through opacity-70">${originalPrice} ج</span>` : ''}
-                            <div class="text-3xl font-bold mt-1">${plan.price} ج</div>
+                            ${originalPrice > finalPrice ? `<span class="text-sm line-through opacity-70">${originalPrice} ج</span>` : ''}
+                            <div class="text-3xl font-bold mt-1">${finalPrice} ج</div>
                             <span class="text-xs">/ شهرياً</span>
                         </div>
-                        <div class="text-xs mt-1 opacity-90">📊 ${plan.examsCount.toLocaleString()} امتحان شهرياً</div>
+                        <div class="text-xs mt-1 opacity-90">📊 ${plan.examsCount || 0} امتحان شهرياً</div>
                     </div>
                     
                     <div class="p-4 flex-1 flex flex-col">
                         <ul class="space-y-1.5 text-sm flex-1">
-                            ${plan.features.map(f => `
-                                <li class="flex items-center gap-2 py-1 border-b border-gray-50 last:border-0">
-                                    <i class="fas fa-check-circle text-green-500 text-xs flex-shrink-0"></i>
-                                    <span class="text-gray-700">${f}</span>
-                                </li>
-                            `).join('')}
+                            ${Array.isArray(plan.features) && plan.features.length > 0 ? 
+                                plan.features.map(f => `
+                                    <li class="flex items-center gap-2 py-1 border-b border-gray-50 last:border-0">
+                                        <i class="fas fa-check-circle text-green-500 text-xs flex-shrink-0"></i>
+                                        <span class="text-gray-700">${f}</span>
+                                    </li>
+                                `).join('') 
+                                : `
+                                    <li class="flex items-center gap-2 py-1 border-b border-gray-50 last:border-0">
+                                        <i class="fas fa-check-circle text-green-500 text-xs flex-shrink-0"></i>
+                                        <span class="text-gray-700">${plan.examsCount || 0} امتحان شهرياً</span>
+                                    </li>
+                                `
+                            }
                         </ul>
                         ${actionButton}
                         <p class="text-center text-xs text-gray-400 mt-2">
@@ -3890,7 +3905,7 @@ async function refreshPlansPage() {
                 day: 'numeric'
             }) : 'غير محدد';
             
-            if (isFree) {
+            if (currentPlanId === 'free') {
                 subscriptionInfo = `
                     <div class="col-span-1 sm:col-span-2 mt-6 p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl border-2 border-green-300 w-full">
                         <div class="flex flex-wrap items-center justify-between gap-3">
@@ -3909,11 +3924,9 @@ async function refreshPlansPage() {
                                     من 5
                                 </p>
                             </div>
-                            <div class="flex flex-col gap-2">
-                                <button onclick="navigateTo('account')" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition text-sm">
-                                    <i class="fas fa-user ml-1"></i> حسابي
-                                </button>
-                            </div>
+                            <button onclick="navigateTo('account')" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition text-sm">
+                                <i class="fas fa-user ml-1"></i> حسابي
+                            </button>
                         </div>
                     </div>
                 `;
@@ -3924,7 +3937,7 @@ async function refreshPlansPage() {
                             <div>
                                 <p class="font-bold text-indigo-700">
                                     <i class="fas fa-user-check ml-2"></i>
-                                    باقتك الحالية: <span class="text-indigo-900">${userPlan.name}</span>
+                                    باقتك الحالية: <span class="text-indigo-900">${userPlan?.name || currentPlanId}</span>
                                 </p>
                                 <p class="text-sm text-gray-600 mt-1">
                                     <i class="fas fa-calendar-alt ml-1"></i>
@@ -3933,7 +3946,7 @@ async function refreshPlansPage() {
                                 <p class="text-sm text-gray-600 mt-1">
                                     <i class="fas fa-coins ml-1"></i>
                                     الامتحانات المتبقية: <span class="font-bold ${remaining > 0 ? 'text-green-600' : 'text-red-600'}">${remaining}</span>
-                                    من ${userPlan.examsCount}
+                                    من ${userPlan?.examsCount || 0}
                                 </p>
                             </div>
                             <button onclick="navigateTo('account')" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition text-sm">
@@ -3948,145 +3961,72 @@ async function refreshPlansPage() {
         // ====== عرض الباقات النهائي ======
         container.innerHTML = `
             <style>
-                /* ====== إزالة كل المسافات الجانبية من البطاقات ====== */
-                #plansList {
-                    width: 100% !important;
-                    max-width: 100% !important;
-                    padding: 0 !important;
-                    margin: 0 !important;
-                    margin-left: -1rem !important;
-                    margin-right: -1rem !important;
-                    width: calc(100% + 2rem) !important;
-                    max-width: calc(100% + 2rem) !important;
-                }
-                
-                /* ====== الشبكة ====== */
+                /* ====== تنسيق الباقات ====== */
                 #plansList .grid {
-                    display: grid !important;
-                    grid-template-columns: 1fr 1fr !important;
-                    gap: 0.75rem !important;
-                    width: 100% !important;
-                    max-width: 100% !important;
-                    margin: 0 !important;
-                    padding: 0 !important;
+                    display: grid;
+                    gap: 1.5rem;
                 }
-                
-                /* ====== كل بطاقة ====== */
+
+                @media (min-width: 768px) {
+                    #plansList .grid {
+                        grid-template-columns: 1fr 1fr;
+                    }
+                }
+
+                @media (max-width: 767px) {
+                    #plansList .grid {
+                        grid-template-columns: 1fr;
+                    }
+                }
+
                 #plansList .grid > div {
-                    width: 100% !important;
-                    max-width: 100% !important;
-                    min-height: 400px;
-                    display: flex !important;
-                    flex-direction: column !important;
+                    background: white;
+                    border-radius: 20px;
+                    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
                     transition: all 0.3s ease;
-                    margin: 0 !important;
-                    border-radius: 16px !important;
-                    overflow: hidden !important;
+                    overflow: hidden;
+                    border: 2px solid #e5e7eb;
+                    min-height: 400px;
+                    display: flex;
+                    flex-direction: column;
                 }
-                
+
                 #plansList .grid > div:hover {
-                    transform: translateY(-6px);
-                    box-shadow: 0 20px 40px -10px rgba(0,0,0,0.25);
+                    transform: translateY(-8px);
+                    box-shadow: 0 20px 40px -10px rgba(0,0,0,0.2);
                 }
-                
-                /* المحتوى الداخلي */
+
                 #plansList .grid > div .p-4 {
                     flex: 1;
                     display: flex;
                     flex-direction: column;
-                    padding: 1rem !important;
                 }
-                
+
                 #plansList .grid > div ul {
                     flex: 1;
                 }
-                
-                /* ====== عرض الجوال (أقل من 640px) ====== */
-                @media (max-width: 640px) {
-                    #plansList {
-                        margin-left: 0 !important;
-                        margin-right: 0 !important;
-                        width: 100% !important;
-                        max-width: 100% !important;
-                    }
-                    
-                    #plansList .grid {
-                        grid-template-columns: 1fr !important;
-                        gap: 0.75rem !important;
-                    }
-                    
-                    #plansList .grid > div {
-                        min-height: 320px;
-                    }
-                }
-                
-                /* ====== عرض التابلت والكمبيوتر ====== */
-                @media (min-width: 641px) {
-                    #plansList {
-                        margin-left: -1rem !important;
-                        margin-right: -1rem !important;
-                        width: calc(100% + 2rem) !important;
-                        max-width: calc(100% + 2rem) !important;
-                    }
-                    
-                    #plansList .grid {
-                        grid-template-columns: 1fr 1fr !important;
-                        gap: 0.75rem !important;
-                    }
-                    
-                    #plansList .grid > div {
-                        min-height: 420px;
-                    }
-                }
-                
-                /* ====== شارة الخصم ====== */
-                #plansList .absolute {
+
+                #plansList .discount-badge {
                     animation: pulse-discount 2s ease-in-out infinite;
                 }
-                
+
                 @keyframes pulse-discount {
                     0%, 100% { transform: scale(1); }
                     50% { transform: scale(1.1); }
                 }
-                
-                /* ====== العمود الكامل ====== */
-                #plansList .col-span-1.sm\\:col-span-2 {
-                    grid-column: 1 / -1 !important;
+
+                #plansList button {
+                    transition: all 0.3s ease;
+                    font-weight: bold;
+                    padding: 12px;
+                    border-radius: 12px;
                 }
-                
-                /* ====== تحسين مظهر البطاقات ====== */
-                #plansList .grid > div .bg-gradient-to-r {
-                    border-radius: 0;
-                }
-                
-                #plansList .grid > div {
-                    border-radius: 16px !important;
-                    overflow: hidden !important;
-                }
-                
-                /* ====== الحفاظ على مسافات الهيدر فقط ====== */
-                .container {
-                    padding-left: 1rem !important;
-                    padding-right: 1rem !important;
-                    max-width: 100% !important;
-                }
-                
-                /* ====== إزالة المسافات من البطاقات فقط ====== */
-                .page {
-                    padding: 0 !important;
-                    margin: 0 !important;
+
+                #plansList button:hover {
+                    transform: scale(1.02);
+                    box-shadow: 0 10px 25px -5px rgba(0,0,0,0.2);
                 }
             </style>
-            
-            <!-- الهيدر فقط - بدون النص الوصفي -->
-            <div class="mb-6">
-                <h2 class="text-2xl md:text-3xl font-bold text-gray-800 flex items-center gap-3">
-                    <span class="bg-gradient-to-r from-indigo-500 to-purple-500 text-white p-2 rounded-xl">
-                        <i class="fas fa-gem"></i>
-                    </span>
-                    باقات الترقية
-                </h2>
-            </div>
             
             <div class="grid">
                 ${plansHtml}

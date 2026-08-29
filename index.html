@@ -2202,6 +2202,56 @@ body {
     }
 }
 
+/* إضافة هذه الأنماط في الـ style */
+
+/* تنسيق الصورة الرمزية في الهيدر */
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    cursor: pointer;
+    transition: transform 0.2s;
+    flex-shrink: 0;
+}
+
+.user-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.user-avatar:hover {
+    transform: scale(1.05);
+}
+
+/* تنسيق الصورة في صفحة الحساب */
+.profile-img {
+    flex-shrink: 0;
+    transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.profile-img .rounded-full {
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.profile-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.profile-img:hover {
+    transform: scale(1.08) rotate(-5deg);
+}
+
     </style>
 </head>
 <body>
@@ -3246,8 +3296,6 @@ function refreshQuestionBank() {
     });
 }
     
-// ==================== صفحة الحساب - بدون زر تكنو شرك ====================
-
 async function refreshAccountPage() {
     const container = document.getElementById('accountContent');
     if (!container) return;
@@ -3485,7 +3533,7 @@ async function refreshAccountPage() {
                     </div>
                 </div>
                 
-                <!-- الأزرار - صفين: ترقية وخروج فقط (تم إزالة زر تكنو شرك) -->
+                <!-- الأزرار - صفين: ترقية وخروج فقط -->
                 <div class="btn-grid grid grid-cols-1 md:grid-cols-2 gap-4">
                     <!-- زر الترقية - أنيميشن خاص -->
                     <button onclick="navigateTo('upgrade')" 
@@ -3525,7 +3573,7 @@ async function refreshAccountPage() {
             </div>
         `;
     } else {
-        // ... كود تسجيل الدخول (يبقى زر تكنو شرك هنا لأن المستخدم غير مسجل)
+        // صفحة تسجيل الدخول للمستخدم غير المسجل
         container.innerHTML = `
             <style>
                 @keyframes float {
@@ -6017,32 +6065,63 @@ function resetToNormalMode() {
         showToast('تم حذف السؤال');
     }
     
-   async function handleGoogleLogin(response) {
+  // ==================== تسجيل الدخول بـ Google مع حفظ الصورة ====================
+
+async function handleGoogleLogin(response) {
     try {
         const cred = firebase.auth.GoogleAuthProvider.credential(response.credential);
         const result = await auth.signInWithCredential(cred);
         const user = result.user;
+        
+        // ✅ حفظ صورة المستخدم من Google
+        const userData = {
+            name: user.displayName,
+            email: user.email,
+            phone: user.phoneNumber || '',
+            photoURL: user.photoURL || '',  // ✅ حفظ صورة Google
+            plan: 'free',
+            createdAt: new Date().toISOString()
+        };
+        
+        // التحقق من وجود المستخدم في قاعدة البيانات
         const snap = await db.ref(`users/${user.uid}`).once('value');
         
         if (!snap.val()) {
-            const newUser = {
-                name: user.displayName,
-                email: user.email,
-                phone: '',
-                photoURL: user.photoURL,  // ✅ حفظ صورة Google
-                plan: 'free',
-                createdAt: new Date().toISOString()
-            };
-            await db.ref(`users/${user.uid}`).set(newUser);
+            // إذا كان المستخدم جديد، نحفظ البيانات كاملة
+            await db.ref(`users/${user.uid}`).set(userData);
             await activateFreePlan(user.uid);
+        } else {
+            // إذا كان موجود، نحدث الصورة فقط
+            const existingData = snap.val();
+            await db.ref(`users/${user.uid}`).update({
+                photoURL: user.photoURL || existingData.photoURL || '',
+                name: user.displayName || existingData.name,
+                email: user.email || existingData.email
+            });
+            // دمج البيانات
+            Object.assign(userData, existingData);
         }
         
-        currentUser = { uid: user.uid, photoURL: user.photoURL, ...(snap.val() || newUser) };
+        // تعيين المستخدم الحالي مع الصورة
+        currentUser = { 
+            uid: user.uid, 
+            ...userData,
+            photoURL: user.photoURL || userData.photoURL || null
+        };
+        
+        // ✅ حفظ في localStorage عشان الجلسة
+        localStorage.setItem('user_uid', currentUser.uid);
+        localStorage.setItem('user_name', currentUser.name);
+        localStorage.setItem('user_email', currentUser.email);
+        localStorage.setItem('user_photo', currentUser.photoURL || '');
+        localStorage.setItem('user_plan', currentUser.plan || 'free');
+        
         updateUserUI();
         showToast(`مرحباً ${currentUser.name}`);
         await loadAllData();
         navigateTo('home');
     } catch (e) {
+        console.error('خطأ في تسجيل الدخول:', e);
         showToast('خطأ في التسجيل');
     }
 }
@@ -6336,19 +6415,34 @@ async function activateFreePlan(userId) {
     await loadAllData();
 }
     
- function updateUserUI() {
+ // ==================== تحديث واجهة المستخدم مع الصورة ====================
+
+function updateUserUI() {
     const loginArea = document.getElementById('loginBtnArea');
     const avatarArea = document.getElementById('userAvatarArea');
+    const avatarElement = document.getElementById('userAvatar');
     
     if (currentUser) {
         if (loginArea) loginArea.classList.add('hidden');
         if (avatarArea) avatarArea.classList.remove('hidden');
         
         const avatarInitial = document.getElementById('avatarInitial');
-        if (avatarInitial) {
-            // ✅ استخدام اسم المستخدم بدلاً من U
-            avatarInitial.innerText = currentUser.name?.charAt(0).toUpperCase() || 
-                                     currentUser.username?.charAt(0).toUpperCase() || 'U';
+        if (avatarElement) {
+            // ✅ عرض صورة Google في الهيدر
+            const userPhoto = currentUser.photoURL || null;
+            if (userPhoto) {
+                avatarElement.innerHTML = `
+                    <img src="${userPhoto}" alt="${currentUser.name}" class="w-full h-full rounded-full object-cover">
+                `;
+                avatarElement.style.background = 'transparent';
+                avatarElement.style.padding = '0';
+            } else {
+                avatarElement.innerHTML = `
+                    <span id="avatarInitial">${currentUser.name?.charAt(0).toUpperCase() || 'U'}</span>
+                `;
+                avatarElement.style.background = 'linear-gradient(135deg, #6366f1, #8b5cf6)';
+                avatarElement.style.padding = '';
+            }
         }
     } else {
         if (loginArea) loginArea.classList.remove('hidden');
@@ -6356,11 +6450,13 @@ async function activateFreePlan(userId) {
     }
 }
 // ==================== استعادة الجلسة من localStorage ====================
+
 function restoreSession() {
     const uid = localStorage.getItem('user_uid');
     const name = localStorage.getItem('user_name');
     const username = localStorage.getItem('user_username');
     const email = localStorage.getItem('user_email');
+    const photoURL = localStorage.getItem('user_photo') || null;  // ✅ استعادة الصورة
     const plan = localStorage.getItem('user_plan') || 'free';
     
     if (uid && name) {
@@ -6369,6 +6465,7 @@ function restoreSession() {
             name: name,
             username: username,
             email: email,
+            photoURL: photoURL,  // ✅ تعيين الصورة
             plan: plan
         };
         updateUserUI();
@@ -7745,64 +7842,43 @@ function showAlreadyTakenScreen(examTitle) {
         });
     }
     
- auth.onAuthStateChanged(async (user) => {
+ // ==================== مراقبة حالة المصادقة ====================
+
+auth.onAuthStateChanged(async (user) => {
     if (user) {
-        // جلب بيانات المستخدم من قاعدة البيانات بشكل موحد
-        const userProfile = await getUserProfile(user.uid);
+        // جلب بيانات المستخدم من قاعدة البيانات
+        const snap = await db.ref(`users/${user.uid}`).once('value');
+        const userData = snap.val() || {};
         
-        if (userProfile) {
-            currentUser = userProfile;
-        } else {
-            // إذا لم يكن موجوداً، قم بإنشاء حساب جديد
-            const email = user.email || '';
-            const name = user.displayName || email.split('@')[0] || 'مستخدم';
-            
-            const newUser = {
-                uid: user.uid,
-                name: name,
-                email: email,
-                username: email.split('@')[0] + '@tecno.shark',
-                phone: user.phoneNumber || '',
-                plan: 'free',
-                createdAt: new Date().toISOString()
-            };
-            
-            // حفظ في الهيكل الجديد (مع profile)
-            await db.ref(`users/${user.uid}/profile`).set({
-                name: newUser.name,
-                username: newUser.username,
-                email: newUser.email,
-                phone: newUser.phone,
-                plan: newUser.plan,
-                createdAt: newUser.createdAt
-            });
-            
-            // حفظ نسخة مبسطة للبحث
-            await db.ref(`users_simple/${user.uid}`).set({
-                name: newUser.name,
-                username: newUser.username,
-                email: newUser.email,
-                phone: newUser.phone
-            });
-            
-            currentUser = newUser;
-            await activateFreePlan(user.uid);
-        }
+        // ✅ دمج بيانات Firebase Auth مع قاعدة البيانات
+        currentUser = {
+            uid: user.uid,
+            name: userData.name || user.displayName || '',
+            email: userData.email || user.email || '',
+            photoURL: userData.photoURL || user.photoURL || null,  // ✅ الصورة من Google
+            phone: userData.phone || user.phoneNumber || '',
+            plan: userData.plan || 'free',
+            username: userData.username || '',
+            createdAt: userData.createdAt || new Date().toISOString()
+        };
         
-        // ✅ تحديث واجهة المستخدم
+        // ✅ حفظ في localStorage
+        localStorage.setItem('user_uid', currentUser.uid);
+        localStorage.setItem('user_name', currentUser.name);
+        localStorage.setItem('user_email', currentUser.email);
+        localStorage.setItem('user_photo', currentUser.photoURL || '');
+        localStorage.setItem('user_plan', currentUser.plan || 'free');
+        
         updateUserUI();
-        
-        // ✅ تحميل جميع البيانات
         await loadAllData();
-        
-        // ✅ التحقق من التجديد التلقائي للاشتراكات المجانية
         setTimeout(() => autoRenewSubscriptions(), 1000);
-        
-        // ❌❌❌ تم إزالة فحص رابط الامتحان من هنا ❌❌❌
-        // أصبح يتم فحص الرابط في دالة منفصلة (checkExamLink)
-        
     } else {
         currentUser = null;
+        localStorage.removeItem('user_uid');
+        localStorage.removeItem('user_name');
+        localStorage.removeItem('user_email');
+        localStorage.removeItem('user_photo');
+        localStorage.removeItem('user_plan');
         updateUserUI();
         await loadAllData();
     }

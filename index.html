@@ -3713,7 +3713,7 @@ function getMonthlyExamUsage() {
     return userExams.length + userResults.length;
 }
 
-// ==================== صفحة الباقات - نسخة تعتمد على قاعدة البيانات ====================
+// ==================== صفحة الباقات - النسخة النهائية ====================
 
 async function refreshPlansPage() {
     const container = document.getElementById('plansList');
@@ -3733,12 +3733,11 @@ async function refreshPlansPage() {
     
     try {
         // ====== جلب الباقات من قاعدة البيانات ======
-        // التأكد من تحميل الباقات أولاً
         if (plans.length === 0) {
             await loadPlans();
         }
         
-        // تصفية الباقات: إزالة الباقة المجانية إذا وجدت (لأنها مش مدفوعة)
+        // تصفية الباقات المدفوعة فقط
         const paidPlans = plans.filter(p => p.id !== 'free' && p.id !== 'Free');
         
         if (paidPlans.length === 0) {
@@ -3755,7 +3754,7 @@ async function refreshPlansPage() {
             return;
         }
         
-        // ====== جلب الاشتراك الحالي للمستخدم ======
+        // ====== جلب الاشتراك الحالي ======
         const subSnapshot = await db.ref(`subscriptions/${currentUser.uid}`).once('value');
         const currentSub = subSnapshot.val();
         const currentPlanId = currentSub?.planId || 'free';
@@ -3763,33 +3762,49 @@ async function refreshPlansPage() {
         const expiryDate = currentSub ? new Date(currentSub.expiryDate) : null;
         const now = new Date();
         const isExpired = expiryDate ? now > expiryDate : false;
-        const isFree = currentPlanId === 'free';
-        const needsRenewal = !isFree && (remaining <= 0 || isExpired);
+        const needsRenewal = !(currentPlanId === 'free') && (remaining <= 0 || isExpired);
         
-        // ====== عرض الباقات ======
-        // ترتيب الباقات حسب السعر (من الأقل للأعلى)
+        // ====== ترتيب الباقات حسب السعر ======
         const sortedPlans = [...paidPlans].sort((a, b) => (a.price || 0) - (b.price || 0));
         
-        // ألوان متدرجة للبطاقات
-        const bgColors = [
-            "from-blue-500 to-cyan-600",
-            "from-indigo-500 to-purple-600",
-            "from-purple-500 to-pink-600",
-            "from-emerald-500 to-teal-600",
-            "from-amber-500 to-orange-600"
-        ];
+        // ====== أيقونات الباقات حسب المستوى ======
+        function getPlanIcon(planName, planId) {
+            const name = (planName || '').toLowerCase();
+            if (name.includes('مدرسة') || name.includes('school')) return '🏫';
+            if (name.includes('ultimate') || name.includes('التميت')) return '💎';
+            if (name.includes('pro') || name.includes('برو')) return '🥇';
+            if (name.includes('أساسي') || name.includes('basic')) return '🥈';
+            // حسب الـ id
+            if (planId === 'school') return '🏫';
+            if (planId === 'ultimate') return '💎';
+            if (planId === 'pro') return '🥇';
+            if (planId === 'basic') return '🥈';
+            return '💎'; // افتراضي
+        }
         
-        const btnColors = [
-            "bg-blue-600 hover:bg-blue-700",
-            "bg-indigo-600 hover:bg-indigo-700",
-            "bg-purple-600 hover:bg-purple-700",
-            "bg-emerald-600 hover:bg-emerald-700",
-            "bg-amber-600 hover:bg-amber-700"
-        ];
+        // ====== ألوان الباقات ======
+        function getPlanColors(planName, planId) {
+            const name = (planName || '').toLowerCase();
+            if (name.includes('مدرسة') || name.includes('school') || planId === 'school') {
+                return { bg: "from-emerald-500 to-teal-600", btn: "bg-emerald-600 hover:bg-emerald-700" };
+            }
+            if (name.includes('ultimate') || name.includes('التميت') || planId === 'ultimate') {
+                return { bg: "from-purple-500 to-pink-600", btn: "bg-purple-600 hover:bg-purple-700" };
+            }
+            if (name.includes('pro') || name.includes('برو') || planId === 'pro') {
+                return { bg: "from-indigo-500 to-purple-600", btn: "bg-indigo-600 hover:bg-indigo-700" };
+            }
+            if (name.includes('أساسي') || name.includes('basic') || planId === 'basic') {
+                return { bg: "from-blue-500 to-cyan-600", btn: "bg-blue-600 hover:bg-blue-700" };
+            }
+            return { bg: "from-indigo-500 to-purple-600", btn: "bg-indigo-600 hover:bg-indigo-700" };
+        }
         
+        // ====== عرض الباقات ======
         let plansHtml = sortedPlans.map((plan, index) => {
             const isCurrentPlan = currentPlanId === plan.id;
-            const colorIndex = index % bgColors.length;
+            const icon = getPlanIcon(plan.name, plan.id);
+            const colors = getPlanColors(plan.name, plan.id);
             
             // حساب الخصم
             let discountBadge = '';
@@ -3817,7 +3832,7 @@ async function refreshPlansPage() {
             if (isCurrentPlan) {
                 if (needsRenewal) {
                     actionButton = `
-                        <button onclick="requestRenewalFromUser()" 
+                        <button onclick="sendRenewalRequestFromUser()" 
                                 class="mt-3 w-full bg-red-600 hover:bg-red-700 text-white py-2.5 rounded-lg transition font-bold text-sm hover:shadow-lg animate-pulse">
                             <i class="fab fa-whatsapp ml-2"></i> 🔄 طلب تجديد
                         </button>
@@ -3838,12 +3853,16 @@ async function refreshPlansPage() {
                         <p class="text-center text-xs text-gray-500">
                             📊 متبقي ${remaining} امتحان
                         </p>
+                        <button onclick="sendRenewalRequestFromUser()" 
+                                class="mt-2 w-full bg-amber-500 hover:bg-amber-600 text-white py-2 rounded-lg transition font-bold text-sm">
+                            <i class="fab fa-whatsapp ml-1"></i> طلب تجديد مبكر
+                        </button>
                     `;
                 }
             } else {
                 actionButton = `
                     <button onclick="requestUpgrade('${plan.id}')" 
-                            class="mt-3 w-full ${btnColors[colorIndex]} text-white py-2.5 rounded-lg transition font-bold text-sm hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]">
+                            class="mt-3 w-full ${colors.btn} text-white py-2.5 rounded-lg transition font-bold text-sm hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]">
                         <i class="fas fa-rocket ml-2"></i> اشترك الآن
                     </button>
                 `;
@@ -3854,12 +3873,12 @@ async function refreshPlansPage() {
             const finalPrice = plan.price || 0;
             
             return `
-                <div class="bg-white rounded-2xl shadow-lg overflow-hidden border-2 ${isCurrentPlan ? 'border-green-500 ring-2 ring-green-200' : 'border-gray-200'} hover:shadow-2xl transition-all duration-300 relative w-full h-full flex flex-col">
+                <div class="bg-white rounded-2xl shadow-lg overflow-hidden border-2 ${isCurrentPlan ? 'border-green-500 ring-2 ring-green-200' : 'border-gray-200'} hover:shadow-2xl transition-all duration-300 relative w-full h-full flex flex-col plan-card">
                     ${currentBadge}
                     ${discountBadge}
                     
-                    <div class="bg-gradient-to-r ${bgColors[colorIndex]} p-5 text-center text-white flex-shrink-0">
-                        <div class="text-4xl mb-2">💎</div>
+                    <div class="bg-gradient-to-r ${colors.bg} p-5 text-center text-white flex-shrink-0">
+                        <div class="text-4xl mb-2">${icon}</div>
                         <h3 class="text-xl font-bold">${plan.name || 'باقة'}</h3>
                         <div class="mt-2">
                             ${originalPrice > finalPrice ? `<span class="text-sm line-through opacity-70">${originalPrice} ج</span>` : ''}
@@ -3905,81 +3924,77 @@ async function refreshPlansPage() {
                 day: 'numeric'
             }) : 'غير محدد';
             
-            if (currentPlanId === 'free') {
-                subscriptionInfo = `
-                    <div class="col-span-1 sm:col-span-2 mt-6 p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl border-2 border-green-300 w-full">
-                        <div class="flex flex-wrap items-center justify-between gap-3">
-                            <div>
-                                <p class="font-bold text-green-700">
-                                    <i class="fas fa-gift ml-2"></i>
-                                    باقتك الحالية: <span class="text-green-900">📖 مجانية</span>
-                                </p>
-                                <p class="text-sm text-gray-600 mt-1">
-                                    <i class="fas fa-calendar-alt ml-1"></i>
-                                    🔄 تتجدد تلقائياً في: <span class="font-bold text-green-600">${formattedExpiry}</span>
-                                </p>
-                                <p class="text-sm text-gray-600 mt-1">
-                                    <i class="fas fa-coins ml-1"></i>
-                                    الامتحانات المتبقية: <span class="font-bold ${remaining > 0 ? 'text-green-600' : 'text-red-600'}">${remaining}</span>
-                                    من 5
-                                </p>
-                            </div>
-                            <button onclick="navigateTo('account')" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition text-sm">
-                                <i class="fas fa-user ml-1"></i> حسابي
-                            </button>
+            const isFreePlan = currentPlanId === 'free';
+            const planIcon = isFreePlan ? '📖' : getPlanIcon(userPlan?.name, currentPlanId);
+            
+            subscriptionInfo = `
+                <div class="col-span-1 sm:col-span-2 mt-6 p-4 ${isFreePlan ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-300' : 'bg-gradient-to-r from-indigo-50 to-purple-50 border-indigo-200'} rounded-2xl border-2 w-full">
+                    <div class="flex flex-wrap items-center justify-between gap-3">
+                        <div>
+                            <p class="font-bold ${isFreePlan ? 'text-green-700' : 'text-indigo-700'}">
+                                <i class="fas ${isFreePlan ? 'fa-gift' : 'fa-user-check'} ml-2"></i>
+                                باقتك الحالية: <span class="${isFreePlan ? 'text-green-900' : 'text-indigo-900'}">${planIcon} ${userPlan?.name || 'مجانية'}</span>
+                            </p>
+                            <p class="text-sm text-gray-600 mt-1">
+                                <i class="fas fa-calendar-alt ml-1"></i>
+                                ${isFreePlan ? '🔄 تتجدد تلقائياً في' : '📅 تنتهي في'}: <span class="font-bold ${isFreePlan ? 'text-green-600' : 'text-indigo-600'}">${formattedExpiry}</span>
+                            </p>
+                            <p class="text-sm text-gray-600 mt-1">
+                                <i class="fas fa-coins ml-1"></i>
+                                الامتحانات المتبقية: <span class="font-bold ${remaining > 0 ? 'text-green-600' : 'text-red-600'}">${remaining}</span>
+                                من ${userPlan?.examsCount || (isFreePlan ? 5 : 0)}
+                            </p>
                         </div>
+                        <button onclick="navigateTo('account')" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition text-sm">
+                            <i class="fas fa-user ml-1"></i> حسابي
+                        </button>
                     </div>
-                `;
-            } else {
-                subscriptionInfo = `
-                    <div class="col-span-1 sm:col-span-2 mt-6 p-4 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl border-2 border-indigo-200 w-full">
-                        <div class="flex flex-wrap items-center justify-between gap-3">
-                            <div>
-                                <p class="font-bold text-indigo-700">
-                                    <i class="fas fa-user-check ml-2"></i>
-                                    باقتك الحالية: <span class="text-indigo-900">${userPlan?.name || currentPlanId}</span>
-                                </p>
-                                <p class="text-sm text-gray-600 mt-1">
-                                    <i class="fas fa-calendar-alt ml-1"></i>
-                                    📅 تنتهي في: <span class="font-bold text-indigo-600">${formattedExpiry}</span>
-                                </p>
-                                <p class="text-sm text-gray-600 mt-1">
-                                    <i class="fas fa-coins ml-1"></i>
-                                    الامتحانات المتبقية: <span class="font-bold ${remaining > 0 ? 'text-green-600' : 'text-red-600'}">${remaining}</span>
-                                    من ${userPlan?.examsCount || 0}
-                                </p>
-                            </div>
-                            <button onclick="navigateTo('account')" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition text-sm">
-                                <i class="fas fa-user ml-1"></i> حسابي
-                            </button>
-                        </div>
-                    </div>
-                `;
-            }
+                </div>
+            `;
         }
         
         // ====== عرض الباقات النهائي ======
         container.innerHTML = `
             <style>
                 /* ====== تنسيق الباقات ====== */
+                #plansList {
+                    width: 100% !important;
+                    max-width: 100% !important;
+                    padding: 0 !important;
+                    margin: 0 !important;
+                }
+                
                 #plansList .grid {
                     display: grid;
-                    gap: 1.5rem;
+                    gap: 0.75rem;
+                    width: 100% !important;
+                    max-width: 100% !important;
+                    margin: 0 !important;
+                    padding: 0 !important;
                 }
-
+                
+                /* بطاقتين في الصف مع مسافات متساوية */
                 @media (min-width: 768px) {
                     #plansList .grid {
                         grid-template-columns: 1fr 1fr;
+                        gap: 0.75rem;
+                    }
+                    
+                    #plansList .grid .plan-card {
+                        margin: 0 !important;
+                        width: 100% !important;
                     }
                 }
-
+                
+                /* جوال: بطاقة واحدة */
                 @media (max-width: 767px) {
                     #plansList .grid {
                         grid-template-columns: 1fr;
+                        gap: 0.75rem;
                     }
                 }
-
-                #plansList .grid > div {
+                
+                #plansList .grid .plan-card {
                     background: white;
                     border-radius: 20px;
                     box-shadow: 0 4px 15px rgba(0,0,0,0.08);
@@ -3989,39 +4004,40 @@ async function refreshPlansPage() {
                     min-height: 400px;
                     display: flex;
                     flex-direction: column;
+                    width: 100% !important;
                 }
-
-                #plansList .grid > div:hover {
+                
+                #plansList .grid .plan-card:hover {
                     transform: translateY(-8px);
                     box-shadow: 0 20px 40px -10px rgba(0,0,0,0.2);
                 }
-
-                #plansList .grid > div .p-4 {
+                
+                #plansList .grid .plan-card .p-4 {
                     flex: 1;
                     display: flex;
                     flex-direction: column;
                 }
-
-                #plansList .grid > div ul {
+                
+                #plansList .grid .plan-card ul {
                     flex: 1;
                 }
-
+                
                 #plansList .discount-badge {
                     animation: pulse-discount 2s ease-in-out infinite;
                 }
-
+                
                 @keyframes pulse-discount {
                     0%, 100% { transform: scale(1); }
                     50% { transform: scale(1.1); }
                 }
-
+                
                 #plansList button {
                     transition: all 0.3s ease;
                     font-weight: bold;
                     padding: 12px;
                     border-radius: 12px;
                 }
-
+                
                 #plansList button:hover {
                     transform: scale(1.02);
                     box-shadow: 0 10px 25px -5px rgba(0,0,0,0.2);
@@ -4050,6 +4066,78 @@ async function refreshPlansPage() {
                 </button>
             </div>
         `;
+    }
+}
+
+// ==================== دالة إرسال طلب التجديد ====================
+
+function sendRenewalRequestFromUser() {
+    if (!currentUser) {
+        showToast('❌ الرجاء تسجيل الدخول أولاً');
+        return;
+    }
+    
+    try {
+        // جلب بيانات الاشتراك
+        db.ref(`subscriptions/${currentUser.uid}`).once('value').then(async (subSnap) => {
+            const sub = subSnap.val() || {};
+            const plan = plans.find(p => p.id === sub.planId) || plans.find(p => p.id === 'free');
+            const remaining = await getRemainingExamsForUser(currentUser.uid);
+            
+            const expiryDate = sub.expiryDate ? new Date(sub.expiryDate) : new Date();
+            const formattedExpiry = expiryDate.toLocaleDateString('ar-EG', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            
+            // أيقونة الباقة
+            function getPlanIcon(planName, planId) {
+                const name = (planName || '').toLowerCase();
+                if (name.includes('مدرسة') || name.includes('school')) return '🏫';
+                if (name.includes('ultimate') || name.includes('التميت')) return '💎';
+                if (name.includes('pro') || name.includes('برو')) return '🥇';
+                if (name.includes('أساسي') || name.includes('basic')) return '🥈';
+                if (planId === 'school') return '🏫';
+                if (planId === 'ultimate') return '💎';
+                if (planId === 'pro') return '🥇';
+                if (planId === 'basic') return '🥈';
+                return '💎';
+            }
+            
+            const planIcon = getPlanIcon(plan?.name, sub.planId);
+            
+            // بناء رسالة التجديد
+            let message = `📋 *طلب تجديد اشتراك - Imtihan*\n\n`;
+            message += `━━━━━━━━━━━━━━━━━━\n`;
+            message += `👤 *العميل:* ${currentUser.name || 'غير محدد'}\n`;
+            message += `📧 *البريد:* ${currentUser.email || 'غير محدد'}\n`;
+            message += `📱 *الهاتف:* ${currentUser.phone || 'غير محدد'}\n`;
+            message += `━━━━━━━━━━━━━━━━━━\n`;
+            message += `${planIcon} *الباقة الحالية:* ${plan?.name || sub.planId || 'مجانية'}\n`;
+            message += `💰 *السعر:* ${plan?.price || 0} ج\n`;
+            message += `📊 *الامتحانات المتبقية:* ${remaining}\n`;
+            message += `📅 *تاريخ الانتهاء:* ${formattedExpiry}\n`;
+            message += `━━━━━━━━━━━━━━━━━━\n`;
+            message += `🔄 *نوع الطلب:* تجديد اشتراك\n`;
+            message += `📅 *تاريخ الطلب:* ${new Date().toLocaleDateString('ar-EG')}\n`;
+            message += `🕐 *الوقت:* ${new Date().toLocaleTimeString('ar-EG')}\n`;
+            message += `━━━━━━━━━━━━━━━━━━\n`;
+            message += `🌟 *شكراً لاستخدامك Imtihan!*`;
+            
+            const encodedMessage = encodeURIComponent(message);
+            window.open(`https://wa.me/201144100018?text=${encodedMessage}`, '_blank');
+            
+            showToast('📤 جاري فتح واتساب...');
+            
+        }).catch(err => {
+            console.error('خطأ في جلب بيانات الاشتراك:', err);
+            showToast('❌ حدث خطأ في جلب البيانات');
+        });
+        
+    } catch (error) {
+        console.error('خطأ في طلب التجديد:', error);
+        showToast('❌ حدث خطأ في طلب التجديد');
     }
 }
    

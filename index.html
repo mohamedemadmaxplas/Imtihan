@@ -3246,7 +3246,7 @@ function refreshQuestionBank() {
     });
 }
     
-// ==================== صفحة الحساب المحسنة بالكامل ====================
+// ==================== صفحة الحساب - بدون زر تكنو شرك ====================
 
 async function refreshAccountPage() {
     const container = document.getElementById('accountContent');
@@ -3293,11 +3293,11 @@ async function refreshAccountPage() {
                 }
                 @keyframes pulse-glow {
                     0%, 100% { box-shadow: 0 0 20px rgba(99, 102, 241, 0.3); }
-                    50% { box-shadow: 0 0 40px rgba(99, 102, 241, 0.6); }
+                    50% { box-shadow: 0 0 50px rgba(99, 102, 241, 0.6); }
                 }
                 @keyframes slideUp {
-                    from { opacity: 0; transform: translateY(30px); }
-                    to { opacity: 1; transform: translateY(0); }
+                    from { opacity: 0; transform: translateY(40px) scale(0.95); }
+                    to { opacity: 1; transform: translateY(0) scale(1); }
                 }
                 @keyframes shimmer {
                     0% { background-position: -200% center; }
@@ -3314,78 +3314,90 @@ async function refreshAccountPage() {
                 .account-card {
                     transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
                 }
-                .account-card:hover {
-                    transform: translateY(-4px);
-                    box-shadow: 0 20px 60px rgba(0,0,0,0.15);
-                }
                 .stat-box {
                     transition: all 0.3s ease;
                     cursor: default;
+                    border: 2px solid transparent;
                 }
                 .stat-box:hover {
-                    transform: scale(1.05);
-                    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+                    transform: translateY(-6px) scale(1.02);
+                    box-shadow: 0 15px 40px rgba(0,0,0,0.12);
+                    border-color: rgba(99, 102, 241, 0.3);
                 }
                 .upgrade-btn {
                     background: linear-gradient(135deg, #f59e0b, #f97316, #f59e0b);
                     background-size: 200% auto;
                     animation: shimmer 3s linear infinite;
                     transition: all 0.3s ease;
+                    border: none;
                 }
                 .upgrade-btn:hover {
                     transform: scale(1.05) rotate(-1deg);
-                    box-shadow: 0 15px 40px rgba(245, 158, 11, 0.4);
-                }
-                .tech-btn {
-                    background: linear-gradient(135deg, #10b981, #059669, #10b981);
-                    background-size: 200% auto;
-                    animation: shimmer 4s linear infinite;
-                    transition: all 0.3s ease;
-                }
-                .tech-btn:hover {
-                    transform: scale(1.05) rotate(1deg);
-                    box-shadow: 0 15px 40px rgba(16, 185, 129, 0.4);
+                    box-shadow: 0 15px 40px rgba(245, 158, 11, 0.5);
                 }
                 .logout-btn {
                     background: linear-gradient(135deg, #ef4444, #dc2626);
                     transition: all 0.3s ease;
+                    border: none;
                 }
                 .logout-btn:hover {
                     transform: scale(1.05);
-                    box-shadow: 0 15px 40px rgba(239, 68, 68, 0.4);
+                    box-shadow: 0 15px 40px rgba(239, 68, 68, 0.5);
                 }
                 .profile-img {
                     transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
                 }
                 .profile-img:hover {
-                    transform: scale(1.1) rotate(-5deg);
+                    transform: scale(1.08) rotate(-5deg);
                 }
                 .progress-bar {
-                    transition: width 1.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                    transition: width 1.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
                 }
+                .glass-effect {
+                    background: rgba(255, 255, 255, 0.7);
+                    backdrop-filter: blur(20px);
+                    -webkit-backdrop-filter: blur(20px);
+                }
+                .number-animate {
+                    transition: all 0.5s ease;
+                }
+                
+                /* عرض كامل للشاشة */
+                #accountContent {
+                    width: 100% !important;
+                    max-width: 100% !important;
+                    padding: 0 !important;
+                    margin: 0 !important;
+                }
+                
                 @media (max-width: 640px) {
-                    .stat-grid { grid-template-columns: repeat(2, 1fr); }
+                    .stat-grid { grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
                     .btn-grid { grid-template-columns: 1fr; }
+                    .profile-section { flex-direction: column !important; text-align: center !important; }
+                }
+                @media (min-width: 641px) and (max-width: 1024px) {
+                    .stat-grid { grid-template-columns: repeat(2, 1fr); }
+                    .btn-grid { grid-template-columns: repeat(2, 1fr); }
                 }
             </style>
             
-            <div class="w-full animate-slide-up">
+            <div class="w-full animate-slide-up" style="max-width: 100% !important; padding: 0 !important;">
                 <!-- بطاقة الملف الشخصي الرئيسية -->
-                <div class="account-card relative bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 rounded-3xl p-8 mb-6 text-white shadow-2xl overflow-hidden">
+                <div class="account-card relative bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 rounded-3xl p-6 md:p-8 mb-6 text-white shadow-2xl overflow-hidden">
                     <!-- خلفية زخرفية -->
-                    <div class="absolute top-[-50px] right-[-50px] w-64 h-64 bg-white/5 rounded-full"></div>
-                    <div class="absolute bottom-[-80px] left-[-30px] w-80 h-80 bg-white/5 rounded-full"></div>
-                    <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-white/5 rounded-full"></div>
+                    <div class="absolute top-[-80px] right-[-80px] w-96 h-96 bg-white/5 rounded-full"></div>
+                    <div class="absolute bottom-[-100px] left-[-50px] w-[400px] h-[400px] bg-white/5 rounded-full"></div>
+                    <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-white/5 rounded-full"></div>
                     
                     <div class="relative z-10">
-                        <div class="flex flex-col md:flex-row items-center gap-6">
+                        <div class="profile-section flex flex-col md:flex-row items-center gap-6">
                             <!-- صورة الملف الشخصي -->
                             <div class="profile-img flex-shrink-0">
-                                <div class="w-28 h-28 rounded-full border-4 border-white/40 shadow-2xl overflow-hidden bg-gradient-to-br from-indigo-400 to-purple-500">
+                                <div class="w-24 h-24 md:w-28 md:h-28 rounded-full border-4 border-white/40 shadow-2xl overflow-hidden bg-gradient-to-br from-indigo-400 to-purple-500 animate-pulse-glow">
                                     ${userPhoto ? `
                                         <img src="${userPhoto}" alt="${currentUser.name}" class="w-full h-full object-cover">
                                     ` : `
-                                        <div class="w-full h-full flex items-center justify-center text-5xl font-bold text-white">
+                                        <div class="w-full h-full flex items-center justify-center text-4xl md:text-5xl font-bold text-white">
                                             ${userInitial}
                                         </div>
                                     `}
@@ -3414,8 +3426,8 @@ async function refreshAccountPage() {
                             
                             <!-- شارة المستوى -->
                             <div class="flex-shrink-0">
-                                <div class="bg-white/20 backdrop-blur-sm rounded-2xl p-3 text-center min-w-[100px]">
-                                    <div class="text-3xl">${usagePercent >= 80 ? '🏆' : usagePercent >= 50 ? '⭐' : '🌟'}</div>
+                                <div class="bg-white/20 backdrop-blur-sm rounded-2xl p-3 text-center min-w-[90px]">
+                                    <div class="text-3xl animate-float">${usagePercent >= 80 ? '🏆' : usagePercent >= 50 ? '⭐' : '🌟'}</div>
                                     <div class="text-xs text-white/80">${usagePercent >= 80 ? 'متقدم' : usagePercent >= 50 ? 'نشط' : 'مبتدئ'}</div>
                                 </div>
                             </div>
@@ -3423,43 +3435,44 @@ async function refreshAccountPage() {
                     </div>
                 </div>
                 
-                <!-- إحصائيات الباقة -->
-                <div class="stat-grid grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                    <div class="stat-box bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-5 text-center shadow-md hover:shadow-xl transition-all">
-                        <div class="text-3xl mb-1">📊</div>
-                        <p class="text-xs text-blue-600 font-semibold">الامتحانات المتبقية</p>
-                        <p class="text-3xl font-bold text-blue-700">${remaining}</p>
-                        <p class="text-xs text-blue-500">من ${maxExams}</p>
+                <!-- إحصائيات الباقة - 3 بطاقات -->
+                <div class="stat-grid grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                    <!-- الامتحانات المتبقية -->
+                    <div class="stat-box bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-5 text-center shadow-md hover:shadow-xl transition-all border-2 border-blue-200/50">
+                        <div class="text-4xl mb-2 animate-float">📊</div>
+                        <p class="text-xs text-blue-600 font-semibold uppercase tracking-wider">الامتحانات المتبقية</p>
+                        <p class="text-4xl font-bold text-blue-700 number-animate">${remaining}</p>
+                        <p class="text-sm text-blue-500">من ${maxExams}</p>
                     </div>
-                    <div class="stat-box bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl p-5 text-center shadow-md hover:shadow-xl transition-all">
-                        <div class="text-3xl mb-1">📅</div>
-                        <p class="text-xs text-purple-600 font-semibold">تاريخ التجديد</p>
-                        <p class="text-sm font-bold text-purple-700">${formattedExpiry}</p>
-                        <p class="text-xs text-purple-500">${sub.planId === 'free' ? '🔄 تجديد تلقائي' : '📆 شهرياً'}</p>
+                    
+                    <!-- الامتحانات المستخدمة -->
+                    <div class="stat-box bg-gradient-to-br from-green-50 to-green-100 rounded-2xl p-5 text-center shadow-md hover:shadow-xl transition-all border-2 border-green-200/50">
+                        <div class="text-4xl mb-2 animate-float">✅</div>
+                        <p class="text-xs text-green-600 font-semibold uppercase tracking-wider">الامتحانات المستخدمة</p>
+                        <p class="text-4xl font-bold text-green-700 number-animate">${usedExams}</p>
+                        <p class="text-sm text-green-500">من ${maxExams}</p>
                     </div>
-                    <div class="stat-box bg-gradient-to-br from-green-50 to-green-100 rounded-2xl p-5 text-center shadow-md hover:shadow-xl transition-all">
-                        <div class="text-3xl mb-1">✅</div>
-                        <p class="text-xs text-green-600 font-semibold">الامتحانات المستخدمة</p>
-                        <p class="text-3xl font-bold text-green-700">${usedExams}</p>
-                        <p class="text-xs text-green-500">من ${maxExams}</p>
-                    </div>
-                    <div class="stat-box bg-gradient-to-br from-amber-50 to-amber-100 rounded-2xl p-5 text-center shadow-md hover:shadow-xl transition-all">
-                        <div class="text-3xl mb-1">🔄</div>
-                        <p class="text-xs text-amber-600 font-semibold">مرات التجديد</p>
-                        <p class="text-3xl font-bold text-amber-700">${sub.renewedCount || 0}</p>
-                        <p class="text-xs text-amber-500">إجمالي</p>
+                    
+                    <!-- تاريخ التجديد -->
+                    <div class="stat-box bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl p-5 text-center shadow-md hover:shadow-xl transition-all border-2 border-purple-200/50">
+                        <div class="text-4xl mb-2 animate-float">📅</div>
+                        <p class="text-xs text-purple-600 font-semibold uppercase tracking-wider">تاريخ التجديد</p>
+                        <p class="text-lg font-bold text-purple-700">${formattedExpiry}</p>
+                        <p class="text-sm text-purple-500">${sub.planId === 'free' ? '🔄 تجديد تلقائي' : '📆 شهرياً'}</p>
                     </div>
                 </div>
                 
                 <!-- شريط التقدم المحسن -->
-                <div class="mb-6 bg-white rounded-2xl p-6 shadow-md hover:shadow-xl transition-all">
-                    <div class="flex justify-between items-center mb-2">
+                <div class="mb-6 glass-effect rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all border border-white/20">
+                    <div class="flex justify-between items-center mb-3">
                         <span class="text-sm font-semibold text-gray-700">📈 نسبة استخدام الامتحانات</span>
-                        <div class="flex items-center gap-2">
-                            <span class="text-sm font-bold ${usagePercent > 80 ? 'text-red-600' : usagePercent > 50 ? 'text-amber-600' : 'text-green-600'}">
+                        <div class="flex items-center gap-3">
+                            <span class="text-2xl font-bold ${usagePercent > 80 ? 'text-red-600' : usagePercent > 50 ? 'text-amber-600' : 'text-green-600'}">
                                 ${Math.round(usagePercent)}%
                             </span>
-                            <span class="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-600">${progressText}</span>
+                            <span class="text-xs px-3 py-1 rounded-full ${usagePercent > 80 ? 'bg-red-100 text-red-700' : usagePercent > 50 ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'} font-semibold">
+                                ${progressText}
+                            </span>
                         </div>
                     </div>
                     <div class="w-full bg-gray-200 rounded-full h-4 overflow-hidden shadow-inner">
@@ -3472,11 +3485,11 @@ async function refreshAccountPage() {
                     </div>
                 </div>
                 
-                <!-- الأزرار -->
-                <div class="btn-grid grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- الأزرار - صفين: ترقية وخروج فقط (تم إزالة زر تكنو شرك) -->
+                <div class="btn-grid grid grid-cols-1 md:grid-cols-2 gap-4">
                     <!-- زر الترقية - أنيميشن خاص -->
                     <button onclick="navigateTo('upgrade')" 
-                        class="upgrade-btn text-white py-4 rounded-2xl font-bold flex items-center justify-center gap-3 shadow-lg text-lg relative overflow-hidden group">
+                        class="upgrade-btn text-white py-4 rounded-2xl font-bold flex items-center justify-center gap-3 shadow-xl text-base md:text-lg relative overflow-hidden group">
                         <span class="absolute inset-0 bg-white/10 transform -skew-x-12 group-hover:translate-x-full transition-transform duration-700"></span>
                         <i class="fas fa-rocket text-2xl group-hover:rotate-12 transition-transform"></i>
                         <span>🚀 ترقية حسابك</span>
@@ -3485,7 +3498,7 @@ async function refreshAccountPage() {
                     
                     <!-- زر تسجيل الخروج -->
                     <button onclick="logout()" 
-                        class="logout-btn text-white py-4 rounded-2xl font-bold flex items-center justify-center gap-3 shadow-lg text-lg relative overflow-hidden group">
+                        class="logout-btn text-white py-4 rounded-2xl font-bold flex items-center justify-center gap-3 shadow-xl text-base md:text-lg relative overflow-hidden group">
                         <span class="absolute inset-0 bg-white/10 transform -skew-x-12 group-hover:translate-x-full transition-transform duration-700"></span>
                         <i class="fas fa-sign-out-alt text-2xl group-hover:rotate-12 transition-transform"></i>
                         <span>🚪 تسجيل خروج</span>
@@ -3493,15 +3506,15 @@ async function refreshAccountPage() {
                 </div>
                 
                 <!-- معلومات إضافية -->
-                <div class="mt-6 bg-white/50 backdrop-blur-sm rounded-2xl p-4 border border-gray-100">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs text-gray-500">
+                <div class="mt-6 glass-effect rounded-2xl p-4 border border-white/20">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs text-gray-600">
                         <div class="flex items-center gap-2">
                             <span class="text-gray-400">🆔 معرف المستخدم:</span>
-                            <span class="text-gray-600 font-mono">${currentUser.uid?.substring(0, 20) || 'غير متاح'}...</span>
+                            <span class="text-gray-700 font-mono bg-white/50 px-2 py-1 rounded">${currentUser.uid?.substring(0, 20) || 'غير متاح'}...</span>
                         </div>
                         <div class="flex items-center gap-2 md:justify-end">
                             <span class="text-gray-400">📅 تاريخ الإنشاء:</span>
-                            <span class="text-gray-600">${new Date(currentUser.createdAt || Date.now()).toLocaleDateString('ar-EG', {
+                            <span class="text-gray-700 font-medium">${new Date(currentUser.createdAt || Date.now()).toLocaleDateString('ar-EG', {
                                 year: 'numeric',
                                 month: 'long',
                                 day: 'numeric'
@@ -3512,22 +3525,27 @@ async function refreshAccountPage() {
             </div>
         `;
     } else {
-        // ... كود تسجيل الدخول المحسن
+        // ... كود تسجيل الدخول (يبقى زر تكنو شرك هنا لأن المستخدم غير مسجل)
         container.innerHTML = `
             <style>
                 @keyframes float {
                     0%, 100% { transform: translateY(0px); }
                     50% { transform: translateY(-10px); }
                 }
+                @keyframes pulse-glow {
+                    0%, 100% { box-shadow: 0 0 20px rgba(99, 102, 241, 0.3); }
+                    50% { box-shadow: 0 0 50px rgba(99, 102, 241, 0.6); }
+                }
                 .animate-float { animation: float 3s ease-in-out infinite; }
+                .animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
             </style>
             
             <div class="w-full max-w-md mx-auto text-center">
                 <div class="relative">
-                    <div class="w-32 h-32 mx-auto bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white text-5xl font-bold shadow-2xl mb-6 animate-float">
+                    <div class="w-32 h-32 mx-auto bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white text-5xl font-bold shadow-2xl mb-6 animate-float animate-pulse-glow">
                         <i class="fas fa-user-graduate"></i>
                     </div>
-                    <div class="absolute -top-2 -right-2 w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white text-xs shadow-lg">
+                    <div class="absolute -top-2 -right-2 w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white text-xs shadow-lg animate-pulse">
                         <i class="fas fa-plus"></i>
                     </div>
                 </div>

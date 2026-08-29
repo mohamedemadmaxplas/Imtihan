@@ -3713,7 +3713,7 @@ function getMonthlyExamUsage() {
     return userExams.length + userResults.length;
 }
 
-// ==================== صفحة الباقات - بطاقتين بعرض كامل بدون مسافات جانبية ====================
+// ==================== صفحة الباقات - بدون نص وصف + بطاقتين بعرض كامل ====================
 
 async function refreshPlansPage() {
     const container = document.getElementById('plansList');
@@ -3945,10 +3945,10 @@ async function refreshPlansPage() {
             }
         }
         
-        // ====== عرض الباقات - بطاقتين بعرض كامل بدون مسافات جانبية ======
+        // ====== عرض الباقات النهائي ======
         container.innerHTML = `
             <style>
-                /* ====== إزالة المسافات الجانبية من البطاقات فقط ====== */
+                /* ====== إزالة كل المسافات الجانبية من البطاقات ====== */
                 #plansList {
                     width: 100% !important;
                     max-width: 100% !important;
@@ -4064,7 +4064,7 @@ async function refreshPlansPage() {
                     overflow: hidden !important;
                 }
                 
-                /* ====== الحفاظ على مسافات الهيدر ====== */
+                /* ====== الحفاظ على مسافات الهيدر فقط ====== */
                 .container {
                     padding-left: 1rem !important;
                     padding-right: 1rem !important;
@@ -4076,15 +4076,9 @@ async function refreshPlansPage() {
                     padding: 0 !important;
                     margin: 0 !important;
                 }
-                
-                /* ====== عنوان الباقات ====== */
-                #upgradePage h2 {
-                    margin-bottom: 1.5rem !important;
-                    padding-right: 0.5rem !important;
-                }
             </style>
             
-            <!-- الهيدر مع المسافات -->
+            <!-- الهيدر فقط - بدون النص الوصفي -->
             <div class="mb-6">
                 <h2 class="text-2xl md:text-3xl font-bold text-gray-800 flex items-center gap-3">
                     <span class="bg-gradient-to-r from-indigo-500 to-purple-500 text-white p-2 rounded-xl">
@@ -4092,7 +4086,6 @@ async function refreshPlansPage() {
                     </span>
                     باقات الترقية
                 </h2>
-                <p class="text-gray-500 text-sm mt-1 pr-2">اختر الباقة المناسبة لك واستمتع بمميزات لا محدودة</p>
             </div>
             
             <div class="grid">

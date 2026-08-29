@@ -2252,144 +2252,6 @@ body {
     transform: scale(1.08) rotate(-5deg);
 }
 
-/* ==================== تنسيق الباقات ==================== */
-
-/* إزالة المسافات الجانبية من الصفحة */
-#upgradePage {
-    padding: 0 !important;
-    margin: 0 !important;
-    width: 100% !important;
-    max-width: 100% !important;
-}
-
-#upgradePage .container {
-    padding: 0 !important;
-    margin: 0 !important;
-    max-width: 100% !important;
-    width: 100% !important;
-}
-
-/* صندوق الباقات الأبيض */
-#upgradePage .bg-white {
-    padding: 1.5rem 0.5rem !important;
-    border-radius: 20px !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    margin: 0 !important;
-}
-
-/* حاوية الباقات */
-#plansList {
-    width: 100% !important;
-    max-width: 100% !important;
-    padding: 0 !important;
-    margin: 0 !important;
-}
-
-/* شبكة البطاقات */
-#plansList .grid {
-    display: grid !important;
-    gap: 0.5rem !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    margin: 0 !important;
-    padding: 0 !important;
-}
-
-/* بطاقتين في الصف - العرض الكامل */
-@media (min-width: 641px) {
-    #plansList .grid {
-        grid-template-columns: 1fr 1fr !important;
-        gap: 0.5rem !important;
-    }
-}
-
-/* جوال - بطاقة واحدة */
-@media (max-width: 640px) {
-    #plansList .grid {
-        grid-template-columns: 1fr !important;
-        gap: 0.5rem !important;
-    }
-}
-
-/* كل بطاقة */
-#plansList .grid > div {
-    width: 100% !important;
-    max-width: 100% !important;
-    min-height: 380px;
-    display: flex !important;
-    flex-direction: column !important;
-    margin: 0 !important;
-    border-radius: 16px !important;
-    overflow: hidden !important;
-    background: white;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-    transition: all 0.3s ease;
-    border: 2px solid #e5e7eb;
-}
-
-#plansList .grid > div:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 20px 40px -10px rgba(0,0,0,0.2);
-}
-
-#plansList .grid > div .p-4 {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    padding: 1rem !important;
-}
-
-#plansList .grid > div ul {
-    flex: 1;
-}
-
-#plansList .grid > div ul li {
-    padding: 4px 0;
-    font-size: 13px;
-    color: #374151;
-}
-
-#plansList .grid > div ul li i {
-    font-size: 14px;
-    width: 18px;
-}
-
-/* شارة الخصم */
-#plansList .discount-badge {
-    animation: pulse-discount 2s ease-in-out infinite;
-}
-
-@keyframes pulse-discount {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.1); }
-}
-
-/* أزرار */
-#plansList button {
-    transition: all 0.3s ease;
-    font-weight: bold;
-    padding: 12px;
-    border-radius: 12px;
-}
-
-#plansList button:hover {
-    transform: scale(1.02);
-    box-shadow: 0 10px 25px -5px rgba(0,0,0,0.2);
-}
-
-/* الهيدر بتاع الباقات */
-#upgradePage .bg-white > h2 {
-    margin-bottom: 1rem !important;
-    padding-right: 0.5rem !important;
-}
-
-/* معلومات الاشتراك */
-#plansList .col-span-1.sm\\:col-span-2 {
-    grid-column: 1 / -1 !important;
-    margin-top: 1rem !important;
-    padding: 0.75rem !important;
-}
 
     </style>
 </head>
@@ -3852,7 +3714,7 @@ function getMonthlyExamUsage() {
     return userExams.length + userResults.length;
 }
 
-// ==================== صفحة الباقات - النسخة النهائية ====================
+// ==================== صفحة الباقات - النسخة النهائية (عرض كامل) ====================
 
 async function refreshPlansPage() {
     const container = document.getElementById('plansList');
@@ -3876,7 +3738,7 @@ async function refreshPlansPage() {
             await loadPlans();
         }
         
-        // تصفية الباقات المدفوعة فقط
+        // تصفية الباقات المدفوعة فقط (نشيل المجانية)
         const paidPlans = plans.filter(p => p.id !== 'free' && p.id !== 'Free');
         
         if (paidPlans.length === 0) {
@@ -3893,7 +3755,7 @@ async function refreshPlansPage() {
             return;
         }
         
-        // ====== جلب الاشتراك الحالي ======
+        // ====== جلب الاشتراك الحالي للمستخدم ======
         const subSnapshot = await db.ref(`subscriptions/${currentUser.uid}`).once('value');
         const currentSub = subSnapshot.val();
         const currentPlanId = currentSub?.planId || 'free';
@@ -3909,16 +3771,11 @@ async function refreshPlansPage() {
         // ====== أيقونات الباقات حسب المستوى ======
         function getPlanIcon(planName, planId) {
             const name = (planName || '').toLowerCase();
-            if (name.includes('مدرسة') || name.includes('school')) return '🏫';
-            if (name.includes('ultimate') || name.includes('التميت')) return '💎';
-            if (name.includes('pro') || name.includes('برو')) return '🥇';
-            if (name.includes('أساسي') || name.includes('basic')) return '🥈';
-            // حسب الـ id
-            if (planId === 'school') return '🏫';
-            if (planId === 'ultimate') return '💎';
-            if (planId === 'pro') return '🥇';
-            if (planId === 'basic') return '🥈';
-            return '💎'; // افتراضي
+            if (name.includes('مدرسة') || name.includes('school') || planId === 'school') return '🏫';
+            if (name.includes('ultimate') || name.includes('التميت') || planId === 'ultimate') return '💎';
+            if (name.includes('pro') || name.includes('برو') || planId === 'pro') return '🥇';
+            if (name.includes('أساسي') || name.includes('basic') || planId === 'basic') return '🥈';
+            return '💎';
         }
         
         // ====== ألوان الباقات ======
@@ -4012,7 +3869,7 @@ async function refreshPlansPage() {
             const finalPrice = plan.price || 0;
             
             return `
-                <div class="bg-white rounded-2xl shadow-lg overflow-hidden border-2 ${isCurrentPlan ? 'border-green-500 ring-2 ring-green-200' : 'border-gray-200'} hover:shadow-2xl transition-all duration-300 relative w-full h-full flex flex-col plan-card">
+                <div class="plan-card bg-white rounded-2xl shadow-lg overflow-hidden border-2 ${isCurrentPlan ? 'border-green-500 ring-2 ring-green-200' : 'border-gray-200'} hover:shadow-2xl transition-all duration-300 relative w-full h-full flex flex-col">
                     ${currentBadge}
                     ${discountBadge}
                     
@@ -4092,10 +3949,10 @@ async function refreshPlansPage() {
             `;
         }
         
-        // ====== عرض الباقات النهائي ======
+        // ====== عرض الباقات النهائي مع الـ CSS ======
         container.innerHTML = `
             <style>
-                /* ====== تنسيق الباقات ====== */
+                /* ====== إزالة كل المسافات الجانبية ====== */
                 #plansList {
                     width: 100% !important;
                     max-width: 100% !important;
@@ -4104,50 +3961,48 @@ async function refreshPlansPage() {
                 }
                 
                 #plansList .grid {
-                    display: grid;
-                    gap: 0.75rem;
+                    display: grid !important;
+                    gap: 0.5rem !important;
                     width: 100% !important;
                     max-width: 100% !important;
                     margin: 0 !important;
                     padding: 0 !important;
                 }
                 
-                /* بطاقتين في الصف مع مسافات متساوية */
-                @media (min-width: 768px) {
+                /* ====== بطاقتين في الصف ====== */
+                @media (min-width: 641px) {
                     #plansList .grid {
-                        grid-template-columns: 1fr 1fr;
-                        gap: 0.75rem;
-                    }
-                    
-                    #plansList .grid .plan-card {
-                        margin: 0 !important;
-                        width: 100% !important;
+                        grid-template-columns: 1fr 1fr !important;
+                        gap: 0.5rem !important;
                     }
                 }
                 
-                /* جوال: بطاقة واحدة */
-                @media (max-width: 767px) {
+                /* ====== جوال - بطاقة واحدة ====== */
+                @media (max-width: 640px) {
                     #plansList .grid {
-                        grid-template-columns: 1fr;
-                        gap: 0.75rem;
+                        grid-template-columns: 1fr !important;
+                        gap: 0.5rem !important;
                     }
                 }
                 
+                /* ====== كل بطاقة ====== */
                 #plansList .grid .plan-card {
+                    width: 100% !important;
+                    max-width: 100% !important;
+                    min-height: 380px;
+                    display: flex !important;
+                    flex-direction: column !important;
+                    margin: 0 !important;
+                    border-radius: 16px !important;
+                    overflow: hidden !important;
                     background: white;
-                    border-radius: 20px;
                     box-shadow: 0 4px 15px rgba(0,0,0,0.08);
                     transition: all 0.3s ease;
-                    overflow: hidden;
                     border: 2px solid #e5e7eb;
-                    min-height: 400px;
-                    display: flex;
-                    flex-direction: column;
-                    width: 100% !important;
                 }
                 
                 #plansList .grid .plan-card:hover {
-                    transform: translateY(-8px);
+                    transform: translateY(-6px);
                     box-shadow: 0 20px 40px -10px rgba(0,0,0,0.2);
                 }
                 
@@ -4155,10 +4010,22 @@ async function refreshPlansPage() {
                     flex: 1;
                     display: flex;
                     flex-direction: column;
+                    padding: 1rem !important;
                 }
                 
                 #plansList .grid .plan-card ul {
                     flex: 1;
+                }
+                
+                #plansList .grid .plan-card ul li {
+                    padding: 4px 0;
+                    font-size: 13px;
+                    color: #374151;
+                }
+                
+                #plansList .grid .plan-card ul li i {
+                    font-size: 14px;
+                    width: 18px;
                 }
                 
                 #plansList .discount-badge {
@@ -4181,6 +4048,13 @@ async function refreshPlansPage() {
                     transform: scale(1.02);
                     box-shadow: 0 10px 25px -5px rgba(0,0,0,0.2);
                 }
+                
+                /* ====== معلومات الاشتراك ====== */
+                #plansList .col-span-1.sm\\:col-span-2 {
+                    grid-column: 1 / -1 !important;
+                    margin-top: 1rem !important;
+                    padding: 0.75rem !important;
+                }
             </style>
             
             <div class="grid">
@@ -4188,7 +4062,7 @@ async function refreshPlansPage() {
             </div>
             ${subscriptionInfo}
             
-            <div class="col-span-1 sm:col-span-2 mt-6 text-center w-full">
+            <div class="col-span-1 sm:col-span-2 mt-4 text-center w-full">
                 <button onclick="navigateTo('home')" class="bg-gray-600 text-white px-6 py-2.5 rounded-lg hover:bg-gray-700 transition">
                     <i class="fas fa-home ml-2"></i> العودة للرئيسية
                 </button>
@@ -4217,7 +4091,6 @@ function sendRenewalRequestFromUser() {
     }
     
     try {
-        // جلب بيانات الاشتراك
         db.ref(`subscriptions/${currentUser.uid}`).once('value').then(async (subSnap) => {
             const sub = subSnap.val() || {};
             const plan = plans.find(p => p.id === sub.planId) || plans.find(p => p.id === 'free');
@@ -4230,23 +4103,17 @@ function sendRenewalRequestFromUser() {
                 day: 'numeric'
             });
             
-            // أيقونة الباقة
             function getPlanIcon(planName, planId) {
                 const name = (planName || '').toLowerCase();
-                if (name.includes('مدرسة') || name.includes('school')) return '🏫';
-                if (name.includes('ultimate') || name.includes('التميت')) return '💎';
-                if (name.includes('pro') || name.includes('برو')) return '🥇';
-                if (name.includes('أساسي') || name.includes('basic')) return '🥈';
-                if (planId === 'school') return '🏫';
-                if (planId === 'ultimate') return '💎';
-                if (planId === 'pro') return '🥇';
-                if (planId === 'basic') return '🥈';
+                if (name.includes('مدرسة') || name.includes('school') || planId === 'school') return '🏫';
+                if (name.includes('ultimate') || name.includes('التميت') || planId === 'ultimate') return '💎';
+                if (name.includes('pro') || name.includes('برو') || planId === 'pro') return '🥇';
+                if (name.includes('أساسي') || name.includes('basic') || planId === 'basic') return '🥈';
                 return '💎';
             }
             
             const planIcon = getPlanIcon(plan?.name, sub.planId);
             
-            // بناء رسالة التجديد
             let message = `📋 *طلب تجديد اشتراك - Imtihan*\n\n`;
             message += `━━━━━━━━━━━━━━━━━━\n`;
             message += `👤 *العميل:* ${currentUser.name || 'غير محدد'}\n`;
@@ -4266,7 +4133,6 @@ function sendRenewalRequestFromUser() {
             
             const encodedMessage = encodeURIComponent(message);
             window.open(`https://wa.me/201144100018?text=${encodedMessage}`, '_blank');
-            
             showToast('📤 جاري فتح واتساب...');
             
         }).catch(err => {

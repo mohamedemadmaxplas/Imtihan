@@ -3246,63 +3246,122 @@ function refreshQuestionBank() {
     });
 }
     
-function refreshAccountPage() {
+// دالة refreshAccountPage المحسنة
+async function refreshAccountPage() {
     const container = document.getElementById('accountContent');
     if (!container) return;
     
     if (currentUser) {
-        const plan = plans.find(p => p.id === currentUser.plan) || plans[0];
+        // جلب الاشتراك الحالي
+        const subSnapshot = await db.ref(`subscriptions/${currentUser.uid}`).once('value');
+        const sub = subSnapshot.val() || {};
+        const plan = plans.find(p => p.id === (sub.planId || 'free')) || plans.find(p => p.id === 'free');
+        const remaining = await getRemainingExamsForUser(currentUser.uid);
+        const expiryDate = sub.expiryDate ? new Date(sub.expiryDate) : new Date();
+        const formattedExpiry = expiryDate.toLocaleDateString('ar-EG', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+        
+        // حساب نسبة الاستخدام
+        const maxExams = plan?.examsCount || 5;
+        const usedExams = Math.max(0, maxExams - remaining);
+        const usagePercent = maxExams > 0 ? Math.min(100, (usedExams / maxExams) * 100) : 0;
+        
+        // تحديد لون شريط التقدم
+        let progressColor = 'bg-green-500';
+        if (usagePercent > 80) progressColor = 'bg-red-500';
+        else if (usagePercent > 50) progressColor = 'bg-yellow-500';
+        
         container.innerHTML = `
             <div class="text-center">
-                <div class="w-24 h-24 mx-auto bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center text-white text-3xl font-bold mb-4">
-                    ${currentUser.name?.charAt(0) || 'U'}
-                </div>
-                <h3 class="text-xl font-bold">${currentUser.name || ''}</h3>
-                <p class="text-gray-500 mb-4">${currentUser.email || ''}</p>
-                <div class="bg-gray-50 p-4 rounded-lg mb-4">
-                    <p>الباقة: <strong class="text-indigo-600">${plan.name}</strong></p>
-                    <p id="accountRemaining">الامتحانات المتبقية: <span id="remainingCount">جاري التحميل...</span></p>
-                    <p id="accountExpiry">📅 تاريخ التجديد: <span id="expiryDateText">جاري التحميل...</span></p>
+                <!-- بطاقة الملف الشخصي -->
+                <div class="relative bg-gradient-to-br from-indigo-600 to-purple-600 rounded-2xl p-6 mb-6 text-white shadow-xl">
+                    <div class="absolute top-3 right-3 text-white/20 text-6xl">👤</div>
+                    <div class="relative z-10">
+                        <div class="w-28 h-28 mx-auto rounded-full border-4 border-white/30 shadow-xl flex items-center justify-center text-5xl font-bold bg-white/20 backdrop-blur-sm mb-4 transition-transform hover:scale-105">
+                            ${currentUser.name?.charAt(0).toUpperCase() || 'U'}
+                        </div>
+                        <h3 class="text-2xl font-bold">${currentUser.name || 'مستخدم'}</h3>
+                        <p class="text-indigo-200 text-sm">${currentUser.email || ''}</p>
+                        <div class="mt-2 inline-block bg-white/20 backdrop-blur-sm px-4 py-1 rounded-full text-sm">
+                            🎯 ${plan?.name || 'مجاني'}
+                        </div>
+                    </div>
                 </div>
                 
-                <a href="https://mohamedemadmaxplas.github.io/NABD_/" target="_blank" 
-                   class="w-full bg-emerald-600 text-white py-2 rounded-lg mb-2 hover:bg-emerald-700 transition text-center block">
-                    <i class="fas fa-coins ml-2"></i> تسجيل الدخول بـ تكنو شرك
-                </a>
+                <!-- إحصائيات الباقة -->
+                <div class="grid grid-cols-2 gap-3 mb-6">
+                    <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4">
+                        <p class="text-xs text-blue-600 font-semibold">📊 الامتحانات المتبقية</p>
+                        <p class="text-2xl font-bold text-blue-700">${remaining}</p>
+                        <p class="text-xs text-blue-500">من ${maxExams}</p>
+                    </div>
+                    <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4">
+                        <p class="text-xs text-purple-600 font-semibold">📅 تاريخ التجديد</p>
+                        <p class="text-sm font-bold text-purple-700">${formattedExpiry}</p>
+                        <p class="text-xs text-purple-500">${sub.planId === 'free' ? '🔄 تجديد تلقائي' : '📆 شهرياً'}</p>
+                    </div>
+                </div>
                 
-                <button onclick="navigateTo('upgrade')" class="w-full bg-amber-500 text-white py-2 rounded-lg mb-2 hover:bg-amber-600 transition">
-                    🚀 ترقية الحساب
-                </button>
-                <button onclick="logout()" class="w-full bg-red-500 text-white py-2 rounded-lg hover:bg-red-600 transition">
-                    تسجيل خروج
-                </button>
+                <!-- شريط التقدم -->
+                <div class="mb-6">
+                    <div class="flex justify-between text-xs text-gray-500 mb-1">
+                        <span>نسبة الاستخدام</span>
+                        <span>${Math.round(usagePercent)}%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
+                        <div class="${progressColor} h-2.5 rounded-full transition-all duration-1000" style="width: ${usagePercent}%"></div>
+                    </div>
+                </div>
+                
+                <!-- الأزرار -->
+                <div class="space-y-3">
+                    <button onclick="navigateTo('upgrade')" 
+                        class="w-full bg-gradient-to-r from-amber-500 to-orange-500 text-white py-3 rounded-xl font-bold hover:shadow-lg hover:scale-[1.02] transition-all duration-300 flex items-center justify-center gap-2">
+                        <i class="fas fa-rocket"></i> 🚀 ترقية الحساب
+                    </button>
+                    
+                    <a href="https://mohamedemadmaxplas.github.io/NABD_/" target="_blank" 
+                       class="w-full bg-gradient-to-r from-emerald-500 to-green-600 text-white py-3 rounded-xl font-bold hover:shadow-lg hover:scale-[1.02] transition-all duration-300 flex items-center justify-center gap-2 block">
+                        <i class="fas fa-coins"></i> 🏢 تسجيل الدخول بـ تكنو شرك
+                    </a>
+                    
+                    <button onclick="logout()" 
+                        class="w-full bg-gradient-to-r from-red-500 to-rose-600 text-white py-3 rounded-xl font-bold hover:shadow-lg hover:scale-[1.02] transition-all duration-300 flex items-center justify-center gap-2">
+                        <i class="fas fa-sign-out-alt"></i> 🚪 تسجيل خروج
+                    </button>
+                </div>
+                
+                <!-- معلومات إضافية -->
+                <div class="mt-4 text-xs text-gray-400 border-t border-gray-100 pt-4">
+                    <p>🆔 معرف المستخدم: ${currentUser.uid?.substring(0, 12) || 'غير متاح'}</p>
+                    <p>📅 تاريخ الإنشاء: ${new Date(currentUser.createdAt || Date.now()).toLocaleDateString('ar-EG')}</p>
+                </div>
             </div>
         `;
-        
-        // ✅ تحديث العداد وتاريخ التجديد
-        setTimeout(() => {
-            refreshExamLimit();
-            loadUserSubscription();
-        }, 200);
-        
     } else {
-        // ... كود تسجيل الدخول
+        // ... كود تسجيل الدخول كما هو
         container.innerHTML = `
             <div class="text-center">
-                <i class="fas fa-user-circle text-6xl text-indigo-600 mb-4"></i>
-                <h2 class="text-2xl font-bold mb-4">مرحباً بك</h2>
-                <div id="googleBtn"></div>
-                <div class="relative my-6">
+                <div class="w-28 h-28 mx-auto bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center text-white text-4xl font-bold shadow-xl mb-4">
+                    <i class="fas fa-user"></i>
+                </div>
+                <h2 class="text-2xl font-bold mb-2">مرحباً بك</h2>
+                <p class="text-gray-500 mb-6">سجل الدخول للوصول إلى حسابك</p>
+                <div id="googleBtn" class="mb-4"></div>
+                <div class="relative my-4">
                     <div class="border-t border-gray-300"></div>
-                    <span class="absolute top-[-12px] left-1/2 transform -translate-x-1/2 bg-white px-2 text-gray-500">أو</span>
+                    <span class="absolute top-[-12px] left-1/2 transform -translate-x-1/2 bg-white px-4 text-gray-500 text-sm">أو</span>
                 </div>
                 
                 <a href="https://mohamedemadmaxplas.github.io/NABD_/" target="_blank" 
-                   class="w-full bg-emerald-600 text-white py-2 rounded-lg mb-3 hover:bg-emerald-700 transition text-center block">
-                    <i class="fas fa-coins ml-2"></i> تسجيل الدخول بـ تكنو شرك
+                   class="w-full bg-gradient-to-r from-emerald-500 to-green-600 text-white py-3 rounded-xl font-bold hover:shadow-lg hover:scale-[1.02] transition-all duration-300 flex items-center justify-center gap-2 block">
+                    <i class="fas fa-coins"></i> 🏢 تسجيل الدخول بـ تكنو شرك
                 </a>
                 
-                <p>ليس لديك حساب؟ <a onclick="showRegisterPopup()" class="text-indigo-600 cursor-pointer hover:underline">إنشاء حساب</a></p>
+                
             </div>
         `;
         
